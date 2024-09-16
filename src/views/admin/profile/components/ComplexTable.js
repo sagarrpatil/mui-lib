@@ -37,7 +37,7 @@ export default function ComplexTable(props) {
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   let defaultData = tableData;
-  
+
   const columns = [
     columnHelper.accessor('name', {
       id: 'name',
@@ -54,7 +54,7 @@ export default function ComplexTable(props) {
       cell: (info) => (
         <Flex align="center">
           <Text color={textColor} fontSize="sm" fontWeight="700">
-            {info.getValue().replace(/(^|\s)\S/g, l => l.toUpperCase())}
+            {info.getValue().replace(/(^|\s)\S/g, (l) => l.toUpperCase())}
           </Text>
         </Flex>
       ),
@@ -92,8 +92,8 @@ export default function ComplexTable(props) {
       ),
       cell: (info) => (
         <Text color={textColor} fontSize="sm" fontWeight="700">
-       ₹ {info.getValue()}
-      </Text>
+          ₹ {info.getValue()}
+        </Text>
       ),
     }),
   ];

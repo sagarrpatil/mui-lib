@@ -158,8 +158,6 @@ export default function HeaderLinks(props) {
         </MenuList>
       </Menu>
 
- 
-
       <Button
         variant="no-hover"
         bg="transparent"

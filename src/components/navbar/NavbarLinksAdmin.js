@@ -143,7 +143,7 @@ export default function HeaderLinks(props) {
               borderRadius="8px"
               mb="10px"
             >
-              <ItemContent info="Horizon UI Dashboard PRO" />
+              <ItemContent info="Fitness work Dashboard PRO" />
             </MenuItem>
             <MenuItem
               _hover={{ bg: 'none' }}
@@ -184,7 +184,7 @@ export default function HeaderLinks(props) {
           <Flex flexDirection="column">
             <Link w="100%" href="https://horizon-ui.com/pro">
               <Button w="100%" h="44px" mb="10px" variant="brand">
-                Buy Horizon UI PRO
+                Buy Fitness work PRO
               </Button>
             </Link>
             <Link

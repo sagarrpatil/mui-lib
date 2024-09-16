@@ -62,7 +62,7 @@ export default function SidebarDocs() {
           px='10px'
           mb='6px'
           textAlign='center'>
-          Improve your development process and start doing more with Horizon UI
+          Improve your development process and start doing more with Fitness work
           PRO!
         </Text>
       </Flex>

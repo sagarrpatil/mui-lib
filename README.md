@@ -1,4 +1,4 @@
-# [Horizon UI ⚡️](https://horizon-ui.com/horizon-ui-chakra) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/intent/tweet?url=https://horizon-ui.com/&text=Check%20Horizon%20UI,%20the%20trendiest%20open-source%20admin%20template%20for%20Chakra%20UI%20&%20React!)
+# [Fitness work ⚡️](https://horizon-ui.com/horizon-ui-chakra) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/intent/tweet?url=https://horizon-ui.com/&text=Check%20Horizon%20UI,%20the%20trendiest%20open-source%20admin%20template%20for%20Chakra%20UI%20&%20React!)
 
 ![version](https://img.shields.io/badge/version-2.0.0-brightgreen.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -6,12 +6,12 @@
 
 <p>&nbsp;</p>
 
-[<img alt="Horizon UI" src="https://i.ibb.co/fdyTwz1/introduction-image-2.png" /> ](https://github.com/horizon-ui/horizon-ui-chakra)
+[<img alt="Fitness work" src="https://i.ibb.co/fdyTwz1/introduction-image-2.png" /> ](https://github.com/horizon-ui/horizon-ui-chakra)
 
 <p>&nbsp;</p>
 
 
-Get started and build your dream web app with Horizon UI, the most trendiest &
+Get started and build your dream web app with Fitness work, the most trendiest &
 innovative Open Source Admin Template for Chakra UI & React!
 
 ---
@@ -19,17 +19,17 @@ innovative Open Source Admin Template for Chakra UI & React!
 ### Introduction
 
 Designed for those who like modern UI elements and beautiful websites. Made of
-hundred of elements, designed blocks and fully coded pages, Horizon UI is ready
+hundred of elements, designed blocks and fully coded pages, Fitness work is ready
 to help you create stunning websites and webapps.
 
 Save hundreds of hours trying to create and develop a dashboard from scratch.
 The fastest, most responsive & trendiest dashboard is here. Seriously.
 
-With Horizon UI you will find many examples for pages like NFTs Pages,
+With Fitness work you will find many examples for pages like NFTs Pages,
 Authentication Pages, Profile and so on. Just choose between a Basic Design or a
 cover and you are good to go!
 
-### 🎉 [NEW] Horizon UI Components
+### 🎉 [NEW] Fitness work Components
 All the main components from both versions, this will help you to see and interact with all & the latest added components of Horizon (also, new components are on the way, stay tuned)! ⚡️
 <a href="https://horizon-ui.com/components/?ref=readme-horizon" target="_blank">See all components</a>
 
@@ -42,7 +42,7 @@ here.</a>
 
 ### Quick Start
 
-Install Horizon UI by running either of the following:
+Install Fitness work by running either of the following:
 
 - Install NodeJS LTS from
   [NodeJs Official Page](https://nodejs.org/en/?ref=horizon-documentation)
@@ -78,20 +78,20 @@ pages here.</a>
 
 | Free Version                                                                                                       | PRO Version                                                                                                               |
 | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| [![Horizon UI](https://i.ibb.co/fdyTwz1/introduction-image-2.png)](https://www.horizon-ui.com/?ref=readme-horizon) | [![Horizon UI PRO](https://i.ibb.co/R6jFKRM/introduction-image-1.png)](https://www.horizon-ui.com/pro?ref=readme-horizon) |
+| [![Fitness work](https://i.ibb.co/fdyTwz1/introduction-image-2.png)](https://www.horizon-ui.com/?ref=readme-horizon) | [![Fitness work PRO](https://i.ibb.co/R6jFKRM/introduction-image-1.png)](https://www.horizon-ui.com/pro?ref=readme-horizon) |
 
 ### Figma Version
 
-Horizon UI is available in Figma format as well! Check it out on Figma
+Fitness work is available in Figma format as well! Check it out on Figma
 Community! 🎨
-[See the Horizon UI Figma design files](https://bit.ly/horizon-figma)
+[See the Fitness work Figma design files](https://bit.ly/horizon-figma)
 
 ### Reporting Issues
 
-We use GitHub Issues as the official bug tracker for the Horizon UI. Here are
+We use GitHub Issues as the official bug tracker for the Fitness work. Here are
 some advices for our users that want to report an issue:
 
-1. Make sure that you are using the latest version of the Horizon UI Dashbaord.
+1. Make sure that you are using the latest version of the Fitness work Dashbaord.
    Check the CHANGELOG from your dashboard on our
    [CHANGE LOG File](https://github.com/horizon-ui/horizon-ui-chakra/blob/main/CHANGELOG.md?ref=readme-horizon).
 2. Providing us reproducible steps for the issue will shorten the time it takes
@@ -104,7 +104,7 @@ some advices for our users that want to report an issue:
 ### Community
 
 Connect with the community! Feel free to ask questions, report issues, and meet
-new people that already use Horizon UI!
+new people that already use Fitness work!
 
 💬 [Join the #HorizonUI Discord Community!](https://discord.gg/f6tEKFBd4m)
 
@@ -112,4 +112,4 @@ new people that already use Horizon UI!
 
 ⭐️ [Copyright 2023 Simmmple ](https://www.simmmple.com/?ref=readme-horizon)
 
-📄 [Horizon UI License](https://www.simmmple.com/licenses?ref=readme-horizon)
+📄 [Fitness work License](https://www.simmmple.com/licenses?ref=readme-horizon)

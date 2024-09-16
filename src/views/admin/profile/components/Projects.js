@@ -115,7 +115,7 @@ export default function Projects() {
                   onChange={(e) => updateSellingType(index, 'price', e.target.value)} 
                 />
                 {index === sellingTypes.length - 1 && (
-                  <div style={{ display: "flex", justifyContent: "space-around" }}>
+                  <div style={{ display: "flex", justifyContent: "space-around", padding:10 }}>
                     <Button colorScheme='green' size="sm" onClick={addSellingType}>+</Button>
                     {sellingTypes.length > 1 && (
                       <Button colorScheme='red' size="sm" onClick={removeSellingType}>-</Button>

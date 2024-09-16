@@ -1,27 +1,4 @@
-/* eslint-disable */
-/*!
-  _   _  ___  ____  ___ ________  _   _   _   _ ___   
- | | | |/ _ \|  _ \|_ _|__  / _ \| \ | | | | | |_ _| 
- | |_| | | | | |_) || |  / / | | |  \| | | | | || | 
- |  _  | |_| |  _ < | | / /| |_| | |\  | | |_| || |
- |_| |_|\___/|_| \_\___/____\___/|_| \_|  \___/|___|
-                                                                                                                                                                                                                                                                                                                                       
-=========================================================
-* Fitness work - v1.1.0
-=========================================================
-
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2023 Fitness work (https://www.horizon-ui.com/)
-
-* Designed and Coded by Simmmple
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
-import React from "react";
+import React, {useState} from "react";
 import { NavLink } from "react-router-dom";
 // Chakra imports
 import {
@@ -47,9 +24,14 @@ import illustration from "assets/img/auth/auth.png";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
+import { auth } from "../../../firebase";
+import { signInWithEmailAndPassword } from "@firebase/auth";
 
 function SignIn() {
   // Chakra color mode
+  const [username, serUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecondary = "gray.400";
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
@@ -67,6 +49,18 @@ function SignIn() {
   );
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
+
+  const handleSubmit = async (e) => {
+    if(e)
+    e.preventDefault();
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, username, password);
+      const user = userCredential.user; 
+      localStorage.setItem("token", btoa(encodeURI(user.email)))
+    } catch (error) {
+      setError("Invalid Credentails")
+    }
+  };
   return (
     <DefaultAuth illustrationBackground={illustration} image={illustration}>
       <Flex
@@ -94,6 +88,7 @@ function SignIn() {
             Enter your email and password to sign in!
           </Text>
         </Box>
+        {error && <p style={{margin:10, padding:5, width:"90%", color: "tomato", border: "1px solid tomato"}}>{error}</p>}
         <Flex
           zIndex='2'
           direction='column'
@@ -104,29 +99,7 @@ function SignIn() {
           mx={{ base: "auto", lg: "unset" }}
           me='auto'
           mb={{ base: "20px", md: "auto" }}>
-          <Button
-            fontSize='sm'
-            me='0px'
-            mb='26px'
-            py='15px'
-            h='50px'
-            borderRadius='16px'
-            bg={googleBg}
-            color={googleText}
-            fontWeight='500'
-            _hover={googleHover}
-            _active={googleActive}
-            _focus={googleActive}>
-            <Icon as={FcGoogle} w='20px' h='20px' me='10px' />
-            Sign in with Google
-          </Button>
-          <Flex align='center' mb='25px'>
-            <HSeparator />
-            <Text color='gray.400' mx='14px'>
-              or
-            </Text>
-            <HSeparator />
-          </Flex>
+           
           <FormControl>
             <FormLabel
               display='flex'
@@ -143,7 +116,9 @@ function SignIn() {
               fontSize='sm'
               ms={{ base: "0px", md: "0px" }}
               type='email'
-              placeholder='mail@simmmple.com'
+              value={username}
+              onChange={(e) => serUsername(e.target.value)}
+              placeholder='mail@gamil.com'
               mb='24px'
               fontWeight='500'
               size='lg'
@@ -162,6 +137,8 @@ function SignIn() {
                 fontSize='sm'
                 placeholder='Min. 8 characters'
                 mb='24px'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 size='lg'
                 type={show ? "text" : "password"}
                 variant='auth'
@@ -207,7 +184,8 @@ function SignIn() {
               fontWeight='500'
               w='100%'
               h='50'
-              mb='24px'>
+              mb='24px'
+              onClick={() => handleSubmit()}>
               Sign In
             </Button>
           </FormControl>
@@ -217,7 +195,7 @@ function SignIn() {
             alignItems='start'
             maxW='100%'
             mt='0px'>
-            <Text color={textColorDetails} fontWeight='400' fontSize='14px'>
+            {/* <Text color={textColorDetails} fontWeight='400' fontSize='14px'>
               Not registered yet?
               <NavLink to='/auth/sign-up'>
                 <Text
@@ -228,7 +206,7 @@ function SignIn() {
                   Create an Account
                 </Text>
               </NavLink>
-            </Text>
+            </Text> */}
           </Flex>
         </Flex>
       </Flex>

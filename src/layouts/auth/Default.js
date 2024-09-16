@@ -40,27 +40,27 @@ function AuthIllustration(props) {
             ps={{ base: "25px", lg: "0px" }}
             pt={{ lg: "0px", xl: "0px" }}
             w='fit-content'>
-            <Icon
+            {/* <Icon
               as={FaChevronLeft}
               me='12px'
               h='13px'
               w='8px'
               color='secondaryGray.600'
-            />
-            <Text ms='0px' fontSize='sm' color='secondaryGray.600'>
+            /> */}
+            {/* <Text ms='0px' fontSize='sm' color='secondaryGray.600'>
               Back to Simmmple
-            </Text>
+            </Text> */}
           </Flex>
         </NavLink>
         {children}
-        <Box
+        {/* <Box
           display={{ base: "none", md: "block" }}
           h='100%'
           minH='100vh'
           w={{ lg: "50vw", "2xl": "44vw" }}
           position='absolute'
           right='0px'>
-          {/* <Flex
+          <Flex
             bg={`url(${illustrationBackground})`}
             justify='center'
             align='end'
@@ -69,8 +69,8 @@ function AuthIllustration(props) {
             bgSize='cover'
             bgPosition='50%'
             position='absolute'
-            borderBottomLeftRadius={{ lg: "120px", xl: "200px" }}></Flex> */}
-        </Box>
+            borderBottomLeftRadius={{ lg: "120px", xl: "200px" }}></Flex>
+        </Box> */}
         <Footer />
       </Flex>
       <FixedPlugin />

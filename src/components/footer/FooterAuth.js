@@ -8,6 +8,8 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
+import { auth, provider } from "../../firebase";
+import { signInWithPopup } from "@firebase/auth";
 
 export default function Footer() {
   let textColor = useColorModeValue("gray.400", "white");
@@ -39,52 +41,6 @@ export default function Footer() {
 
         </Text>
       </Text>
-      <List display='flex'>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link
-            fontWeight='500'
-            color={linkColor}
-            href='mailto:hello@simmmple.com?ref=horizon-chakra-free'>
-            Support
-          </Link>
-        </ListItem>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link
-            fontWeight='500'
-            color={linkColor}
-            href='https://www.simmmple.com/licenses?ref=horizon-chakra-free'>
-            License
-          </Link>
-        </ListItem>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link
-            fontWeight='500'
-            color={linkColor}
-            href='https://simmmple.com/terms-of-service?ref=horizon-chakra-free'>
-            Terms of Use
-          </Link>
-        </ListItem>
-        <ListItem>
-          <Link
-            fontWeight='500'
-            color={linkColor}
-            href='https://www.blog.simmmple.com/?ref=horizon-chakra-free'>
-            Blog
-          </Link>
-        </ListItem>
-      </List>
     </Flex>
   );
 }

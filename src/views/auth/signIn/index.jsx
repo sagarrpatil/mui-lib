@@ -56,7 +56,8 @@ function SignIn() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, username, password);
       const user = userCredential.user; 
-      localStorage.setItem("token", btoa(encodeURI(user.email)))
+      localStorage.setItem("token", btoa(encodeURI(user.email)));
+      window.location.href = '/';
     } catch (error) {
       setError("Invalid Credentails")
     }

@@ -13,8 +13,10 @@ import { useState } from 'react';
 // Chakra imports
 
 export default function Main() {
-  // eslint-disable-next-line
-  const [currentTheme, setCurrentTheme] = useState(initialTheme);
+    const [authCheck, setAuthCheck] = useState(localStorage.getItem("token"));
+    const [currentTheme, setCurrentTheme] = useState(initialTheme);
+
+  if(authCheck)
   return (
     <ChakraProvider theme={currentTheme}>
       <Routes>
@@ -35,4 +37,18 @@ export default function Main() {
       </Routes>
     </ChakraProvider>
   );
+  else{
+    return (
+      <ChakraProvider theme={currentTheme}>
+        <Routes>
+          <Route path="auth/*" element={<AuthLayout />} />
+          <Route path="/" element={<Navigate to="/auth/sign-in" replace />} />
+          <Route
+          path="admin/*"
+          element={<Navigate to="/auth/sign-in" replace />}
+          />
+        </Routes>
+      </ChakraProvider>
+    );
+  }
 }

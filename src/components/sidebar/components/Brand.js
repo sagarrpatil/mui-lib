@@ -4,7 +4,7 @@ import React from "react";
 import { Flex, useColorModeValue } from "@chakra-ui/react";
 
 // Custom components
-import { HorizonLogo } from "components/icons/Icons";
+import { FitnessLogo } from "components/icons/Icons";
 import { HSeparator } from "components/separator/Separator";
 
 export function SidebarBrand() {
@@ -13,7 +13,7 @@ export function SidebarBrand() {
 
   return (
     <Flex align='center' direction='column'>
-      {/* <HorizonLogo h='26px' w='175px' my='32px' color={logoColor} /> */}
+      {/* <FitnessLogo h='26px' w='175px' my='32px' color={logoColor} /> */}
       <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
           width="120px" height="100px" viewBox="0 0 896.000000 278.000000"
           preserveAspectRatio="xMidYMid meet">

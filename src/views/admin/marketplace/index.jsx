@@ -9,8 +9,8 @@
 * Fitness work - v1.1.0
 =========================================================
 
-* Product Page: https://www.horizon-ui.com/
-* Copyright 2023 Fitness work (https://www.horizon-ui.com/)
+* Product Page: https://www.Fitness-ui.com/
+* Copyright 2023 Fitness work (https://www.Fitness-ui.com/)
 
 * Designed and Coded by Simmmple
 

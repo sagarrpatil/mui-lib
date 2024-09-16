@@ -459,8 +459,8 @@ export const SpotifyLogo = createIcon({
   ),
 });
 
-export const HorizonLogo = createIcon({
-  displayName: "horizonLogo",
+export const FitnessLogo = createIcon({
+  displayName: "FitnessLogo",
   viewBox: "0 0 179 20",
   path: (
           <svg version="1.0" xmlns="http://www.w3.org/2000/svg"

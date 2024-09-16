@@ -152,7 +152,7 @@ export default function HeaderLinks(props) {
               borderRadius="8px"
               mb="10px"
             >
-              <ItemContent info="Horizon Design System Free" />
+              <ItemContent info="Fitness Design System Free" />
             </MenuItem>
           </Flex>
         </MenuList>

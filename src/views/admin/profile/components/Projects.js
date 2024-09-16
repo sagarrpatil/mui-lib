@@ -1,64 +1,135 @@
 // Chakra imports
-import { Text, useColorModeValue } from "@chakra-ui/react";
-import Box from '@mui/material/Box';
-import { Button, ButtonGroup } from '@chakra-ui/react'
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-} from '@chakra-ui/react'
+import { Grid, Text, useColorModeValue, Button, Input, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
+import React from "react";
 // Custom components
 import Card from "components/card/Card.js";
-import React from "react";
+import {addInAvailableProduct } from '../../../../service/apiservice'
 
-
-export default function Projects(props) {
+export default function Projects() {
   const [open, setOpen] = React.useState(false);
-  const handleOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const [sellingTypes, setSellingTypes] = React.useState([{ type: "", price: "" }]);
+  const [productDetails, setProductDetails] = React.useState({
+    name: "",
+    quantity: "",
+    buyPrice: ""
+  });
+
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
   const textColorSecondary = "gray.400";
-  const cardShadow = useColorModeValue(
-    "0px 18px 40px rgba(112, 144, 176, 0.12)",
-    "unset"
-  );
+  const cardShadow = useColorModeValue("0px 18px 40px rgba(112, 144, 176, 0.12)", "unset");
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    setProductDetails({ name: "", quantity: "", buyPrice: "" });
+    setSellingTypes([{ type: "", price: "" }]);
+  };
+
+  const updateSellingType = (index, field, value) => {
+    const updatedSellingTypes = [...sellingTypes];
+    updatedSellingTypes[index][field] = value;
+    setSellingTypes(updatedSellingTypes);
+  };
+
+  const addSellingType = () => {
+    setSellingTypes([...sellingTypes, { type: "", price: "" }]);
+  };
+
+  const removeSellingType = () => {
+    if (sellingTypes.length > 1) {
+      setSellingTypes(sellingTypes.slice(0, -1));
+    }
+  };
+
+  const handleProductDetailChange = (field, value) => {
+    setProductDetails(prev => ({ ...prev, [field]: value }));
+  };
+  const isSaveDisabled = () => {
+    const { name, quantity, buyPrice } = productDetails;
+    if (!name || !quantity || !buyPrice) return true;
+    for (let i = 0; i < sellingTypes.length; i++) {
+      if (!sellingTypes[i].type || !sellingTypes[i].price) return true;
+    }
+    return false;
+  };
+  const saveProduct = () =>{
+    let obj = {
+      ...productDetails,
+      sellingTypes: sellingTypes,
+    }
+    addInAvailableProduct(obj).then((response) =>{ 
+      console.log(response);
+      handleClose()
+    })
+
+  }
   return (
     <Card mb={{ base: "0px", "2xl": "20px" }}>
-      <Text
-        color={textColorPrimary}
-        fontWeight='bold'
-        fontSize='2xl'
-        mt='10px'
-        mb='4px'>
-        Available Products
-      </Text> <Button colorScheme='blue'  onClick={handleOpen}>New Product</Button>
-      <Text color={textColorSecondary} fontSize='md' me='26px' mb='40px'>
-        
-      </Text>
+    
+      <Button colorScheme='blue' onClick={handleOpen}>New Product</Button>
+
       <Modal isOpen={open} onClose={handleClose} size={"lg"}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Add New Product</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-  
-          </ModalBody>
+            <Input 
+              placeholder='Product Name' 
+              size='lg' 
+              value={productDetails.name} 
+              onChange={(e) => handleProductDetailChange('name', e.target.value)} 
+              mb={4}
+            />
+            <Input 
+              placeholder='Quantity' 
+              size='lg' 
+              type="number" 
+              value={productDetails.quantity} 
+              onChange={(e) => handleProductDetailChange('quantity', e.target.value)} 
+              mb={4}
+            />
+            <Input 
+              placeholder='Buying Price per quantity' 
+              size='lg' 
+              type="number" 
+              value={productDetails.buyPrice} 
+              onChange={(e) => handleProductDetailChange('buyPrice', e.target.value)} 
+              mb={4}
+            />
+            <Text textAlign="center" color="#878484" mb={2}>Selling Rate</Text>
 
+            {sellingTypes.map((sellingType, index) => (
+              <Grid key={index} templateColumns='repeat(3, 1fr)' gap={5} mb={4}>
+                <Input 
+                  placeholder='Selling Type' 
+                  size='lg' 
+                  value={sellingType.type} 
+                  onChange={(e) => updateSellingType(index, 'type', e.target.value)} 
+                />
+                <Input 
+                  placeholder='Selling Price' 
+                  size='lg' 
+                  type="number" 
+                  value={sellingType.price} 
+                  onChange={(e) => updateSellingType(index, 'price', e.target.value)} 
+                />
+                {index === sellingTypes.length - 1 && (
+                  <div style={{ display: "flex", justifyContent: "space-around" }}>
+                    <Button colorScheme='green' size="sm" onClick={addSellingType}>+</Button>
+                    {sellingTypes.length > 1 && (
+                      <Button colorScheme='red' size="sm" onClick={removeSellingType}>-</Button>
+                    )}
+                  </div>
+                )}
+              </Grid>
+            ))}
+          </ModalBody>
           <ModalFooter>
-           
-            <Button variant='ghost'>Save</Button>
+            <Button colorScheme="blue" onClick={() => saveProduct()} isDisabled={isSaveDisabled()}>Save</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-    
     </Card>
   );
 }

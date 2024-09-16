@@ -5,7 +5,7 @@ import React from "react";
 import Card from "components/card/Card.js";
 import {addInAvailableProduct } from '../../../../service/apiservice'
 
-export default function Projects() {
+export default function Projects(props) {
   const [open, setOpen] = React.useState(false);
   const [sellingTypes, setSellingTypes] = React.useState([{ type: "", price: "" }]);
   const [productDetails, setProductDetails] = React.useState({
@@ -58,8 +58,8 @@ export default function Projects() {
       sellingTypes: sellingTypes,
     }
     addInAvailableProduct(obj).then((response) =>{ 
-      console.log(response);
-      handleClose()
+      props.fetchProductRefresh();
+      handleClose();
     })
 
   }
@@ -78,7 +78,7 @@ export default function Projects() {
               placeholder='Product Name' 
               size='lg' 
               value={productDetails.name} 
-              onChange={(e) => handleProductDetailChange('name', e.target.value)} 
+              onChange={(e) => handleProductDetailChange('name', e.target.value.replace(/(^|\s)\S/g, l => l.toUpperCase()))} 
               mb={4}
             />
             <Input 
@@ -105,7 +105,7 @@ export default function Projects() {
                   placeholder='Selling Type' 
                   size='lg' 
                   value={sellingType.type} 
-                  onChange={(e) => updateSellingType(index, 'type', e.target.value)} 
+                  onChange={(e) => updateSellingType(index, 'type', e.target.value.replace(/(^|\s)\S/g, l => l.toUpperCase()))} 
                 />
                 <Input 
                   placeholder='Selling Price' 

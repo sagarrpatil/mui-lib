@@ -5,22 +5,31 @@ import Banner from "views/admin/profile/components/Banner";
 import General from "views/admin/profile/components/General";
 import Notifications from "views/admin/profile/components/Notifications";
 import Projects from "views/admin/profile/components/Projects";
-import Storage from "views/admin/profile/components/Storage";
-import Upload from "views/admin/profile/components/Upload";
+import {
+
+  columnsDataComplex,
+} from "views/admin/dataTables/variables/columnsData";
+
+import tableDataComplex from "views/admin/dataTables/variables/tableDataComplex.json";
+import ComplexTable from "views/admin/profile/components/ComplexTable";
 
 // Assets
 import banner from "assets/img/auth/banner.png";
 import avatar from "assets/img/avatars/avatar4.png";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function Overview() {
+  const [data, setData] = useState(null);
 
   useEffect(() => {
+    fetchProduct();
+  }, []);
+  const fetchProduct = () =>{
+    setData(null)
     fetchAvailableProduct().then((response) =>{
-      console.log(response)
+      setData(response)
     } )
-
-  }, [])
+  }
 
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
@@ -38,7 +47,13 @@ export default function Overview() {
           "2xl": "1fr",
         }}
         gap={{ base: "20px", xl: "20px" }}>
-        <Projects />
+        <Projects fetchProductRefresh={() => fetchProduct()}/>
+      </Grid>
+      <Grid
+    >
+         {data && <ComplexTable    
+            columnsData={columnsDataComplex}
+          tableData={data}/>}
       </Grid>
     </Box>
   );

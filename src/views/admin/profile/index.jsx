@@ -54,7 +54,7 @@ export default function Overview() {
           gridArea='1 / 1 / 2 / 2'
           banner={banner}
           avatar={avatar}
-          name='Adela Parkson'
+          name='PP'
           job='Product Designer'
           posts='17'
           followers='9.7k'
@@ -92,7 +92,7 @@ export default function Overview() {
           gridArea='1 / 2 / 2 / 2'
           banner={banner}
           avatar={avatar}
-          name='Adela Parkson'
+          name='P P'
           job='Product Designer'
           posts='17'
           followers='9.7k'

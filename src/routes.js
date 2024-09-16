@@ -21,7 +21,7 @@ import SignInCentered from 'views/auth/signIn';
 
 const routes = [
   {
-    name: 'Main Dashboard',
+    name: 'Dashboard',
     layout: '/admin',
     path: '/default',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
@@ -39,7 +39,8 @@ const routes = [
         color="inherit"
       />
     ),
-    component: <NFTMarketplace />,
+    // component: <NFTMarketplace />,
+    component: <></>,
     secondary: true,
   },
   {
@@ -47,21 +48,22 @@ const routes = [
     layout: '/admin',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
     path: '/data-tables',
-    component: <DataTables />,
+    // component: <DataTables />,
+    component: <></>,
   },
-  {
-    name: 'Expense',
-    layout: '/admin',
-    path: '/profile',
-    icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-    component: <Profile />,
-  },
+  // {
+  //   name: 'Expense',
+  //   layout: '/admin',
+  //   path: '/profil',
+  //   icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+  //   component: <></>,
+  // },
   {
     name: 'Store Management',
-    layout: '/rtl',
-    path: '/rtl-default',
+    layout: '/admin',
+    path: '/profile',
     icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-    component: <RTL />,
+    component: <Profile />,
   },
   {
     name: 'Sign Out',

@@ -16,7 +16,7 @@ import React from "react";
 import { MdOutlineCloudDone } from "react-icons/md";
 
 export default function Banner(props) {
-  const { used, total } = props;
+
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
   const brandColor = useColorModeValue("brand.500", "white");
@@ -49,18 +49,18 @@ export default function Banner(props) {
       <Box w='100%' mt='auto'>
         <Flex w='100%' justify='space-between' mb='10px'>
           <Text color={textColorSecondary} fontSize='sm' maxW='40%'>
-            {used} GB
+    
           </Text>
           <Text color={textColorSecondary} fontSize='sm' maxW='40%'>
-            {total} GB
+          
           </Text>
         </Flex>
-        <Progress
+        {/* <Progress
           align='start'
           colorScheme='brandScheme'
           value={(used / total) * 100}
           w='100%'
-        />
+        /> */}
       </Box>
     </Card>
   );

@@ -96,6 +96,30 @@ export default function ComplexTable(props) {
         </Text>
       ),
     }),
+    columnHelper.accessor('sellingTypes', {
+      id: 'sellingTypes',
+      header: () => (
+        <Text
+          justifyContent="space-between"
+          align="center"
+          fontSize={{ sm: '10px', lg: '12px' }}
+          color="gray.400"
+        >
+          Selling Price
+        </Text>
+      ),
+      cell: (info) => (
+        <Text color={textColor} fontSize="sm" fontWeight="700">
+          {info
+            .getValue()
+            .map(
+              (item) =>
+                `${item.type.replace(/(^|\s)\S/g, (l) => l.toUpperCase())}: ₹ ${item.price}`,
+            )
+            .join(', ')}
+        </Text>
+      ),
+    }),
   ];
   const [data, setData] = React.useState(() => [...defaultData]);
   const table = useReactTable({

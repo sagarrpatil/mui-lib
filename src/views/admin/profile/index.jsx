@@ -47,7 +47,10 @@ export default function Overview() {
       </Grid>
       <Grid>
         {data && (
-          <ComplexTable columnsData={columnsDataComplex} tableData={data} />
+          <ComplexTable
+            columnsData={columnsDataComplex}
+            tableData={data.reverse()}
+          />
         )}
       </Grid>
     </Box>

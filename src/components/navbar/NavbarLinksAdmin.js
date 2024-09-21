@@ -234,6 +234,10 @@ export default function HeaderLinks(props) {
               color="red.400"
               borderRadius="8px"
               px="14px"
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/';
+              }}
             >
               <Text fontSize="sm">Log out</Text>
             </MenuItem>

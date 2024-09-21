@@ -30,7 +30,7 @@ const routes = [
   {
     name: 'Sell Order',
     layout: '/admin',
-    path: '/nft-marketplace',
+    path: '/sell-marketplace',
     icon: (
       <Icon
         as={MdOutlineShoppingCart}

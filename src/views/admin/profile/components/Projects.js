@@ -12,7 +12,9 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Icon,
 } from '@chakra-ui/react';
+import { IoHeart, IoHeartOutline } from 'react-icons/io5';
 import React from 'react';
 // Custom components
 import Card from 'components/card/Card.js';
@@ -23,6 +25,7 @@ export default function Projects(props) {
   const [sellingTypes, setSellingTypes] = React.useState([
     { type: '', price: '' },
   ]);
+  const [like, setLike] = React.useState(false);
   const [productDetails, setProductDetails] = React.useState({
     name: '',
     quantity: '',
@@ -41,6 +44,7 @@ export default function Projects(props) {
     setOpen(false);
     setProductDetails({ name: '', quantity: '', buyPrice: '' });
     setSellingTypes([{ type: '', price: '' }]);
+    setLike(false);
   };
 
   const updateSellingType = (index, field, value) => {
@@ -74,6 +78,7 @@ export default function Projects(props) {
     let obj = {
       ...productDetails,
       sellingTypes: sellingTypes,
+      fav: like,
     };
     addInAvailableProduct(obj).then((response) => {
       props.fetchProductRefresh();
@@ -124,6 +129,31 @@ export default function Projects(props) {
               }
               mb={4}
             />
+
+            <Button
+              position="absolute"
+              bg="white"
+              _hover={{ bg: 'whiteAlpha.900' }}
+              _active={{ bg: 'white' }}
+              _focus={{ bg: 'white' }}
+              p="0px !important"
+              top="14px"
+              right="14px"
+              borderRadius="50%"
+              minW="36px"
+              h="36px"
+              onClick={() => {
+                setLike(!like);
+              }}
+            >
+              <Icon
+                transition="0.2s linear"
+                w="20px"
+                h="20px"
+                as={like ? IoHeart : IoHeartOutline}
+                color="brand.500"
+              />
+            </Button>
             <Text textAlign="center" color="#878484" mb={2}>
               Selling Rate
             </Text>

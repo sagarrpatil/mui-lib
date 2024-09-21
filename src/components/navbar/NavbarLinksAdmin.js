@@ -73,7 +73,7 @@ export default function HeaderLinks(props) {
         align="center"
         me="6px"
       >
-        <Flex
+        {/* <Flex
           align="center"
           justify="center"
           bg={ethBox}
@@ -83,8 +83,8 @@ export default function HeaderLinks(props) {
           me="7px"
         >
           <Icon color={ethColor} w="9px" h="14px" as={FaEthereum} />
-        </Flex>
-        <Text
+        </Flex> */}
+        {/* <Text
           w="max-content"
           color={ethColor}
           fontSize="sm"
@@ -96,7 +96,7 @@ export default function HeaderLinks(props) {
             {' '}
             ETH
           </Text>
-        </Text>
+        </Text> */}
       </Flex>
       <SidebarResponsive routes={routes} />
       <Menu>

@@ -18,20 +18,19 @@ import React, { useState } from 'react';
 import { IoHeart, IoHeartOutline } from 'react-icons/io5';
 
 export default function NFT(props) {
-  const { image, name, author, bidders, download, currentbid } = props;
-  const [like, setLike] = useState(false);
+  const { fav, name, productValue, quantity, buyingQty, rateCard } = props;
+  const [like, setLike] = useState(fav);
+  const outofStock = buyingQty >= quantity;
   const textColor = useColorModeValue('navy.700', 'white');
   const textColorBid = useColorModeValue('brand.500', 'white');
   return (
     <Card p="20px">
-      <Flex direction={{ base: 'column' }} justify="center">
+      <Flex
+        direction={{ base: 'column' }}
+        justify="center"
+        style={{ opacity: outofStock ? 0.3 : 1 }}
+      >
         <Box mb={{ base: '20px', '2xl': '20px' }} position="relative">
-          <Image
-            src={image}
-            w={{ base: '100%', '3xl': '100%' }}
-            h={{ base: '100%', '3xl': '100%' }}
-            borderRadius="20px"
-          />
           <Button
             position="absolute"
             bg="white"
@@ -86,34 +85,20 @@ export default function NFT(props) {
               >
                 {name}
               </Text>
-              <Text
-                color="secondaryGray.600"
-                fontSize={{
-                  base: 'sm',
-                }}
-                fontWeight="400"
-                me="14px"
-              >
-                {author}
-              </Text>
-            </Flex>
-            <AvatarGroup
-              max={3}
-              color={textColorBid}
-              size="sm"
-              mt={{
-                base: '0px',
-                md: '10px',
-                lg: '0px',
-                xl: '10px',
-                '2xl': '0px',
-              }}
-              fontSize="12px"
-            >
-              {bidders.map((avt, key) => (
-                <Avatar key={key} src={avt} />
+
+              {rateCard.map((val) => (
+                <Text
+                  color="secondaryGray.600"
+                  fontSize={{
+                    base: 'sm',
+                  }}
+                  fontWeight="400"
+                  me="14px"
+                >
+                  {val.type} : ₹{val.price}
+                </Text>
               ))}
-            </AvatarGroup>
+            </Flex>
           </Flex>
           <Flex
             align="start"
@@ -127,32 +112,24 @@ export default function NFT(props) {
             }}
             mt="25px"
           >
+            Quantity:
             <Text fontWeight="700" fontSize="sm" color={textColorBid}>
-              Current Bid: {currentbid}
+              {quantity}
             </Text>
-            <Link
-              href={download}
-              mt={{
-                base: '0px',
-                md: '10px',
-                lg: '0px',
-                xl: '10px',
-                '2xl': '0px',
+            <Text
+              color="secondaryGray.600"
+              fontSize={{
+                base: 'sm',
               }}
+              fontWeight="400"
+              me="14px"
             >
-              <Button
-                variant="darkBrand"
-                color="white"
-                fontSize="sm"
-                fontWeight="500"
-                borderRadius="70px"
-                px="24px"
-                py="5px"
-              >
-                Place Bid
-              </Button>
-            </Link>
+              (B: {productValue})
+            </Text>
           </Flex>
+          {outofStock && (
+            <Text style={{ color: 'tomato', fontSize: 14 }}>Out of Stock</Text>
+          )}
         </Flex>
       </Flex>
     </Card>

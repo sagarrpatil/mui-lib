@@ -114,7 +114,11 @@ export default function Marketplace() {
                 </Link>
               </Flex>
             </Flex>
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap="20px">
+            <SimpleGrid
+              columns={{ base: 1, md: 3 }}
+              gap="20px"
+              className="mobileSellScroll"
+            >
               {tableData &&
                 tableData.map((val) => (
                   <div

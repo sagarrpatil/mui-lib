@@ -10,7 +10,7 @@ import {
   Box,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
-import { fetchAvailableProduct } from '../../../service/apiservice'
+import { fetchAvailableProduct } from '../../../service/apiservice';
 
 export function SearchBar(props) {
   const [inputValue, setInputValue] = useState('');
@@ -18,17 +18,17 @@ export function SearchBar(props) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [products, setProduct] = useState([]);
   useEffect(() => {
-    fetchAvailableProduct().then(response => {
-      setProduct(response.filter(x => x.quantity > 0));
-    })
-  }, [])
+    fetchAvailableProduct().then((response) => {
+      setProduct(response.filter((x) => x.quantity > 0));
+    });
+  }, []);
   // Handle input change and filter suggestions
   const onChange = (e) => {
     const userInput = e.target.value;
 
     // Filter the products based on input value
     const filtered = products.filter((product) =>
-      product.name.toLowerCase().includes(userInput.toLowerCase())
+      product.name.toLowerCase().includes(userInput.toLowerCase()),
     );
 
     setInputValue(userInput);

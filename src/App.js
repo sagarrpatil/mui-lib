@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 import initialTheme from './theme/theme'; //  { themeGreen }
 import { useState } from 'react';
+import './App.css';
 // Chakra imports
 
 export default function Main() {

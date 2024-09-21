@@ -1,20 +1,36 @@
 import React from 'react';
 // Chakra imports
-import { Button, Flex, Icon, Text, useColorModeValue } from '@chakra-ui/react';
+import {
+  Button,
+  Flex,
+  Select,
+  Text,
+  useColorModeValue,
+  Input,
+} from '@chakra-ui/react';
 // Custom components
 import Card from 'components/card/Card.js';
 // Assets
 import { FaEthereum } from 'react-icons/fa';
 
 export default function NFT(props) {
-  const { buyingQty, name, author, id, date, quantity } = props;
-  // Chakra Color Mode
+  const { buyingQty, name, buyPrice, id, sellingTypes, quantity } = props;
+  const [selectedValue, setSelectedValue] = React.useState('');
+  const [customInput, setCustomInput] = React.useState('');
   const textColor = useColorModeValue('brands.900', 'white');
   const bgItem = useColorModeValue(
     { bg: 'white', boxShadow: '0px 40px 58px -20px rgba(112, 144, 176, 0.12)' },
     { bg: 'navy.700', boxShadow: 'unset' },
   );
   const textColorDate = useColorModeValue('secondaryGray.600', 'white');
+  const handleSelectChange = (e) => {
+    const value = e.target.value;
+    setSelectedValue(value);
+    if (value !== 'custom') {
+      setCustomInput('');
+    }
+  };
+  const sellPrice = selectedValue === 'custom' ? customInput : selectedValue;
   return (
     <Card
       _hover={bgItem}
@@ -42,7 +58,7 @@ export default function NFT(props) {
             >
               {name}
             </Text>
-            <Text
+            <Flex
               color="secondaryGray.600"
               fontSize={{
                 base: 'sm',
@@ -50,8 +66,30 @@ export default function NFT(props) {
               fontWeight="400"
               me="14px"
             >
-              {author}
-            </Text>
+              <Select
+                placeholder="Select Rate per quantity"
+                size="xs"
+                width={150}
+                value={selectedValue}
+                onChange={handleSelectChange}
+              >
+                {sellingTypes.map((val) => (
+                  <option value={val.price}>
+                    {val.type} ₹{val.price}
+                  </option>
+                ))}
+                <option value="custom">Manual Price</option>
+              </Select>
+              {selectedValue === 'custom' && (
+                <Input
+                  placeholder="Price"
+                  type="number"
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  size="xs"
+                />
+              )}
+            </Flex>
           </Flex>
           <Flex
             me={{ base: '4px', md: '32px', xl: '10px', '3xl': '32px' }}
@@ -91,6 +129,23 @@ export default function NFT(props) {
               </Button>
             </Text>
           </Flex>
+        </Flex>
+
+        <Flex style={{ justifyContent: 'space-between', paddingTop: 10 }}>
+          <Text style={{ textAlign: 'right', fontSize: 12, color: 'grey' }}>
+            B:{buyPrice},{' '}
+            {sellPrice && (
+              <>
+                {' '}
+                Margin:{' '}
+                {(((sellPrice - buyPrice) / sellPrice) * 100).toFixed(2)}%
+              </>
+            )}
+          </Text>
+          <Text style={{ textAlign: 'right', fontSize: 14 }}>
+            Amount:
+            <b>{sellPrice * buyingQty}</b>
+          </Text>
         </Flex>
       </Flex>
     </Card>

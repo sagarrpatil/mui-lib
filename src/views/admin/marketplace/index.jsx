@@ -160,15 +160,20 @@ export default function Marketplace() {
               </Flex>
 
               {Cart.map((val) => (
-                <HistoryItem
-                  name={val.name}
-                  buyingQty={val.buyingQty}
-                  id={val.id}
-                  updateCartData={(id, operation) =>
-                    updateCartData(id, operation)
-                  }
-                  quantity={val.quantity}
-                />
+                <>
+                  <HistoryItem
+                    name={val.name}
+                    buyingQty={val.buyingQty}
+                    buyPrice={val.buyPrice}
+                    id={val.id}
+                    updateCartData={(id, operation) =>
+                      updateCartData(id, operation)
+                    }
+                    sellingTypes={val.sellingTypes}
+                    quantity={val.quantity}
+                  />
+                  <hr />
+                </>
               ))}
             </Card>
           )}

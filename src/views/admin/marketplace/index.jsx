@@ -38,6 +38,10 @@ import Card from 'components/card/Card.js';
 import Nft5 from 'assets/img/nfts/Nft5.png';
 
 import { fetchAvailableProduct } from 'service/apiservice';
+import {
+  saveAndBillApiCall,
+  fetchAvailableTransaction,
+} from 'service/apiservice';
 
 export default function Marketplace() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -55,15 +59,25 @@ export default function Marketplace() {
   const [customerName, setCustomerName] = useState('');
   const [receipterName, setReceipterName] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
+  const [transaction, setTransaction] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   useEffect(() => {
     setPartialPayment(0);
   }, [paymentMode]);
   useEffect(() => {
+    fetchAvailable();
+    fetchTransaction();
+  }, []);
+  const fetchAvailable = () => {
     fetchAvailableProduct().then((response) => {
       setTableData(response);
-      console.log(response);
     });
-  }, []);
+  };
+  const fetchTransaction = () => {
+    fetchAvailableTransaction().then((response) => {
+      setTransaction(response);
+    });
+  };
 
   const pushCartData = (value) => {
     let data = [...Cart];
@@ -151,6 +165,42 @@ export default function Marketplace() {
     }
     return true;
   };
+  useEffect(() => {
+    if (customerName) {
+      const matches = transaction.filter((cust) =>
+        // cust.customerName
+        //   .toLowerCase()
+        //   .includes(customerName.toLowerCase()) ||
+        cust.phoneNumber.includes(phoneNumber),
+      );
+      setFilteredCustomers(matches);
+    } else {
+      setFilteredCustomers([]);
+    }
+  }, [customerName]);
+  useEffect(() => {
+    if (phoneNumber) {
+      const matches = transaction.filter((cust) =>
+        // cust.customerName
+        //   .toLowerCase()
+        //   .includes(customerName.toLowerCase()) ||
+        cust.phoneNumber.includes(phoneNumber),
+      );
+      setFilteredCustomers(matches);
+    } else {
+      setFilteredCustomers([]);
+    }
+  }, [phoneNumber]);
+  const handleCustomerSelect = (e) => {
+    const selectedCustomer = transaction.find(
+      (cust) => cust.customerName === e.target.value,
+    );
+    if (selectedCustomer) {
+      setCustomerName(selectedCustomer.customerName);
+      setPhoneNumber(selectedCustomer.phoneNumber);
+    }
+  };
+  console.log('filteredCustomers', filteredCustomers);
   const onCancelPopup = () => {
     setcheckedAddittional(null);
     setPhoneNumber('');
@@ -160,6 +210,29 @@ export default function Marketplace() {
     setPaymentMode('Full Payment');
     setPartialPayment(0);
     onClose();
+  };
+  const saveAndPrint = () => {
+    const obj = {
+      customerName: customerName,
+      phoneNumber: phoneNumber,
+      paymentMode: paymentMode,
+      checkedAddittional: checkedAddittional,
+      receipterName: receipterName,
+      paymentOption: paymentOption,
+      totalAmmount: Number(totalAmmount),
+      partialPayment: Number(partialPayment),
+      Cart: Cart,
+      balance:
+        paymentMode === 'Partial Payment'
+          ? Number(totalAmmount) - Number(partialPayment)
+          : 0,
+    };
+    console.log(obj);
+    saveAndBillApiCall(obj).then((response) => {
+      onCancelPopup();
+      setCart([]);
+      fetchAvailable();
+    });
   };
   return (
     <Box pt={{ base: '93px', md: '46px', xl: '46px' }}>
@@ -324,6 +397,35 @@ export default function Marketplace() {
           <ModalHeader>Customer Details</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6} style={{ maxHeight: '60vh', overflowY: 'scroll' }}>
+            <FormControl>
+              <FormLabel>Customer Name</FormLabel>
+              <Input
+                ref={initialRef}
+                placeholder="Customer Name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+              />
+            </FormControl>
+            <br />
+            {filteredCustomers.length > 0 && (
+              <>
+                <FormControl mt={4}>
+                  <FormLabel>Select Existing Customer</FormLabel>
+                  <Select
+                    placeholder="Select Customer"
+                    onChange={handleCustomerSelect}
+                  >
+                    {filteredCustomers.map((cust) => (
+                      <option key={cust.phoneNumber} value={cust.customerName}>
+                        {cust.customerName} - {cust.phoneNumber}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <br />
+              </>
+            )}
+
             <FormControl mt={4}>
               <FormLabel>Phone Number</FormLabel>
               <Input
@@ -335,16 +437,7 @@ export default function Marketplace() {
               />
             </FormControl>
             <br />
-            <FormControl>
-              <FormLabel>Customer Name</FormLabel>
-              <Input
-                ref={initialRef}
-                placeholder="Customer Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-            </FormControl>
-            <br />
+
             <FormControl>
               <FormLabel>Payment Mode</FormLabel>
               <Select
@@ -407,7 +500,7 @@ export default function Marketplace() {
                     ref={initialRef}
                     onChange={(e) => {
                       let value = { ...checkedAddittional };
-                      value.amount = e.target.value;
+                      value.amount = Number(e.target.value);
                       setcheckedAddittional(value);
                     }}
                     value={checkedAddittional.amount}
@@ -535,7 +628,12 @@ export default function Marketplace() {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} isDisabled={!isFormValid()}>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              isDisabled={!isFormValid()}
+              onClick={() => saveAndPrint()}
+            >
               Save & Print
             </Button>
             <Button onClick={onCancelPopup}>Cancel</Button>

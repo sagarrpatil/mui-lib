@@ -19,7 +19,7 @@ export function SearchBar(props) {
   const [products, setProduct] = useState([]);
   useEffect(() => {
     fetchAvailableProduct().then((response) => {
-      setProduct(response.filter((x) => x.quantity > 0));
+      setProduct(response?.filter((x) => x.quantity > 0));
     });
   }, []);
   // Handle input change and filter suggestions

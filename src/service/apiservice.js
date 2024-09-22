@@ -42,3 +42,53 @@ export const addInAvailableProduct = async (object) => {
     return error;
   }
 };
+export const saveAndBillApiCall = async (object) => {
+  try {
+    let dateNow = Date.now();
+    const dataRefs = ref(realtimeDb, `${key}/transactions/${dateNow}`);
+    object.Cart.map((val) => availableProductDeduction(val));
+    set(dataRefs, object).then((snapshot) => {
+      return snapshot;
+    });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return error;
+  }
+};
+export const availableProductDeduction = async (object) => {
+  try {
+    let deduct = object.quantity - object.buyingQty;
+    const dataRefs = ref(
+      realtimeDb,
+      `${key}/availableStock/${object.id}/quantity`,
+    );
+    set(dataRefs, deduct).then((snapshot) => {
+      return snapshot;
+    });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return error;
+  }
+};
+
+export const fetchAvailableTransaction = async () => {
+  try {
+    const dataRefs = ref(realtimeDb, `${key}/transactions`);
+    const snapshot = await get(dataRefs); // Use get() to fetch a single snapshot
+    const value = snapshot.val();
+
+    if (value === null || value === undefined) {
+      console.warn('Data not found or empty.');
+      return null; // Return null or an appropriate default value
+    }
+    const resultArray = Object.keys(value).map((key) => ({
+      id: key,
+      ...value[key],
+    }));
+
+    return resultArray;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error; // Re-throw the error for proper error handling
+  }
+};

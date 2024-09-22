@@ -115,7 +115,7 @@ export default function Projects(props) {
               type="number"
               value={productDetails.quantity}
               onChange={(e) =>
-                handleProductDetailChange('quantity', e.target.value)
+                handleProductDetailChange('quantity', Number(e.target.value))
               }
               mb={4}
             />

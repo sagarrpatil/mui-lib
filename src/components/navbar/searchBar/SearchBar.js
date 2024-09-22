@@ -49,6 +49,12 @@ export function SearchBar(props) {
   const inputBg = useColorModeValue('secondaryGray.300', 'navy.900');
   const inputText = useColorModeValue('gray.700', 'gray.100');
 
+  useEffect(() => {
+    if (props.fromSellOrder) {
+      props.filteredSuggestionstoSell(filteredSuggestions);
+    }
+  }, [filteredSuggestions]);
+
   return (
     <Box position="relative" w="100%">
       <InputGroup w={{ base: '100%', md: '200px' }} {...rest}>
@@ -75,8 +81,10 @@ export function SearchBar(props) {
           onChange={onChange}
           variant="search"
           fontSize="sm"
-          bg={background ? background : inputBg}
-          color={inputText}
+          bg={
+            !props.fromSellOrder ? (background ? background : inputBg) : '#fff'
+          }
+          color={!props.fromSellOrder ? inputText : 'black'}
           fontWeight="500"
           _placeholder={{ color: 'gray.400', fontSize: '14px' }}
           borderRadius={borderRadius ? borderRadius : '30px'}
@@ -85,30 +93,32 @@ export function SearchBar(props) {
       </InputGroup>
 
       {/* Render suggestions below the input */}
-      {showSuggestions && filteredSuggestions.length > 0 && (
-        <List
-          bg="white"
-          borderRadius="md"
-          boxShadow="md"
-          position="absolute"
-          zIndex="1000"
-          width="100%"
-          mt="2"
-        >
-          {filteredSuggestions.map((suggestion) => (
-            <ListItem
-              key={suggestion.id}
-              padding="10px"
-              borderBottom="1px solid #ddd"
-              cursor="pointer"
-              _hover={{ backgroundColor: 'gray.100' }}
-              onClick={() => onClick(suggestion)}
-            >
-              {suggestion.name}
-            </ListItem>
-          ))}
-        </List>
-      )}
+      {!props.fromSellOrder &&
+        showSuggestions &&
+        filteredSuggestions.length > 0 && (
+          <List
+            bg="white"
+            borderRadius="md"
+            boxShadow="md"
+            position="absolute"
+            zIndex="1000"
+            width="100%"
+            mt="2"
+          >
+            {filteredSuggestions.map((suggestion) => (
+              <ListItem
+                key={suggestion.id}
+                padding="10px"
+                borderBottom="1px solid #ddd"
+                cursor="pointer"
+                _hover={{ backgroundColor: 'gray.100' }}
+                onClick={() => onClick(suggestion)}
+              >
+                {suggestion.name}
+              </ListItem>
+            ))}
+          </List>
+        )}
     </Box>
   );
 }

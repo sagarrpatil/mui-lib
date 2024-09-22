@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 // Chakra imports
 import {
   Button,
@@ -31,6 +31,9 @@ export default function NFT(props) {
     }
   };
   const sellPrice = selectedValue === 'custom' ? customInput : selectedValue;
+  useEffect(() => {
+    props.totalAmountAndSellAndQty(id, sellPrice, buyingQty);
+  }, [selectedValue, customInput, buyingQty]);
   return (
     <Card
       _hover={bgItem}

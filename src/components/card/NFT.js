@@ -44,7 +44,7 @@ export default function NFT(props) {
             minW="36px"
             h="36px"
             onClick={() => {
-              setLike(!like);
+              // setLike(!like);
             }}
           >
             <Icon

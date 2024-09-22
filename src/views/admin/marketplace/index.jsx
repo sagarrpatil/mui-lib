@@ -253,7 +253,10 @@ export default function Marketplace() {
               >
                 Total:{' '}
                 {Cart.reduce((acc, item) => {
-                  return acc + (item.sellPrice + item.buyingQty);
+                  return (
+                    Number(acc) +
+                    Number(item.sellPrice) * Number(item.buyingQty)
+                  );
                 }, 0)}
               </Flex>
             </Card>
@@ -337,7 +340,7 @@ export default function Marketplace() {
                           <td style={{ fontWeight: 'bold' }}>
                             ₹{' '}
                             {Cart.reduce((acc, item) => {
-                              return acc + (item.sellPrice + item.buyingQty);
+                              return acc + item.sellPrice * item.buyingQty;
                             }, 0)}
                           </td>
                         </tr>

@@ -136,7 +136,7 @@ export default function NFT(props) {
 
         <Flex style={{ justifyContent: 'space-between', paddingTop: 10 }}>
           <Text style={{ textAlign: 'right', fontSize: 12, color: 'grey' }}>
-            B:{buyPrice},{' '}
+            P:{buyPrice},{' '}
             {sellPrice && (
               <>
                 {' '}

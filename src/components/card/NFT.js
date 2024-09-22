@@ -124,7 +124,7 @@ export default function NFT(props) {
               fontWeight="400"
               me="14px"
             >
-              (B: {productValue})
+              (P: {productValue})
             </Text>
           </Flex>
           {outofStock && (

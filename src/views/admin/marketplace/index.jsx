@@ -232,6 +232,7 @@ export default function Marketplace() {
       onCancelPopup();
       setCart([]);
       fetchAvailable();
+      fetchTransaction();
     });
   };
   return (
@@ -396,14 +397,16 @@ export default function Marketplace() {
         <ModalContent>
           <ModalHeader>Customer Details</ModalHeader>
           <ModalCloseButton />
+
           <ModalBody pb={6} style={{ maxHeight: '60vh', overflowY: 'scroll' }}>
-            <FormControl>
-              <FormLabel>Customer Name</FormLabel>
+            <FormControl mt={4}>
+              <FormLabel>Phone Number</FormLabel>
               <Input
-                ref={initialRef}
-                placeholder="Customer Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Phone Number"
+                type="number"
+                maxLength={10}
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
               />
             </FormControl>
             <br />
@@ -422,17 +425,16 @@ export default function Marketplace() {
                     ))}
                   </Select>
                 </FormControl>
+                <br />
               </>
             )}
-
-            <FormControl mt={4}>
-              <FormLabel>Phone Number</FormLabel>
+            <FormControl>
+              <FormLabel>Customer Name</FormLabel>
               <Input
-                placeholder="Phone Number"
-                type="number"
-                maxLength={10}
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                ref={initialRef}
+                placeholder="Customer Name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
               />
             </FormControl>
             <br />

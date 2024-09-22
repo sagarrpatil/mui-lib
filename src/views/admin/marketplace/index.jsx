@@ -9,6 +9,23 @@ import {
   Text,
   useColorModeValue,
   SimpleGrid,
+  useDisclosure,
+  FormControl,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormLabel,
+  Input,
+  Select,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react';
 
 import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
@@ -19,7 +36,9 @@ import Nft5 from 'assets/img/nfts/Nft5.png';
 import { fetchAvailableProduct } from 'service/apiservice';
 
 export default function Marketplace() {
-  // Chakra Color Mode
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const initialRef = React.useRef(null);
+  const finalRef = React.useRef(null);
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const textColorBrand = useColorModeValue('brand.500', 'white');
   const [tableData, setTableData] = useState(false);
@@ -192,6 +211,7 @@ export default function Marketplace() {
                 <Button
                   variant="darkBrand"
                   isDisabled={getZeroValue.length > 0}
+                  onClick={onOpen}
                 >
                   Sell Order
                 </Button>
@@ -240,7 +260,103 @@ export default function Marketplace() {
           )}
         </Flex>
       </Grid>
-      {/* Delete Product */}
+
+      <Modal
+        initialFocusRef={initialRef}
+        finalFocusRef={finalRef}
+        isOpen={isOpen}
+        onClose={onClose}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Customer Details</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6} style={{ maxHeight: '60vh', overflow: 'scroll' }}>
+            <FormControl mt={4}>
+              <FormLabel>Phone Number</FormLabel>
+              <Input placeholder="Phone Number" type="number" maxLength={10} />
+            </FormControl>
+            <br />
+            <FormControl>
+              <FormLabel>Customer Name</FormLabel>
+              <Input ref={initialRef} placeholder="Customer Name" />
+            </FormControl>
+            <br />
+            <FormControl>
+              <FormLabel>Payment Mode</FormLabel>
+              <Select placeholder="Select Payment Mode">
+                <option value="UPI / Netbanking">UPI / Netbanking</option>
+                <option value="Cash">Cash</option>
+              </Select>
+            </FormControl>
+            <br />
+            <FormControl>
+              <FormLabel>Receipter name</FormLabel>
+              <Input ref={initialRef} placeholder="Receipter name" />
+            </FormControl>
+            <br />
+            <Accordion allowToggle>
+              <AccordionItem>
+                <h2>
+                  <AccordionButton>
+                    <Box as="span" flex="1" textAlign="left">
+                      Order Details
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel pb={4} bg="aliceblue">
+                  <Flex
+                    flexDirection="column"
+                    gridArea={{ xl: '1 / 3 / 2 / 4', '2xl': '1 / 2 / 2 / 3' }}
+                  >
+                    <table
+                      style={{ width: '100%', borderCollapse: 'collapse' }}
+                    >
+                      <thead>
+                        <tr style={{ textAlign: 'left' }}>
+                          <th>Name</th>
+                          <th>Qty</th>
+                          <th>Price</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Cart.map((val) => (
+                          <tr>
+                            <td>{val.name}</td>
+                            <td>{val.buyingQty}</td>
+                            <td>₹ {val.sellPrice}</td>
+                            <td>₹ {val.buyingQty * val.sellPrice}</td>
+                          </tr>
+                        ))}
+                        <tr>
+                          <td></td>
+                          <td></td>
+                          <td style={{ fontWeight: 'bold' }}>Total</td>
+                          <td style={{ fontWeight: 'bold' }}>
+                            ₹{' '}
+                            {Cart.reduce((acc, item) => {
+                              return acc + (item.sellPrice + item.buyingQty);
+                            }, 0)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </Flex>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3}>
+              Save & Print
+            </Button>
+            <Button onClick={onClose}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

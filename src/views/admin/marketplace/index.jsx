@@ -409,7 +409,7 @@ export default function Marketplace() {
             <br />
             {filteredCustomers.length > 0 && (
               <>
-                <FormControl mt={4}>
+                <FormControl>
                   <FormLabel>Select Existing Customer</FormLabel>
                   <Select
                     placeholder="Select Customer"
@@ -422,7 +422,6 @@ export default function Marketplace() {
                     ))}
                   </Select>
                 </FormControl>
-                <br />
               </>
             )}
 

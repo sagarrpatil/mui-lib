@@ -106,6 +106,10 @@ export default function Marketplace() {
       : tableData
         ? tableData
         : [];
+
+  const totalAmmount = Cart.reduce((acc, item) => {
+    return Number(acc) + Number(item.sellPrice) * Number(item.buyingQty);
+  }, 0);
   return (
     <Box pt={{ base: '93px', md: '46px', xl: '46px' }}>
       <Grid
@@ -251,13 +255,7 @@ export default function Marketplace() {
                 px="22px"
                 py="18px"
               >
-                Total:{' '}
-                {Cart.reduce((acc, item) => {
-                  return (
-                    Number(acc) +
-                    Number(item.sellPrice) * Number(item.buyingQty)
-                  );
-                }, 0)}
+                Total: {totalAmmount}
               </Flex>
             </Card>
           )}
@@ -338,10 +336,7 @@ export default function Marketplace() {
                           <td></td>
                           <td style={{ fontWeight: 'bold' }}>Total</td>
                           <td style={{ fontWeight: 'bold' }}>
-                            ₹{' '}
-                            {Cart.reduce((acc, item) => {
-                              return acc + item.sellPrice * item.buyingQty;
-                            }, 0)}
+                            ₹ {totalAmmount}
                           </td>
                         </tr>
                       </tbody>

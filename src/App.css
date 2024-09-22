@@ -2,6 +2,6 @@
   .mobileSellScroll {
     display: flex !important;
     width: 95vw;
-    overflow: scroll;
+    overflow-x: scroll;
   }
 }

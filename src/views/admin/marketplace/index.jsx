@@ -26,6 +26,10 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  Radio,
+  RadioGroup,
+  Stack,
+  Checkbox,
 } from '@chakra-ui/react';
 
 import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
@@ -44,6 +48,16 @@ export default function Marketplace() {
   const [tableData, setTableData] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [Cart, setCart] = useState([]);
+  const [paymentMode, setPaymentMode] = React.useState('Full Payment');
+  const [partialPayment, setPartialPayment] = React.useState(0);
+  const [checkedAddittional, setcheckedAddittional] = React.useState(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [receipterName, setReceipterName] = useState('');
+  const [paymentOption, setPaymentOption] = useState('');
+  useEffect(() => {
+    setPartialPayment(0);
+  }, [paymentMode]);
   useEffect(() => {
     fetchAvailableProduct().then((response) => {
       setTableData(response);
@@ -107,9 +121,46 @@ export default function Marketplace() {
         ? tableData
         : [];
 
-  const totalAmmount = Cart.reduce((acc, item) => {
+  var totalAmmount = Cart.reduce((acc, item) => {
     return Number(acc) + Number(item.sellPrice) * Number(item.buyingQty);
   }, 0);
+  if (checkedAddittional) {
+    totalAmmount += Number(checkedAddittional.amount);
+  }
+  const isFormValid = () => {
+    if (
+      !phoneNumber ||
+      !customerName ||
+      !paymentMode ||
+      !receipterName ||
+      !paymentOption
+    ) {
+      return false;
+    }
+    if (
+      checkedAddittional &&
+      (!checkedAddittional.type || !checkedAddittional.amount)
+    ) {
+      return false;
+    }
+    if (
+      paymentMode === 'Partial Payment' &&
+      (!partialPayment || partialPayment > totalAmmount)
+    ) {
+      return false;
+    }
+    return true;
+  };
+  const onCancelPopup = () => {
+    setcheckedAddittional(null);
+    setPhoneNumber('');
+    setCustomerName('');
+    setReceipterName('');
+    setPaymentOption('');
+    setPaymentMode('Full Payment');
+    setPartialPayment(0);
+    onClose();
+  };
   return (
     <Box pt={{ base: '93px', md: '46px', xl: '46px' }}>
       <Grid
@@ -221,7 +272,7 @@ export default function Marketplace() {
                 </Button>
               </Flex>
 
-              <div style={{ maxHeight: '50vh', overflow: 'scroll' }}>
+              <div style={{ maxHeight: '50vh', overflowY: 'scroll' }}>
                 {Cart.map((val) => (
                   <>
                     <HistoryItem
@@ -272,29 +323,131 @@ export default function Marketplace() {
         <ModalContent>
           <ModalHeader>Customer Details</ModalHeader>
           <ModalCloseButton />
-          <ModalBody pb={6} style={{ maxHeight: '60vh', overflow: 'scroll' }}>
+          <ModalBody pb={6} style={{ maxHeight: '60vh', overflowY: 'scroll' }}>
             <FormControl mt={4}>
               <FormLabel>Phone Number</FormLabel>
-              <Input placeholder="Phone Number" type="number" maxLength={10} />
+              <Input
+                placeholder="Phone Number"
+                type="number"
+                maxLength={10}
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
             </FormControl>
             <br />
             <FormControl>
               <FormLabel>Customer Name</FormLabel>
-              <Input ref={initialRef} placeholder="Customer Name" />
+              <Input
+                ref={initialRef}
+                placeholder="Customer Name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+              />
             </FormControl>
             <br />
             <FormControl>
               <FormLabel>Payment Mode</FormLabel>
-              <Select placeholder="Select Payment Mode">
+              <Select
+                placeholder="Select Payment Mode"
+                value={paymentOption}
+                onChange={(e) => setPaymentOption(e.target.value)}
+              >
                 <option value="UPI / Netbanking">UPI / Netbanking</option>
                 <option value="Cash">Cash</option>
+                <option value="Cash">Card</option>
               </Select>
             </FormControl>
             <br />
             <FormControl>
               <FormLabel>Receipter name</FormLabel>
-              <Input ref={initialRef} placeholder="Receipter name" />
+              <Input
+                ref={initialRef}
+                placeholder="Receipter name"
+                value={receipterName}
+                onChange={(e) => setReceipterName(e.target.value)}
+              />
             </FormControl>
+            <br />
+
+            <FormControl>
+              <Checkbox
+                isChecked={checkedAddittional !== null}
+                onChange={(e) =>
+                  setcheckedAddittional(
+                    e.target.checked
+                      ? {
+                          type: '',
+                          amount: '',
+                        }
+                      : null,
+                  )
+                }
+              >
+                Additional Charges
+              </Checkbox>
+            </FormControl>
+            {checkedAddittional && (
+              <div style={{ display: 'flex' }}>
+                <FormControl style={{ paddingRight: 10 }}>
+                  <FormLabel>Additional Type</FormLabel>
+                  <Input
+                    ref={initialRef}
+                    value={checkedAddittional.type}
+                    onChange={(e) => {
+                      let value = { ...checkedAddittional };
+                      value.type = e.target.value;
+                      setcheckedAddittional(value);
+                    }}
+                    placeholder="Additional Type"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Additional Amount</FormLabel>
+                  <Input
+                    ref={initialRef}
+                    onChange={(e) => {
+                      let value = { ...checkedAddittional };
+                      value.amount = e.target.value;
+                      setcheckedAddittional(value);
+                    }}
+                    value={checkedAddittional.amount}
+                    placeholder="Additional Amount"
+                    type="number"
+                  />
+                </FormControl>
+              </div>
+            )}
+
+            <br />
+            <RadioGroup onChange={setPaymentMode} value={paymentMode}>
+              <Stack direction="row">
+                <Radio value="Full Payment">Full Payment</Radio>
+                <Radio value="Partial Payment">Partial Payment</Radio>
+              </Stack>
+            </RadioGroup>
+            <br />
+
+            {paymentMode === 'Partial Payment' && (
+              <>
+                <br />
+                <FormControl>
+                  <FormLabel>Partial Payment Amount</FormLabel>
+                  <Input
+                    ref={initialRef}
+                    placeholder="Partial Payment"
+                    type="number"
+                    value={partialPayment}
+                    onChange={(e) => setPartialPayment(e.target.value)}
+                  />
+                </FormControl>
+                {partialPayment > totalAmmount && (
+                  <p style={{ color: 'tomato' }}>
+                    Partial payment should not be greater than full payment.
+                  </p>
+                )}
+              </>
+            )}
+
             <br />
             <Accordion allowToggle>
               <AccordionItem>
@@ -331,14 +484,48 @@ export default function Marketplace() {
                             <td>₹ {val.buyingQty * val.sellPrice}</td>
                           </tr>
                         ))}
+                        {checkedAddittional && (
+                          <tr>
+                            <td></td>
+                            <td></td>
+                            <td style={{ fontWeight: 'bold' }}>
+                              {checkedAddittional.type} Charges
+                            </td>
+                            <td style={{ fontWeight: 'bold' }}>
+                              ₹ {checkedAddittional.amount}
+                            </td>
+                          </tr>
+                        )}
                         <tr>
                           <td></td>
                           <td></td>
-                          <td style={{ fontWeight: 'bold' }}>Total</td>
+                          <td style={{ fontWeight: 'bold' }}>Total Amount</td>
                           <td style={{ fontWeight: 'bold' }}>
                             ₹ {totalAmmount}
                           </td>
                         </tr>
+                        {paymentMode === 'Partial Payment' && (
+                          <tr style={{ color: 'green' }}>
+                            <td></td>
+                            <td></td>
+                            <td style={{ fontWeight: 'bold' }}>
+                              Partial Payment
+                            </td>
+                            <td style={{ fontWeight: 'bold' }}>
+                              ₹ {partialPayment}
+                            </td>
+                          </tr>
+                        )}
+                        {paymentMode === 'Partial Payment' && (
+                          <tr style={{ color: 'tomato' }}>
+                            <td></td>
+                            <td></td>
+                            <td style={{ fontWeight: 'bold' }}>Balance</td>
+                            <td style={{ fontWeight: 'bold' }}>
+                              ₹ {totalAmmount - partialPayment}
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </Flex>
@@ -348,10 +535,10 @@ export default function Marketplace() {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3}>
+            <Button colorScheme="blue" mr={3} isDisabled={!isFormValid()}>
               Save & Print
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onCancelPopup}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

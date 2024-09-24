@@ -12,12 +12,16 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  FormControl,
+  FormLabel,
   Icon,
 } from '@chakra-ui/react';
 import { IoHeart, IoHeartOutline } from 'react-icons/io5';
 import React from 'react';
 // Custom components
 import Card from 'components/card/Card.js';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { addInAvailableProduct } from '../../../../service/apiservice';
 
 export default function Projects(props) {
@@ -30,8 +34,9 @@ export default function Projects(props) {
     name: '',
     quantity: '',
     buyPrice: '',
+    mrpOfProduct: '',
   });
-
+  const [expDate, setExpDate] = React.useState('');
   const textColorPrimary = useColorModeValue('secondaryGray.900', 'white');
   const textColorSecondary = 'gray.400';
   const cardShadow = useColorModeValue(
@@ -67,8 +72,9 @@ export default function Projects(props) {
     setProductDetails((prev) => ({ ...prev, [field]: value }));
   };
   const isSaveDisabled = () => {
-    const { name, quantity, buyPrice } = productDetails;
-    if (!name || !quantity || !buyPrice) return true;
+    const { name, quantity, buyPrice, mrpOfProduct } = productDetails;
+    if (!name || !quantity || !buyPrice || !expDate || !mrpOfProduct)
+      return true;
     for (let i = 0; i < sellingTypes.length; i++) {
       if (!sellingTypes[i].type || !sellingTypes[i].price) return true;
     }
@@ -79,6 +85,7 @@ export default function Projects(props) {
       ...productDetails,
       sellingTypes: sellingTypes,
       fav: like,
+      expDate: expDate,
     };
     addInAvailableProduct(obj).then((response) => {
       props.fetchProductRefresh();
@@ -97,6 +104,7 @@ export default function Projects(props) {
           <ModalHeader>Add New Product</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            <FormLabel>Product Name</FormLabel>
             <Input
               placeholder="Product Name"
               size="lg"
@@ -109,6 +117,7 @@ export default function Projects(props) {
               }
               mb={4}
             />
+            <FormLabel>Quantity</FormLabel>
             <Input
               placeholder="Quantity"
               size="lg"
@@ -119,16 +128,52 @@ export default function Projects(props) {
               }
               mb={4}
             />
-            <Input
-              placeholder="Buying Price per quantity"
-              size="lg"
-              type="number"
-              value={productDetails.buyPrice}
-              onChange={(e) =>
-                handleProductDetailChange('buyPrice', e.target.value)
-              }
-              mb={4}
-            />
+
+            <Grid templateColumns="repeat(2, 1fr)" gap={5} mb={4}>
+              <FormControl>
+                <FormLabel>Buying/quantity</FormLabel>
+                <Input
+                  placeholder="Buying Price per quantity"
+                  size="lg"
+                  type="number"
+                  value={productDetails.buyPrice}
+                  onChange={(e) =>
+                    handleProductDetailChange('buyPrice', e.target.value)
+                  }
+                  mb={4}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>MRP of Product</FormLabel>
+                <Input
+                  placeholder="MRP of Product"
+                  size="lg"
+                  type="number"
+                  value={productDetails.mrpOfProduct}
+                  onChange={(e) =>
+                    handleProductDetailChange(
+                      'mrpOfProduct',
+                      Number(e.target.value),
+                    )
+                  }
+                  mb={4}
+                />
+              </FormControl>
+            </Grid>
+            <Grid>
+              <FormLabel>Select Expiry Date</FormLabel>
+              <DatePicker
+                selected={expDate}
+                onChange={(date) => setExpDate(date)}
+                dateFormat="yyyy/MM/dd"
+                placeholderText="Select Expiry Date"
+                style={{ width: '100%' }}
+                minDate={new Date()}
+                className="custom-date-picker"
+              />
+            </Grid>
+            <br />
+            <br />
 
             <Button
               position="absolute"
@@ -154,35 +199,48 @@ export default function Projects(props) {
                 color="brand.500"
               />
             </Button>
-            <Text textAlign="center" color="#878484" mb={2}>
+            <hr />
+            <Text textAlign="center" color="#878484" mb={1}>
               Selling Rate
             </Text>
-
+            <hr />
             {sellingTypes.map((sellingType, index) => (
-              <Grid key={index} templateColumns="repeat(3, 1fr)" gap={5} mb={4}>
-                <Input
-                  placeholder="Selling Type"
-                  size="lg"
-                  value={sellingType.type}
-                  onChange={(e) =>
-                    updateSellingType(
-                      index,
-                      'type',
-                      e.target.value.replace(/(^|\s)\S/g, (l) =>
-                        l.toUpperCase(),
-                      ),
-                    )
-                  }
-                />
-                <Input
-                  placeholder="Selling Price"
-                  size="lg"
-                  type="number"
-                  value={sellingType.price}
-                  onChange={(e) =>
-                    updateSellingType(index, 'price', e.target.value)
-                  }
-                />
+              <Grid
+                key={index}
+                templateColumns="repeat(3, 1fr)"
+                gap={5}
+                mt={2}
+                mb={4}
+              >
+                <FormControl>
+                  <FormLabel>Selling Type</FormLabel>
+                  <Input
+                    placeholder="Selling Type"
+                    size="lg"
+                    value={sellingType.type}
+                    onChange={(e) =>
+                      updateSellingType(
+                        index,
+                        'type',
+                        e.target.value.replace(/(^|\s)\S/g, (l) =>
+                          l.toUpperCase(),
+                        ),
+                      )
+                    }
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Selling Price</FormLabel>
+                  <Input
+                    placeholder="Selling Price"
+                    size="lg"
+                    type="number"
+                    value={sellingType.price}
+                    onChange={(e) =>
+                      updateSellingType(index, 'price', e.target.value)
+                    }
+                  />
+                </FormControl>
                 {index === sellingTypes.length - 1 && (
                   <div
                     style={{

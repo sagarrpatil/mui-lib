@@ -92,6 +92,28 @@ export default function Projects(props) {
       handleClose();
     });
   };
+
+  const changePercentageMRPSelling = (index, percentage) => {
+    let updatedSellingTypes = [...sellingTypes];
+
+    if (percentage >= 0 && productDetails.mrpOfProduct) {
+      // Calculate the new price based on the MRP and percentage
+      const newPrice =
+        productDetails.mrpOfProduct -
+        (productDetails.mrpOfProduct * percentage) / 100;
+      if (newPrice > 0)
+        updatedSellingTypes[index] = {
+          ...updatedSellingTypes[index],
+          price: newPrice,
+        };
+
+      setSellingTypes(updatedSellingTypes);
+    }
+  };
+  const handlePercentageChange = (index, value) => {
+    // We update the value while the user types, but delay the price update until `onBlur`
+    changePercentageMRPSelling(index, value);
+  };
   return (
     <Card mb={{ base: '0px', '2xl': '20px' }}>
       <Button colorScheme="blue" onClick={handleOpen}>
@@ -161,12 +183,12 @@ export default function Projects(props) {
               </FormControl>
             </Grid>
             <Grid>
-              <FormLabel>Select Expiry Date</FormLabel>
+              <FormLabel>Select Expiry Date DD/MM/YYYY</FormLabel>
               <DatePicker
                 selected={expDate}
                 onChange={(date) => setExpDate(date)}
-                dateFormat="yyyy/MM/dd"
-                placeholderText="Select Expiry Date"
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select Expiry Date "
                 style={{ width: '100%' }}
                 minDate={new Date()}
                 className="custom-date-picker"
@@ -229,6 +251,32 @@ export default function Projects(props) {
                     }
                   />
                 </FormControl>
+                {productDetails?.mrpOfProduct &&
+                productDetails.mrpOfProduct !== 0 ? (
+                  <FormControl>
+                    <FormLabel>MRP Discount</FormLabel>
+                    <Input
+                      placeholder="MRP Percentage"
+                      size="lg"
+                      type="number"
+                      value={(
+                        (1 - sellingType.price / productDetails.mrpOfProduct) *
+                        100
+                      ).toFixed(2)}
+                      onChange={(e) =>
+                        handlePercentageChange(index, e.target.value)
+                      }
+                      onBlur={(e) =>
+                        changePercentageMRPSelling(
+                          index,
+                          Number(e.target.value),
+                        )
+                      }
+                    />
+                  </FormControl>
+                ) : (
+                  ''
+                )}
                 <FormControl>
                   <FormLabel>Selling Price</FormLabel>
                   <Input

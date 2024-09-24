@@ -410,7 +410,7 @@ export default function Marketplace() {
               />
             </FormControl>
             <br />
-            {filteredCustomers.length > 0 && (
+            {filteredCustomers && filteredCustomers.length > 0 && (
               <>
                 <FormControl>
                   <FormLabel>Select Existing Customer</FormLabel>

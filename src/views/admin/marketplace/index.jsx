@@ -167,11 +167,11 @@ export default function Marketplace() {
   };
   useEffect(() => {
     if (customerName) {
-      const matches = transaction.filter((cust) =>
+      const matches = transaction?.filter((cust) =>
         // cust.customerName
         //   .toLowerCase()
         //   .includes(customerName.toLowerCase()) ||
-        cust.phoneNumber.includes(phoneNumber),
+        cust?.phoneNumber?.includes(phoneNumber),
       );
       setFilteredCustomers(matches);
     } else {
@@ -180,11 +180,11 @@ export default function Marketplace() {
   }, [customerName]);
   useEffect(() => {
     if (phoneNumber) {
-      const matches = transaction.filter((cust) =>
+      const matches = transaction?.filter((cust) =>
         // cust.customerName
         //   .toLowerCase()
         //   .includes(customerName.toLowerCase()) ||
-        cust.phoneNumber.includes(phoneNumber),
+        cust?.phoneNumber?.includes(phoneNumber),
       );
       setFilteredCustomers(matches);
     } else {

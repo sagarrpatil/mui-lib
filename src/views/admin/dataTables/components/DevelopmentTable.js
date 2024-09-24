@@ -349,8 +349,8 @@ export default function ComplexTable(props) {
                             </thead>
                             <tbody>
                               {transactionData
-                                .find((x) => x.id === row.getValue('id'))
-                                .Cart.map((val) => (
+                                ?.find((x) => x.id === row.getValue('id'))
+                                .Cart?.map((val) => (
                                   <tr>
                                     <td>{val.name}</td>
                                     <td>{val.buyingQty}</td>

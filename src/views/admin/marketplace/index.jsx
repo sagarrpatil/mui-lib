@@ -211,7 +211,7 @@ export default function Marketplace() {
     setPartialPayment(0);
     onClose();
   };
-  const saveAndPrint = () => {
+  const saveAndPrint = (WA) => {
     const obj = {
       customerName: customerName,
       phoneNumber: phoneNumber,
@@ -229,6 +229,20 @@ export default function Marketplace() {
     };
     console.log(obj);
     saveAndBillApiCall(obj).then((response) => {
+      let receipt =
+        'https://reciept-chi.vercel.app/invoice/' +
+        localStorage.getItem('token') +
+        '/' +
+        response;
+      if (WA) {
+        window.open(
+          `https://api.whatsapp.com/send?phone=91${obj.phoneNumber}&text=${encodeURI(
+            `Thank You... Be Connected \n` + receipt,
+          )}`,
+        );
+      } else {
+        window.open(receipt);
+      }
       onCancelPopup();
       setCart([]);
       fetchAvailable();
@@ -296,27 +310,32 @@ export default function Marketplace() {
               className="mobileSellScroll"
             >
               {tableDataToSearch &&
-                tableDataToSearch.map((val) => (
-                  <div
-                    style={{ cursor: 'pointer' }}
-                    onClick={() =>
-                      (Cart.find((x) => x.id === val.id)?.buyingQty ===
-                        undefined ||
-                        Cart.find((x) => x.id === val.id)?.buyingQty <
-                          val.quantity) &&
-                      pushCartData(val)
-                    }
-                  >
-                    <NFT
-                      name={val.name}
-                      productValue={val.buyPrice}
-                      rateCard={val.sellingTypes}
-                      fav={val.fav}
-                      quantity={val.quantity}
-                      buyingQty={Cart.find((x) => x.id === val.id)?.buyingQty}
-                    />
-                  </div>
-                ))}
+                tableDataToSearch.map(
+                  (val) =>
+                    val.quantity > 0 && (
+                      <div
+                        style={{ cursor: 'pointer' }}
+                        onClick={() =>
+                          (Cart.find((x) => x.id === val.id)?.buyingQty ===
+                            undefined ||
+                            Cart.find((x) => x.id === val.id)?.buyingQty <
+                              val.quantity) &&
+                          pushCartData(val)
+                        }
+                      >
+                        <NFT
+                          name={val.name}
+                          productValue={val.buyPrice}
+                          rateCard={val.sellingTypes}
+                          fav={val.fav}
+                          quantity={val.quantity}
+                          buyingQty={
+                            Cart.find((x) => x.id === val.id)?.buyingQty
+                          }
+                        />
+                      </div>
+                    ),
+                )}
             </SimpleGrid>
           </Flex>
         </Flex>
@@ -636,6 +655,14 @@ export default function Marketplace() {
               onClick={() => saveAndPrint()}
             >
               Save & Print
+            </Button>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              isDisabled={!isFormValid()}
+              onClick={() => saveAndPrint('WA')}
+            >
+              Save & Share WhatsApp
             </Button>
             <Button onClick={onCancelPopup}>Cancel</Button>
           </ModalFooter>

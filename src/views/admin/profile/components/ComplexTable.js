@@ -24,6 +24,7 @@ import {
 // Custom components
 import Card from 'components/card/Card';
 import Menu from 'components/menu/MainMenu';
+import moment from 'moment';
 import * as React from 'react';
 // Assets
 import { MdCancel, MdCheckCircle, MdOutlineError } from 'react-icons/md';
@@ -93,6 +94,24 @@ export default function ComplexTable(props) {
       cell: (info) => (
         <Text color={textColor} fontSize="sm" fontWeight="700">
           ₹ {info.getValue()}
+        </Text>
+      ),
+    }),
+    columnHelper.accessor('expDate', {
+      id: 'expDate',
+      header: () => (
+        <Text
+          justifyContent="space-between"
+          align="center"
+          fontSize={{ sm: '10px', lg: '12px' }}
+          color="gray.400"
+        >
+          Product Expiry Date
+        </Text>
+      ),
+      cell: (info) => (
+        <Text color={textColor} fontSize="sm" fontWeight="700">
+          {moment(info.getValue()).format('MMM DD, YYYY')}
         </Text>
       ),
     }),

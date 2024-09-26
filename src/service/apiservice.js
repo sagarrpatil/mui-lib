@@ -47,9 +47,8 @@ export const saveAndBillApiCall = async (object) => {
     let dateNow = Date.now();
     const dataRefs = ref(realtimeDb, `${key}/transactions/${dateNow}`);
     object.Cart.map((val) => availableProductDeduction(val));
-    set(dataRefs, object).then((snapshot) => {
-      return snapshot;
-    });
+    set(dataRefs, object).then((snapshot) => {});
+    return dateNow;
   } catch (error) {
     console.error('Error fetching data:', error);
     return error;

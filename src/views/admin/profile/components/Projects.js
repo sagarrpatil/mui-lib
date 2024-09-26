@@ -50,6 +50,7 @@ export default function Projects(props) {
     setProductDetails({ name: '', quantity: '', buyPrice: '' });
     setSellingTypes([{ type: '', price: '' }]);
     setLike(false);
+    setExpDate('');
   };
 
   const updateSellingType = (index, field, value) => {
@@ -81,11 +82,13 @@ export default function Projects(props) {
     return false;
   };
   const saveProduct = () => {
+    const date = new Date(expDate);
+    const unixTimeExp = Math.floor(date.getTime());
     let obj = {
       ...productDetails,
       sellingTypes: sellingTypes,
       fav: like,
-      expDate: expDate,
+      expDate: unixTimeExp,
     };
     addInAvailableProduct(obj).then((response) => {
       props.fetchProductRefresh();

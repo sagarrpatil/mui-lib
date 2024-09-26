@@ -11,7 +11,7 @@ import {
   Tr,
   useColorModeValue,
   IconButton,
-  Progress,
+  Button,
   Collapse,
 } from '@chakra-ui/react';
 import {
@@ -225,27 +225,27 @@ export default function ComplexTable(props) {
           fontSize={{ sm: '10px', lg: '12px' }}
           color="gray.400"
         >
-          PROGRESS
+          Bill
         </Text>
       ),
       cell: (info) => (
         <Flex align="center">
-          <Progress
-            variant="table"
-            colorScheme="brandScheme"
-            h="8px"
-            w="63px"
-            value={
-              transactionData.find((x) => x.id === info.getValue()).balance ===
-              0
-                ? 100
-                : (transactionData.find((x) => x.id === info.getValue())
-                    .balance /
-                    transactionData.find((x) => x.id === info.getValue())
-                      .totalAmmount) *
-                  100
+          <Button
+            variant="darkBrand"
+            colorScheme="blue"
+            style={{ height: 20, fontSize: 12 }}
+            onClick={() =>
+              window.open(
+                'https://reciept-chi.vercel.app/invoice/' +
+                  localStorage.getItem('token') +
+                  '/' +
+                  info.getValue(),
+              )
             }
-          />
+          >
+            View Receipt
+          </Button>
+          {/* {} */}
         </Flex>
       ),
     }),

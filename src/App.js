@@ -11,7 +11,7 @@ import {
 import initialTheme from './theme/theme'; //  { themeGreen }
 import { useState } from 'react';
 import './App.css';
-// Chakra imports
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Main() {
   const [authCheck, setAuthCheck] = useState(localStorage.getItem('token'));

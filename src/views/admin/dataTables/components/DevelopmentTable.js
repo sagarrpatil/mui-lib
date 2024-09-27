@@ -13,6 +13,15 @@ import {
   IconButton,
   Button,
   Collapse,
+  Input,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormLabel,
 } from '@chakra-ui/react';
 import {
   createColumnHelper,
@@ -25,6 +34,8 @@ import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import Card from 'components/card/Card';
 import Menu from 'components/menu/MainMenu';
 import moment from 'moment';
+import { updateInAvailableDueBalance } from 'service/apiservice';
+import { ToastContainer, toast } from 'react-toastify';
 
 const columnHelper = createColumnHelper();
 
@@ -32,7 +43,8 @@ export default function ComplexTable(props) {
   const { transactionData } = props;
   const [sorting, setSorting] = React.useState([]);
   const [expandedRowIds, setExpandedRowIds] = React.useState([]);
-
+  const [balanceSet, setbalanceSet] = React.useState(0);
+  const [modalOpenDue, setModalOpenDue] = React.useState(null);
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const iconColor = useColorModeValue('secondaryGray.500', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
@@ -43,6 +55,10 @@ export default function ComplexTable(props) {
         ? prev.filter((id) => id !== rowId)
         : [...prev, rowId],
     );
+  };
+  const onClose = () => {
+    setModalOpenDue(null);
+    setbalanceSet(0);
   };
 
   const columns = [
@@ -57,9 +73,9 @@ export default function ComplexTable(props) {
             aria-label="Expand row"
             icon={
               isExpanded ? (
-                <ChevronUpIcon style={{ fontSize: 15 }} />
+                <ChevronUpIcon style={{ fontSize: 30 }} />
               ) : (
-                <ChevronDownIcon style={{ fontSize: 15 }} />
+                <ChevronDownIcon style={{ fontSize: 30 }} />
               )
             }
             onClick={() => handleRowToggle(rowId)} // Toggle row expansion
@@ -229,11 +245,11 @@ export default function ComplexTable(props) {
         </Text>
       ),
       cell: (info) => (
-        <Flex align="center">
+        <Flex align="center" justifyContent={'space-around'}>
           <Button
             variant="darkBrand"
             colorScheme="blue"
-            style={{ height: 20, fontSize: 12 }}
+            style={{ height: 25, fontSize: 12, padding: 15 }}
             onClick={() =>
               window.open(
                 'https://reciept-chi.vercel.app/invoice/' +
@@ -243,9 +259,28 @@ export default function ComplexTable(props) {
               )
             }
           >
-            View Receipt
+            Receipt
           </Button>
-          {/* {} */}
+          <div style={{ width: 5 }}></div>
+          <Button
+            variant="darkBrand"
+            colorScheme="blue"
+            style={{ height: 25, fontSize: 12, padding: 15 }}
+            onClick={() =>
+              window.open(
+                `https://api.whatsapp.com/send?phone=91${transactionData.find((x) => x.id === info.getValue()).phoneNumber}&text=${encodeURI(
+                  `Thank You... Be Connected \n Receipt of your order \n` +
+                    'https://reciept-chi.vercel.app/invoice/' +
+                    localStorage.getItem('token') +
+                    '/' +
+                    info.getValue(),
+                )}`,
+              )
+            }
+          >
+            Share <br />
+            Receipt
+          </Button>
         </Flex>
       ),
     }),
@@ -261,6 +296,23 @@ export default function ComplexTable(props) {
     debugTable: true,
   });
 
+  const updateDue = (updateDues) => {
+    let obj = { ...updateDues };
+    obj.balance = obj.balance - Number(balanceSet);
+    let partial = obj.partialPayment + Number(balanceSet) === obj.totalAmmount;
+    obj.partialPayment = partial ? 0 : obj.partialPayment + Number(balanceSet);
+
+    updateInAvailableDueBalance(obj, obj.id).then((response) => {
+      onClose();
+      toast(
+        'Due Balance Updated of Customer : ' +
+          updateDues.customerName +
+          ' Paid Amount: ' +
+          Number(balanceSet).toLocaleString(),
+      );
+      props.refreshTable();
+    });
+  };
   return (
     <Card
       flexDirection="column"
@@ -268,7 +320,8 @@ export default function ComplexTable(props) {
       px="0px"
       overflowX={{ sm: 'scroll', lg: 'hidden' }}
     >
-      <Flex px="25px" mb="8px" justifyContent="space-between" align="center">
+      <ToastContainer />
+      {/* <Flex px="25px" mb="8px" justifyContent="space-between" align="center">
         <Text
           color={textColor}
           fontSize="22px"
@@ -278,7 +331,7 @@ export default function ComplexTable(props) {
           Transaction
         </Text>
         <Menu />
-      </Flex>
+      </Flex> */}
       <Box>
         <Table variant="simple" color="gray.500" mb="24px" mt="12px">
           <Thead>
@@ -335,9 +388,20 @@ export default function ComplexTable(props) {
                   <Tr>
                     <Td colSpan={columns.length} p="0">
                       <Collapse in={isExpanded} animateOpacity>
-                        <Box p="10px" bg="gray.50" rounded="md" shadow="sm">
+                        <Box
+                          p="10px"
+                          bg="gray.50"
+                          rounded="md"
+                          shadow="sm"
+                          display={'flex'}
+                        >
                           <table
-                            style={{ width: '50%', borderCollapse: 'collapse' }}
+                            style={{
+                              width: '50%',
+                              borderCollapse: 'collapse',
+                              margin: 15,
+                              color: 'black',
+                            }}
                           >
                             <thead>
                               <tr style={{ textAlign: 'left' }}>
@@ -359,7 +423,61 @@ export default function ComplexTable(props) {
                                   </tr>
                                 ))}
                             </tbody>
+
+                            <tbody>
+                              {transactionData?.find(
+                                (x) => x.id === row.getValue('id'),
+                              ).checkedAddittional && (
+                                <tr>
+                                  <td></td>
+                                  <td></td>
+                                  <td>
+                                    {
+                                      transactionData?.find(
+                                        (x) => x.id === row.getValue('id'),
+                                      ).checkedAddittional.type
+                                    }
+                                  </td>
+                                  <td>
+                                    ₹{' '}
+                                    {
+                                      transactionData?.find(
+                                        (x) => x.id === row.getValue('id'),
+                                      ).checkedAddittional.amount
+                                    }
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
                           </table>
+                          {transactionData?.find(
+                            (x) => x.id === row.getValue('id'),
+                          ).balance > 0 && (
+                            <Button
+                              // variant="darkBrand"
+                              colorScheme="red"
+                              style={{
+                                height: 30,
+                                fontSize: 14,
+                                marginTop: 20,
+                              }}
+                              onClick={() => {
+                                setModalOpenDue({
+                                  id: row.getValue('id'),
+                                  ...transactionData?.find(
+                                    (x) => x.id === row.getValue('id'),
+                                  ),
+                                });
+                                setbalanceSet(
+                                  transactionData?.find(
+                                    (x) => x.id === row.getValue('id'),
+                                  ).balance,
+                                );
+                              }}
+                            >
+                              Update Balance or Due
+                            </Button>
+                          )}
                         </Box>
                       </Collapse>
                     </Td>
@@ -370,6 +488,56 @@ export default function ComplexTable(props) {
           </Tbody>
         </Table>
       </Box>
+      <Modal isOpen={modalOpenDue} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Balance Due Update</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody sx={{ paddingLeft: 10 }}>
+            {modalOpenDue && (
+              <ul>
+                <li>
+                  <b>Total Amount:</b>{' '}
+                  {modalOpenDue.totalAmmount.toLocaleString()}
+                </li>
+                <li style={{ color: 'green' }}>
+                  <b>Previous Amount:</b>{' '}
+                  {modalOpenDue.partialPayment.toLocaleString()}
+                </li>
+                <li style={{ color: 'tomato' }}>
+                  <b>Balance/Due Amount:</b>{' '}
+                  {modalOpenDue.balance.toLocaleString()}
+                </li>
+              </ul>
+            )}
+            <br />
+            <FormLabel>Balance / Due Payment</FormLabel>
+            <Input
+              placeholder="Balance / Due Payment"
+              value={balanceSet}
+              onChange={(e) => setbalanceSet(e.target.value)}
+              size="lg"
+              type="number"
+            />
+          </ModalBody>
+
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={() => updateDue(modalOpenDue)}
+              isDisabled={
+                !balanceSet ||
+                Number(balanceSet) <= 0 ||
+                Number(balanceSet) > modalOpenDue.balance
+              }
+            >
+              Update Due
+            </Button>
+            {/* <Button variant='ghost'>Secondary Action</Button> */}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Card>
   );
 }

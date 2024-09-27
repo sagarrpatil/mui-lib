@@ -103,3 +103,16 @@ export const fetchAvailableTransaction = async () => {
     throw error; // Re-throw the error for proper error handling
   }
 };
+export const updateInAvailableDueBalance = async (object, id) => {
+  try {
+    delete object.id;
+    console.log(object);
+    const dataRefs = ref(realtimeDb, `${key}/transactions/${id}`);
+    set(dataRefs, object).then((snapshot) => {
+      return snapshot;
+    });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return error;
+  }
+};

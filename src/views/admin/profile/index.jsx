@@ -16,7 +16,7 @@ import React, { useEffect, useState } from 'react';
 
 export default function Overview() {
   const [data, setData] = useState(null);
-
+  const [updateProduct, setUpdateProduct] = useState(null);
   useEffect(() => {
     fetchProduct();
   }, []);
@@ -26,7 +26,7 @@ export default function Overview() {
       setData(response);
     });
   };
-
+  console.log(updateProduct);
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
       <Grid
@@ -43,13 +43,18 @@ export default function Overview() {
         }}
         gap={{ base: '20px', xl: '20px' }}
       >
-        <Projects fetchProductRefresh={() => fetchProduct()} />
+        <Projects
+          fetchProductRefresh={() => fetchProduct()}
+          updateProduct={updateProduct}
+          closeUpdate={() => setUpdateProduct(null)}
+        />
       </Grid>
       <Grid>
         {data && (
           <ComplexTable
             columnsData={columnsDataComplex}
             tableData={data.reverse()}
+            updateProduct={(obj, id) => setUpdateProduct({ id, ...obj })}
           />
         )}
       </Grid>

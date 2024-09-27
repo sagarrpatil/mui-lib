@@ -42,6 +42,18 @@ export const addInAvailableProduct = async (object) => {
     return error;
   }
 };
+export const updateInAvailableProduct = async (object, id) => {
+  try {
+    console.log(object);
+    const dataRefs = ref(realtimeDb, `${key}/availableStock/${id}`);
+    set(dataRefs, object).then((snapshot) => {
+      return snapshot;
+    });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return error;
+  }
+};
 export const saveAndBillApiCall = async (object) => {
   try {
     let dateNow = Date.now();

@@ -249,6 +249,28 @@ export default function Marketplace() {
       fetchTransaction();
     });
   };
+  const mergeByPhoneNumber = (data) => {
+    const mergedData = {};
+
+    data.forEach((entry) => {
+      const phoneNumber = entry.phoneNumber;
+
+      if (!mergedData[phoneNumber]) {
+        mergedData[phoneNumber] = {
+          ...entry,
+          Cart: [...entry.Cart],
+          totalAmmount: entry.totalAmmount,
+        };
+      } else {
+        // Merge cart items and total amount
+        mergedData[phoneNumber].Cart.push(...entry.Cart);
+        mergedData[phoneNumber].totalAmmount += entry.totalAmmount;
+      }
+    });
+
+    return Object.values(mergedData);
+  };
+
   return (
     <Box pt={{ base: '93px', md: '46px', xl: '46px' }}>
       <Grid
@@ -437,7 +459,7 @@ export default function Marketplace() {
                     placeholder="Select Customer"
                     onChange={handleCustomerSelect}
                   >
-                    {filteredCustomers.map((cust) => (
+                    {mergeByPhoneNumber(filteredCustomers).map((cust) => (
                       <option key={cust.phoneNumber} value={cust.customerName}>
                         {cust.customerName} - {cust.phoneNumber}
                       </option>
@@ -472,7 +494,7 @@ export default function Marketplace() {
             </FormControl>
             <br />
             <FormControl>
-              <FormLabel>Receipter name</FormLabel>
+              <FormLabel>Receipter name / Notes</FormLabel>
               <Input
                 ref={initialRef}
                 placeholder="Receipter name"

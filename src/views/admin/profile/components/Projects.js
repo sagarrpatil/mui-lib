@@ -17,12 +17,15 @@ import {
   Icon,
 } from '@chakra-ui/react';
 import { IoHeart, IoHeartOutline } from 'react-icons/io5';
-import React from 'react';
+import React, { useEffect } from 'react';
 // Custom components
 import Card from 'components/card/Card.js';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { addInAvailableProduct } from '../../../../service/apiservice';
+import {
+  addInAvailableProduct,
+  updateInAvailableProduct,
+} from '../../../../service/apiservice';
 
 export default function Projects(props) {
   const [open, setOpen] = React.useState(false);
@@ -51,6 +54,7 @@ export default function Projects(props) {
     setSellingTypes([{ type: '', price: '' }]);
     setLike(false);
     setExpDate('');
+    props.closeUpdate();
   };
 
   const updateSellingType = (index, field, value) => {
@@ -90,10 +94,18 @@ export default function Projects(props) {
       fav: like,
       expDate: unixTimeExp,
     };
-    addInAvailableProduct(obj).then((response) => {
-      props.fetchProductRefresh();
-      handleClose();
-    });
+    if (props.updateProduct) {
+      let id = props.updateProduct.id;
+      updateInAvailableProduct(obj, id).then((response) => {
+        props.fetchProductRefresh();
+        handleClose();
+      });
+    } else {
+      addInAvailableProduct(obj).then((response) => {
+        props.fetchProductRefresh();
+        handleClose();
+      });
+    }
   };
 
   const changePercentageMRPSelling = (index, percentage) => {
@@ -117,16 +129,37 @@ export default function Projects(props) {
     // We update the value while the user types, but delay the price update until `onBlur`
     changePercentageMRPSelling(index, value);
   };
+  useEffect(() => {
+    let updateProduct = props.updateProduct;
+    if (updateProduct) {
+      let obj = {
+        name: updateProduct.name,
+        quantity: updateProduct.quantity,
+        buyPrice: updateProduct.buyPrice,
+        mrpOfProduct: updateProduct.mrpOfProduct,
+      };
+      setSellingTypes(updateProduct.sellingTypes);
+      setProductDetails(obj);
+      setExpDate(updateProduct.expDate);
+      setLike(updateProduct.fav);
+    }
+  }, [props.updateProduct]);
   return (
     <Card mb={{ base: '0px', '2xl': '20px' }}>
       <Button colorScheme="blue" onClick={handleOpen}>
         New Product
       </Button>
 
-      <Modal isOpen={open} onClose={handleClose} size={'lg'}>
+      <Modal
+        isOpen={open || props.updateProduct}
+        onClose={handleClose}
+        size={'lg'}
+      >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Add New Product</ModalHeader>
+          <ModalHeader>
+            {props.updateProduct ? 'Update New Product' : 'Add New Product'}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormLabel>Product Name</FormLabel>
@@ -327,7 +360,7 @@ export default function Projects(props) {
               onClick={() => saveProduct()}
               isDisabled={isSaveDisabled()}
             >
-              Save
+              {props.updateProduct ? 'Update' : 'Save'}
             </Button>
           </ModalFooter>
         </ModalContent>

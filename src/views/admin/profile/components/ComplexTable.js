@@ -2,6 +2,7 @@
 
 import {
   Box,
+  Button,
   Flex,
   Icon,
   Progress,
@@ -136,6 +137,35 @@ export default function ComplexTable(props) {
                 `${item.type.replace(/(^|\s)\S/g, (l) => l.toUpperCase())}: ₹ ${item.price}`,
             )
             .join(', ')}
+        </Text>
+      ),
+    }),
+    columnHelper.accessor('id', {
+      id: 'id',
+      header: () => (
+        <Text
+          justifyContent="space-between"
+          align="center"
+          fontSize={{ sm: '10px', lg: '12px' }}
+          color="gray.400"
+        >
+          Update
+        </Text>
+      ),
+      cell: (info) => (
+        <Text color={textColor} fontSize="sm" fontWeight="700">
+          <Button
+            colorScheme="blue"
+            onClick={() =>
+              props.updateProduct(
+                tableData.find((x) => x.id === info.getValue()),
+                info.getValue(),
+              )
+            }
+          >
+            UPDATE
+          </Button>
+          {}
         </Text>
       ),
     }),

@@ -1,4 +1,4 @@
-import { Box, Card, CardBody, SimpleGrid , Grid} from '@chakra-ui/react';
+import { Box, Card, CardBody, SimpleGrid, Grid } from '@chakra-ui/react';
 import DevelopmentTable from 'views/admin/dataTables/components/DevelopmentTable';
 import CheckTable from 'views/admin/dataTables/components/CheckTable';
 import ColumnsTable from 'views/admin/dataTables/components/ColumnsTable';
@@ -17,7 +17,6 @@ import React, { useEffect, useState } from 'react';
 import { fetchAvailableTransaction } from 'service/apiservice';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 
-
 export default function Settings() {
   const [transaction, setTransaction] = useState(null);
   useEffect(() => {
@@ -30,26 +29,28 @@ export default function Settings() {
   };
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
-     
       <SimpleGrid
         mb="20px"
         // columns={{ sm: 1, md: 2 }}
         spacing={{ base: '20px', xl: '20px' }}
       >
-    
-        
-        <Tabs width={"100%"}>
-        <Grid templateColumns='repeat(2, 1fr)' gap={2} display={"flex"}  position={"fixed"} zIndex={100} justifyContent={"space-between"}>
-          <TabList background={"#fff"}  >
-            <Tab>All Transaction</Tab>
-            <Tab>Balance / Dues</Tab>
-          </TabList>
-          <Card background={"#fff"}>
-          <CardBody>
-
-          </CardBody>
-        </Card> 
-        </Grid>
+        <Tabs width={'100%'}>
+          <Grid
+            templateColumns="repeat(2, 1fr)"
+            gap={2}
+            display={'flex'}
+            position={'fixed'}
+            zIndex={100}
+            justifyContent={'space-between'}
+          >
+            <TabList background={'#fff'}>
+              <Tab>All Transaction</Tab>
+              <Tab>Balance / Dues</Tab>
+            </TabList>
+            <Card background={'#fff'}>
+              <CardBody></CardBody>
+            </Card>
+          </Grid>
           <TabPanels paddingTop={50}>
             <TabPanel>
               {transaction && transaction.length > 0 ? (

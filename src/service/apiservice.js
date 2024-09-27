@@ -116,3 +116,9 @@ export const updateInAvailableDueBalance = async (object, id) => {
     return error;
   }
 };
+export const longformatDate = (parameter) => {
+  const date = new Date(parameter);
+  const unixTime = Math.floor(date.getTime());
+  if (parameter) return unixTime;
+  else return '';
+};

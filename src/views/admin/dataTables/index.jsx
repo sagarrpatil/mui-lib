@@ -1,4 +1,12 @@
-import { Box, Card, CardBody, SimpleGrid, Grid } from '@chakra-ui/react';
+import {
+  Box,
+  Card,
+  FormControl,
+  SimpleGrid,
+  Grid,
+  FormLabel,
+  Input,
+} from '@chakra-ui/react';
 import DevelopmentTable from 'views/admin/dataTables/components/DevelopmentTable';
 import CheckTable from 'views/admin/dataTables/components/CheckTable';
 import ColumnsTable from 'views/admin/dataTables/components/ColumnsTable';
@@ -18,6 +26,7 @@ import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 export default function Settings() {
   const [transaction, setTransaction] = useState(null);
   const [transactionFilter, setTransactionFilter] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [value, setValue] = useState({
     startDate: null,
     endDate: null,
@@ -39,11 +48,24 @@ export default function Settings() {
           parseInt(item.id) >= longformatDate(value.startDate) &&
           parseInt(item.id) <= longformatDate(value.endDate),
       );
+      // setPhoneNumber("")
       setTransactionFilter(filteredData);
     } else {
       setTransactionFilter(transaction);
     }
   }, [value]);
+
+  useEffect(() => {
+    if (phoneNumber && transaction) {
+      const matches = transaction?.filter((cust) =>
+        cust?.phoneNumber?.includes(phoneNumber),
+      );
+      setTransactionFilter(matches);
+    } else {
+      setTransactionFilter(transaction);
+    }
+  }, [phoneNumber]);
+  console.log('=====================', transactionFilter);
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
       <SimpleGrid
@@ -51,7 +73,7 @@ export default function Settings() {
         // columns={{ sm: 1, md: 2 }}
         spacing={{ base: '20px', xl: '20px' }}
       >
-        <Card zIndex={101} right={'10'} position={'fixed'}>
+        <Card zIndex={10} right={'10'} position={'fixed'}>
           <div
             style={{ display: 'flex', padding: 10, width: '60vw', height: 40 }}
           >
@@ -64,6 +86,7 @@ export default function Settings() {
                     .toLocaleString()}
               </b>
             </div>
+
             <div>
               Due Amount :{' '}
               <b>
@@ -73,8 +96,20 @@ export default function Settings() {
                     .toLocaleString()}
               </b>
             </div>
+            <div>
+              <FormControl ml={10} mt={-1.5}>
+                <Input
+                  placeholder="Search by Phone Number"
+                  type="number"
+                  maxLength={10}
+                  size="sm"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                />
+              </FormControl>
+            </div>
             <div
-              style={{ right: 0, position: 'absolute', top: 0, width: '40%' }}
+              style={{ right: 0, position: 'absolute', top: 0, width: '30%' }}
             >
               <Datepicker
                 value={value}
@@ -98,7 +133,7 @@ export default function Settings() {
               <Tab>Balance / Dues</Tab>
             </TabList>
           </Grid>
-          <TabPanels paddingTop={50}>
+          <TabPanels paddingTop={50} zIndex={2} position={'absolute'}>
             <TabPanel>
               {transactionFilter && transactionFilter.length > 0 ? (
                 <DevelopmentTable

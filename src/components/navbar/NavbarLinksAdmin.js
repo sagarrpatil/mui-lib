@@ -208,7 +208,8 @@ export default function HeaderLinks(props) {
               fontWeight="700"
               color={textColor}
             >
-              👋&nbsp; Hey, Pratik
+              👋 Hey{' '}
+              {atob(localStorage.getItem('token')).replace('@gmail.com', '')}
             </Text>
           </Flex>
           <Flex flexDirection="column" p="10px">

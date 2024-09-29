@@ -7,12 +7,14 @@ import {
   MdHome,
   MdLock,
   MdOutlineShoppingCart,
+  MdExpandCircleDown,
 } from 'react-icons/md';
 
 // Admin Imports
 import MainDashboard from 'views/admin/default';
 import SellOrder from 'views/admin/marketplace';
 import Profile from 'views/admin/profile';
+import Expense from 'views/admin/Expense';
 import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
 
@@ -65,11 +67,18 @@ const routes = [
     component: <Profile />,
   },
   {
-    name: 'Sign Out',
-    layout: '/auth',
-    path: '/sign-in',
-    icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-    component: <SignInCentered />,
+    name: 'Expenses',
+    layout: '/admin',
+    path: '/Expense',
+    icon: (
+      <Icon
+        as={MdExpandCircleDown}
+        width="20px"
+        height="20px"
+        color="inherit"
+      />
+    ),
+    component: <Expense />,
   },
 ];
 

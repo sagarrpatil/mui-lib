@@ -22,6 +22,7 @@ import Datepicker from 'react-tailwindcss-datepicker';
 import React, { useEffect, useState } from 'react';
 import { fetchAvailableTransaction, longformatDate } from 'service/apiservice';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
+import moment from 'moment';
 
 export default function Settings() {
   const [transaction, setTransaction] = useState(null);
@@ -45,8 +46,10 @@ export default function Settings() {
     if (value.startDate && value.endDate) {
       const filteredData = transaction.filter(
         (item) =>
-          parseInt(item.id) >= longformatDate(value.startDate) &&
-          parseInt(item.id) <= longformatDate(value.endDate),
+          parseInt(item.id) >=
+            longformatDate(moment(value.startDate).startOf('day').format()) &&
+          parseInt(item.id) <=
+            longformatDate(moment(value.endDate).endOf('day').format()),
       );
       // setPhoneNumber("")
       setTransactionFilter(filteredData);

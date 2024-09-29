@@ -136,11 +136,7 @@ export default function UserReports() {
           name="Earnings"
           value={'₹ ' + transactionTotalAmount}
         />
-        <MiniStatistics
-          name="Spend this month"
-          value="₹ 0"
-          growth="Work in porgress"
-        />
+
         <MiniStatistics
           name="Overall Total Balance / Due"
           value={'₹ ' + trancactionDue}
@@ -152,6 +148,11 @@ export default function UserReports() {
         <MiniStatistics
           name="Recieved Amount"
           value={'₹ ' + trancactionReceivedAmount}
+        />
+        <MiniStatistics
+          name="Spend this month"
+          value="₹ 0"
+          growth="Work in porgress"
         />
       </SimpleGrid>
 

@@ -327,39 +327,42 @@ export default function Marketplace() {
                 </Link>
               </Flex>
             </Flex>
-            <SimpleGrid
-              columns={{ base: 1, md: 3 }}
-              gap="20px"
-              className="mobileSellScroll"
-            >
-              {tableDataToSearch &&
-                tableDataToSearch.map(
-                  (val) =>
-                    val.quantity > 0 && (
-                      <div
-                        style={{ cursor: 'pointer' }}
-                        onClick={() =>
-                          (Cart.find((x) => x.id === val.id)?.buyingQty ===
-                            undefined ||
-                            Cart.find((x) => x.id === val.id)?.buyingQty <
-                              val.quantity) &&
-                          pushCartData(val)
-                        }
-                      >
-                        <NFT
-                          name={val.name}
-                          productValue={val.buyPrice}
-                          rateCard={val.sellingTypes}
-                          fav={val.fav}
-                          quantity={val.quantity}
-                          buyingQty={
-                            Cart.find((x) => x.id === val.id)?.buyingQty
+            <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              <SimpleGrid
+                columns={{ base: 1, md: 3 }}
+                gap="20px"
+                className="mobileSellScroll"
+              >
+                {tableDataToSearch &&
+                  tableDataToSearch.map(
+                    (val) =>
+                      val.quantity > 0 && (
+                        <div
+                          style={{ cursor: 'pointer' }}
+                          onClick={() =>
+                            (Cart.find((x) => x.id === val.id)?.buyingQty ===
+                              undefined ||
+                              Cart.find((x) => x.id === val.id)?.buyingQty <
+                                val.quantity) &&
+                            pushCartData(val)
                           }
-                        />
-                      </div>
-                    ),
-                )}
-            </SimpleGrid>
+                        >
+                          <NFT
+                            name={val.name}
+                            productValue={val.buyPrice}
+                            rateCard={val.sellingTypes}
+                            fav={val.fav}
+                            quantity={val.quantity}
+                            data={val}
+                            buyingQty={
+                              Cart.find((x) => x.id === val.id)?.buyingQty
+                            }
+                          />
+                        </div>
+                      ),
+                  )}
+              </SimpleGrid>
+            </div>
           </Flex>
         </Flex>
         <Flex

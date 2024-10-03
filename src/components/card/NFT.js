@@ -13,12 +13,14 @@ import {
 } from '@chakra-ui/react';
 // Custom components
 import Card from 'components/card/Card.js';
+import moment from 'moment';
 // Assets
 import React, { useState } from 'react';
 import { IoHeart, IoHeartOutline } from 'react-icons/io5';
 
 export default function NFT(props) {
-  const { fav, name, productValue, quantity, buyingQty, rateCard } = props;
+  const { fav, name, productValue, quantity, buyingQty, rateCard, data } =
+    props;
   const [like, setLike] = useState(fav);
   const outofStock = buyingQty >= quantity;
   const textColor = useColorModeValue('navy.700', 'white');
@@ -83,7 +85,7 @@ export default function NFT(props) {
                 fontWeight="bold"
                 me="14px"
               >
-                {name}
+                {name + (data.flavour ? ` (${data.flavour})` : '')}
               </Text>
 
               {rateCard.map((val) => (
@@ -100,6 +102,21 @@ export default function NFT(props) {
               ))}
             </Flex>
           </Flex>
+
+          {data.expDate && (
+            <Text
+              color="secondaryGray.600"
+              fontSize={{
+                base: 'sm',
+              }}
+              fontWeight="500"
+              me="14px"
+            >
+              <hr />
+              EXP Date: {moment(data.expDate).format('MMM YYYY')}
+              <hr />
+            </Text>
+          )}
           <Flex
             align="start"
             justify="space-between"

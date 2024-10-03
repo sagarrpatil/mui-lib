@@ -334,158 +334,160 @@ export default function ComplexTable(props) {
       </Flex> */}
       <Box>
         <Table variant="simple" color="gray.500" mb="24px" mt="12px">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    pe="10px"
-                    borderColor={borderColor}
-                    cursor="pointer"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <Flex
-                      justifyContent="space-between"
-                      align="center"
-                      fontSize={{ sm: '10px', lg: '12px' }}
-                      color="gray.400"
+          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <Thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Th
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      pe="10px"
+                      borderColor={borderColor}
+                      cursor="pointer"
+                      onClick={header.column.getToggleSortingHandler()}
                     >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {{ asc: '', desc: '' }[header.column.getIsSorted()] ??
-                        null}
-                    </Flex>
-                  </Th>
-                ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => {
-              const isExpanded = expandedRowIds.includes(row.id);
-              return (
-                <React.Fragment key={row.id}>
-                  <Tr>
-                    {row.getVisibleCells().map((cell) => (
-                      <Td
-                        key={cell.id}
-                        fontSize={{ sm: '14px' }}
-                        minW={{ sm: '150px', md: '200px', lg: 'auto' }}
-                        borderColor="transparent"
+                      <Flex
+                        justifyContent="space-between"
+                        align="center"
+                        fontSize={{ sm: '10px', lg: '12px' }}
+                        color="gray.400"
                       >
                         {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
+                          header.column.columnDef.header,
+                          header.getContext(),
                         )}
-                      </Td>
-                    ))}
-                  </Tr>
-                  {/* Expanded row content */}
-                  <Tr>
-                    <Td colSpan={columns.length} p="0">
-                      <Collapse in={isExpanded} animateOpacity>
-                        <Box
-                          p="10px"
-                          bg="gray.50"
-                          rounded="md"
-                          shadow="sm"
-                          display={'flex'}
+                        {{ asc: '', desc: '' }[header.column.getIsSorted()] ??
+                          null}
+                      </Flex>
+                    </Th>
+                  ))}
+                </Tr>
+              ))}
+            </Thead>
+            <Tbody>
+              {table.getRowModel().rows.map((row) => {
+                const isExpanded = expandedRowIds.includes(row.id);
+                return (
+                  <React.Fragment key={row.id}>
+                    <Tr>
+                      {row.getVisibleCells().map((cell) => (
+                        <Td
+                          key={cell.id}
+                          fontSize={{ sm: '14px' }}
+                          minW={{ sm: '150px', md: '200px', lg: 'auto' }}
+                          borderColor="transparent"
                         >
-                          <table
-                            style={{
-                              width: '50%',
-                              borderCollapse: 'collapse',
-                              margin: 15,
-                              color: 'black',
-                            }}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </Td>
+                      ))}
+                    </Tr>
+                    {/* Expanded row content */}
+                    <Tr>
+                      <Td colSpan={columns.length} p="0">
+                        <Collapse in={isExpanded} animateOpacity>
+                          <Box
+                            p="10px"
+                            bg="gray.50"
+                            rounded="md"
+                            shadow="sm"
+                            display={'flex'}
                           >
-                            <thead>
-                              <tr style={{ textAlign: 'left' }}>
-                                <th>Product</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Amount</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {transactionData
-                                ?.find((x) => x.id === row.getValue('id'))
-                                .Cart?.map((val) => (
-                                  <tr>
-                                    <td>{val.name}</td>
-                                    <td>{val.buyingQty}</td>
-                                    <td>₹ {val.sellPrice}</td>
-                                    <td>₹ {val.buyingQty * val.sellPrice}</td>
-                                  </tr>
-                                ))}
-                            </tbody>
-
-                            <tbody>
-                              {transactionData?.find(
-                                (x) => x.id === row.getValue('id'),
-                              ).checkedAddittional && (
-                                <tr>
-                                  <td></td>
-                                  <td></td>
-                                  <td>
-                                    {
-                                      transactionData?.find(
-                                        (x) => x.id === row.getValue('id'),
-                                      ).checkedAddittional.type
-                                    }
-                                  </td>
-                                  <td>
-                                    ₹{' '}
-                                    {
-                                      transactionData?.find(
-                                        (x) => x.id === row.getValue('id'),
-                                      ).checkedAddittional.amount
-                                    }
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                          {transactionData?.find(
-                            (x) => x.id === row.getValue('id'),
-                          ).balance > 0 && (
-                            <Button
-                              // variant="darkBrand"
-                              colorScheme="red"
+                            <table
                               style={{
-                                height: 30,
-                                fontSize: 14,
-                                marginTop: 20,
-                              }}
-                              onClick={() => {
-                                setModalOpenDue({
-                                  id: row.getValue('id'),
-                                  ...transactionData?.find(
-                                    (x) => x.id === row.getValue('id'),
-                                  ),
-                                });
-                                setbalanceSet(
-                                  transactionData?.find(
-                                    (x) => x.id === row.getValue('id'),
-                                  ).balance,
-                                );
+                                width: '50%',
+                                borderCollapse: 'collapse',
+                                margin: 15,
+                                color: 'black',
                               }}
                             >
-                              Update Balance or Due
-                            </Button>
-                          )}
-                        </Box>
-                      </Collapse>
-                    </Td>
-                  </Tr>
-                </React.Fragment>
-              );
-            })}
-          </Tbody>
+                              <thead>
+                                <tr style={{ textAlign: 'left' }}>
+                                  <th>Product</th>
+                                  <th>Qty</th>
+                                  <th>Price</th>
+                                  <th>Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {transactionData
+                                  ?.find((x) => x.id === row.getValue('id'))
+                                  .Cart?.map((val) => (
+                                    <tr>
+                                      <td>{val.name}</td>
+                                      <td>{val.buyingQty}</td>
+                                      <td>₹ {val.sellPrice}</td>
+                                      <td>₹ {val.buyingQty * val.sellPrice}</td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+
+                              <tbody>
+                                {transactionData?.find(
+                                  (x) => x.id === row.getValue('id'),
+                                ).checkedAddittional && (
+                                  <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                      {
+                                        transactionData?.find(
+                                          (x) => x.id === row.getValue('id'),
+                                        ).checkedAddittional.type
+                                      }
+                                    </td>
+                                    <td>
+                                      ₹{' '}
+                                      {
+                                        transactionData?.find(
+                                          (x) => x.id === row.getValue('id'),
+                                        ).checkedAddittional.amount
+                                      }
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                            {transactionData?.find(
+                              (x) => x.id === row.getValue('id'),
+                            ).balance > 0 && (
+                              <Button
+                                // variant="darkBrand"
+                                colorScheme="red"
+                                style={{
+                                  height: 30,
+                                  fontSize: 14,
+                                  marginTop: 20,
+                                }}
+                                onClick={() => {
+                                  setModalOpenDue({
+                                    id: row.getValue('id'),
+                                    ...transactionData?.find(
+                                      (x) => x.id === row.getValue('id'),
+                                    ),
+                                  });
+                                  setbalanceSet(
+                                    transactionData?.find(
+                                      (x) => x.id === row.getValue('id'),
+                                    ).balance,
+                                  );
+                                }}
+                              >
+                                Update Balance or Due
+                              </Button>
+                            )}
+                          </Box>
+                        </Collapse>
+                      </Td>
+                    </Tr>
+                  </React.Fragment>
+                );
+              })}
+            </Tbody>
+          </div>
         </Table>
       </Box>
       <Modal isOpen={modalOpenDue} onClose={onClose}>

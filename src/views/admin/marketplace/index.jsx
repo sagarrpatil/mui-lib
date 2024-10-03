@@ -229,7 +229,7 @@ export default function Marketplace() {
     };
     console.log(obj);
     saveAndBillApiCall(obj).then((response) => {
-      let receipt = encodeURI(
+      let receipt = encodeURIComponent(
         'https://reciept-chi.vercel.app/invoice/' +
           localStorage.getItem('token') +
           '/' +
@@ -237,7 +237,7 @@ export default function Marketplace() {
       );
       if (WA) {
         window.open(
-          `https://api.whatsapp.com/send?phone=91${obj.phoneNumber}&text=${encodeURI(
+          `https://api.whatsapp.com/send?phone=91${obj.phoneNumber}&text=${encodeURIComponent(
             `Thank You... Be Connected \n` + receipt,
           )}`,
         );

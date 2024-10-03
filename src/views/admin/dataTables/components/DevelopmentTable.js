@@ -268,12 +268,12 @@ export default function ComplexTable(props) {
             style={{ height: 25, fontSize: 12, padding: 15 }}
             onClick={() =>
               window.open(
-                `https://api.whatsapp.com/send?phone=91${transactionData.find((x) => x.id === info.getValue()).phoneNumber}&text=${encodeURI(
+                `https://api.whatsapp.com/send?phone=91${transactionData.find((x) => x.id === info.getValue()).phoneNumber}&text=${encodeURIComponent(
                   `Thank You... Be Connected \n Receipt of your order \n` +
-                  encodeURI( 'https://reciept-chi.vercel.app/invoice/' +
+                    'https://reciept-chi.vercel.app/invoice/' +
                     localStorage.getItem('token') +
                     '/' +
-                    info.getValue()),
+                    info.getValue(),
                 )}`,
               )
             }

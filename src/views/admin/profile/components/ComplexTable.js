@@ -61,7 +61,28 @@ export default function ComplexTable(props) {
         </Flex>
       ),
     }),
-
+    columnHelper.accessor('flavour', {
+      id: 'flavour',
+      header: () => (
+        <Text
+          justifyContent="space-between"
+          align="center"
+          fontSize={{ sm: '10px', lg: '12px' }}
+          color="gray.400"
+        >
+          Flavour
+        </Text>
+      ),
+      cell: (info) => (
+        <Flex align="center">
+          <Text color={textColor} fontSize="sm" fontWeight="700">
+            {info.getValue()
+              ? info.getValue().replace(/(^|\s)\S/g, (l) => l.toUpperCase())
+              : ''}
+          </Text>
+        </Flex>
+      ),
+    }),
     columnHelper.accessor('quantity', {
       id: 'quantity',
       header: () => (

@@ -1,4 +1,3 @@
-// Chakra imports
 import {
   Grid,
   Text,
@@ -17,8 +16,7 @@ import {
   Icon,
 } from '@chakra-ui/react';
 import { IoHeart, IoHeartOutline } from 'react-icons/io5';
-import React, { useEffect } from 'react';
-// Custom components
+import React, { useEffect, useRef } from 'react';
 import Card from 'components/card/Card.js';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -30,7 +28,8 @@ import {
 export default function Projects(props) {
   const [open, setOpen] = React.useState(false);
   const [sellingTypes, setSellingTypes] = React.useState([
-    { type: '', price: '' },
+    { type: 'Trainer', price: '' },
+    { type: 'Customer', price: '' },
   ]);
   const [like, setLike] = React.useState(false);
   const [productDetails, setProductDetails] = React.useState({
@@ -38,6 +37,7 @@ export default function Projects(props) {
     quantity: '',
     buyPrice: '',
     mrpOfProduct: '',
+    flavour: '',
   });
   const [expDate, setExpDate] = React.useState('');
   const textColorPrimary = useColorModeValue('secondaryGray.900', 'white');
@@ -51,7 +51,10 @@ export default function Projects(props) {
   const handleClose = () => {
     setOpen(false);
     setProductDetails({ name: '', quantity: '', buyPrice: '' });
-    setSellingTypes([{ type: '', price: '' }]);
+    setSellingTypes([
+      { type: 'Trainer', price: '' },
+      { type: 'Customer', price: '' },
+    ]);
     setLike(false);
     setExpDate('');
     props.closeUpdate();
@@ -76,6 +79,7 @@ export default function Projects(props) {
   const handleProductDetailChange = (field, value) => {
     setProductDetails((prev) => ({ ...prev, [field]: value }));
   };
+
   const isSaveDisabled = () => {
     const { name, quantity, buyPrice, mrpOfProduct } = productDetails;
     if (!name || !quantity || !buyPrice || !expDate || !mrpOfProduct)
@@ -85,6 +89,7 @@ export default function Projects(props) {
     }
     return false;
   };
+
   const saveProduct = () => {
     const date = new Date(expDate);
     const unixTimeExp = Math.floor(date.getTime());
@@ -112,23 +117,23 @@ export default function Projects(props) {
     let updatedSellingTypes = [...sellingTypes];
 
     if (percentage >= 0 && productDetails.mrpOfProduct) {
-      // Calculate the new price based on the MRP and percentage
       const newPrice =
         productDetails.mrpOfProduct -
         (productDetails.mrpOfProduct * percentage) / 100;
       if (newPrice > 0)
         updatedSellingTypes[index] = {
           ...updatedSellingTypes[index],
-          price: newPrice,
+          price: newPrice > 0 ? Number(newPrice).toFixed(2) : 0,
         };
 
       setSellingTypes(updatedSellingTypes);
     }
   };
+
   const handlePercentageChange = (index, value) => {
-    // We update the value while the user types, but delay the price update until `onBlur`
     changePercentageMRPSelling(index, value);
   };
+
   useEffect(() => {
     let updateProduct = props.updateProduct;
     if (updateProduct) {
@@ -144,6 +149,39 @@ export default function Projects(props) {
       setLike(updateProduct.fav);
     }
   }, [props.updateProduct]);
+
+  // References for navigation
+  const nameInputRef = useRef(null);
+  const flavourtRef = useRef(null);
+  const quantityInputRef = useRef(null);
+  const buyPriceInputRef = useRef(null);
+  const mrpInputRef = useRef(null);
+  const expDateInputRef = useRef(null);
+
+  const handleKeyDown = (e, currentRef) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      if (currentRef === nameInputRef?.current) {
+        flavourtRef?.current?.focus();
+      } else if (currentRef === flavourtRef.current) {
+        quantityInputRef?.current?.focus();
+      } else if (currentRef === quantityInputRef.current) {
+        buyPriceInputRef?.current?.focus();
+      } else if (currentRef === buyPriceInputRef.current) {
+        mrpInputRef?.current?.focus();
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      if (currentRef === mrpInputRef.current) {
+        buyPriceInputRef?.current?.focus();
+      } else if (currentRef === buyPriceInputRef.current) {
+        quantityInputRef?.current?.focus();
+      } else if (currentRef === quantityInputRef.current) {
+        flavourtRef?.current?.focus();
+      } else if (currentRef === flavourtRef.current) {
+        nameInputRef?.current?.focus();
+      }
+    }
+  };
+
   return (
     <Card mb={{ base: '0px', '2xl': '20px' }}>
       <Button colorScheme="blue" onClick={handleOpen}>
@@ -164,33 +202,56 @@ export default function Projects(props) {
           <ModalBody>
             <FormLabel>Product Name</FormLabel>
             <Input
+              ref={nameInputRef}
               placeholder="Product Name"
               size="lg"
               value={productDetails.name}
               onChange={(e) =>
-                handleProductDetailChange(
-                  'name',
-                  e.target.value.replace(/(^|\s)\S/g, (l) => l.toUpperCase()),
-                )
+                handleProductDetailChange('name', e.target.value)
               }
+              onKeyDown={(e) => handleKeyDown(e, nameInputRef.current)}
               mb={4}
             />
-            <FormLabel>Quantity</FormLabel>
-            <Input
-              placeholder="Quantity"
-              size="lg"
-              type="number"
-              value={productDetails.quantity}
-              onChange={(e) =>
-                handleProductDetailChange('quantity', Number(e.target.value))
-              }
-              mb={4}
-            />
+            <Grid templateColumns="repeat(2, 1fr)" gap={5} mb={4}>
+              <FormControl>
+                <FormLabel>Flavour</FormLabel>
+                <Input
+                  ref={flavourtRef}
+                  placeholder="Flavour"
+                  size="lg"
+                  value={productDetails.flavour}
+                  onChange={(e) =>
+                    handleProductDetailChange('flavour', e.target.value)
+                  }
+                  onKeyDown={(e) => handleKeyDown(e, flavourtRef.current)}
+                  mb={4}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Quantity</FormLabel>
+                <Input
+                  ref={quantityInputRef}
+                  placeholder="Quantity"
+                  size="lg"
+                  type="number"
+                  value={productDetails.quantity}
+                  onChange={(e) =>
+                    handleProductDetailChange(
+                      'quantity',
+                      Number(e.target.value),
+                    )
+                  }
+                  onKeyDown={(e) => handleKeyDown(e, quantityInputRef.current)}
+                  mb={4}
+                />
+              </FormControl>
+            </Grid>
 
             <Grid templateColumns="repeat(2, 1fr)" gap={5} mb={4}>
               <FormControl>
                 <FormLabel>Buying/quantity</FormLabel>
                 <Input
+                  ref={buyPriceInputRef}
                   placeholder="Buying Price per quantity"
                   size="lg"
                   type="number"
@@ -198,12 +259,14 @@ export default function Projects(props) {
                   onChange={(e) =>
                     handleProductDetailChange('buyPrice', e.target.value)
                   }
+                  onKeyDown={(e) => handleKeyDown(e, buyPriceInputRef.current)}
                   mb={4}
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>MRP of Product</FormLabel>
                 <Input
+                  ref={mrpInputRef}
                   placeholder="MRP of Product"
                   size="lg"
                   type="number"
@@ -214,6 +277,7 @@ export default function Projects(props) {
                       Number(e.target.value),
                     )
                   }
+                  onKeyDown={(e) => handleKeyDown(e, mrpInputRef.current)}
                   mb={4}
                 />
               </FormControl>
@@ -221,13 +285,15 @@ export default function Projects(props) {
             <Grid>
               <FormLabel>Select Expiry Date DD/MM/YYYY</FormLabel>
               <DatePicker
+                ref={expDateInputRef}
                 selected={expDate}
                 onChange={(date) => setExpDate(date)}
                 dateFormat="dd/MM/yyyy"
-                placeholderText="Select Expiry Date "
+                placeholderText="Select Expiry Date"
                 style={{ width: '100%' }}
                 minDate={new Date()}
                 className="custom-date-picker"
+                onKeyDown={(e) => handleKeyDown(e, expDateInputRef.current)}
               />
             </Grid>
             <br />
@@ -298,7 +364,7 @@ export default function Projects(props) {
                       value={(
                         (1 - sellingType.price / productDetails.mrpOfProduct) *
                         100
-                      ).toFixed(2)}
+                      ).toFixed(0)}
                       onChange={(e) =>
                         handlePercentageChange(index, e.target.value)
                       }

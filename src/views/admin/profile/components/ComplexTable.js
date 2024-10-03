@@ -223,45 +223,44 @@ export default function ComplexTable(props) {
       </Flex>
       <Box>
         <Table variant="simple" color="gray.500" mb="24px" mt="12px">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <Th
-                      key={header.id}
-                      colSpan={header.colSpan}
-                      pe="10px"
-                      borderColor={borderColor}
-                      cursor="pointer"
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      <Flex
-                        justifyContent="space-between"
-                        align="center"
-                        fontSize={{ sm: '10px', lg: '12px' }}
-                        color="gray.400"
+          <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+            <Thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <Th
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        pe="10px"
+                        borderColor={borderColor}
+                        cursor="pointer"
+                        onClick={header.column.getToggleSortingHandler()}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                        {{
-                          asc: '',
-                          desc: '',
-                        }[header.column.getIsSorted()] ?? null}
-                      </Flex>
-                    </Th>
-                  );
-                })}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table
-              .getRowModel()
-              .rows.slice(0, 11)
-              .map((row) => {
+                        <Flex
+                          justifyContent="space-between"
+                          align="center"
+                          fontSize={{ sm: '10px', lg: '12px' }}
+                          color="gray.400"
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          {{
+                            asc: '',
+                            desc: '',
+                          }[header.column.getIsSorted()] ?? null}
+                        </Flex>
+                      </Th>
+                    );
+                  })}
+                </Tr>
+              ))}
+            </Thead>
+
+            <Tbody overflowX="scroll">
+              {table.getRowModel().rows.map((row) => {
                 return (
                   <Tr key={row.id}>
                     {row.getVisibleCells().map((cell) => {
@@ -282,7 +281,8 @@ export default function ComplexTable(props) {
                   </Tr>
                 );
               })}
-          </Tbody>
+            </Tbody>
+          </div>
         </Table>
       </Box>
     </Card>

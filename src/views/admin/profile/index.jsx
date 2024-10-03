@@ -23,6 +23,7 @@ export default function Overview() {
   const fetchProduct = () => {
     setData(null);
     fetchAvailableProduct().then((response) => {
+      console.log(response);
       setData(response);
     });
   };

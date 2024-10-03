@@ -270,10 +270,10 @@ export default function ComplexTable(props) {
               window.open(
                 `https://api.whatsapp.com/send?phone=91${transactionData.find((x) => x.id === info.getValue()).phoneNumber}&text=${encodeURI(
                   `Thank You... Be Connected \n Receipt of your order \n` +
-                    'https://reciept-chi.vercel.app/invoice/' +
+                  encodeURI( 'https://reciept-chi.vercel.app/invoice/' +
                     localStorage.getItem('token') +
                     '/' +
-                    info.getValue(),
+                    info.getValue()),
                 )}`,
               )
             }

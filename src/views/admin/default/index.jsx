@@ -97,13 +97,33 @@ export default function UserReports() {
         .toLocaleString()
     : 0;
   const totalQuantity = AvailbleStock
-    ? AvailbleStock.reduce((total, item) => total + item.quantity, 0)
+    ? AvailbleStock?.reduce((total, item) => total + item.quantity, 0)
     : 0;
   const totalCostAvailbleStock = AvailbleStock
-    ? AvailbleStock.reduce((total, item) => {
+    ? AvailbleStock?.reduce((total, item) => {
         return total + item.quantity * parseFloat(item.buyPrice);
       }, 0)
     : 0;
+  const totalBuyingQty = transactionFilter?.reduce((total, item) => {
+    return (
+      total + item.Cart.reduce((sum, cartItem) => sum + cartItem.buyingQty, 0)
+    );
+  }, 0);
+
+  let totalBuyingCost = 0;
+  let totalSellingRevenue = 0;
+
+  transactionFilter?.forEach((item) => {
+    item?.Cart?.forEach((cartItem) => {
+      totalBuyingCost += parseFloat(cartItem.buyPrice) * cartItem.buyingQty;
+      totalSellingRevenue +=
+        parseFloat(cartItem.sellPrice) * cartItem.buyingQty;
+    });
+  });
+  const totalProfit = Number(totalSellingRevenue - totalBuyingCost).toFixed(2);
+
+  const profitPercentage = (totalProfit / totalBuyingCost) * 100;
+
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
       <SimpleGrid
@@ -122,20 +142,7 @@ export default function UserReports() {
         gap="20px"
         mb="20px"
       >
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w="56px"
-              h="56px"
-              bg={boxBg}
-              icon={
-                <Icon w="32px" h="32px" as={MdBarChart} color={brandColor} />
-              }
-            />
-          }
-          name="Earnings"
-          value={'₹ ' + transactionTotalAmount}
-        />
+        <MiniStatistics name="Earnings" value={'₹ ' + transactionTotalAmount} />
 
         <MiniStatistics
           name="Overall Total Balance / Due"
@@ -150,10 +157,11 @@ export default function UserReports() {
           value={'₹ ' + trancactionReceivedAmount}
         />
         <MiniStatistics
-          name="Spend this month"
-          value="₹ 0"
-          growth="Work in porgress"
+          name="Profit Buy / Sell"
+          value={'₹ ' + Number(totalProfit).toLocaleString()}
+          growth={'Percent: ' + Number(profitPercentage).toFixed(2) + '%'}
         />
+        <MiniStatistics name="Stock Qty Sell" value={totalBuyingQty} />
       </SimpleGrid>
 
       <SimpleGrid mt={4} mb={2}>

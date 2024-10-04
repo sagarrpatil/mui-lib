@@ -192,8 +192,8 @@ export default function ComplexTable(props) {
         </Flex>
       ),
     }),
-    columnHelper.accessor('partialPayment', {
-      id: 'partialPayment',
+    columnHelper.accessor('id', {
+      id: 'id',
       header: () => (
         <Text
           justifyContent="space-between"
@@ -207,7 +207,13 @@ export default function ComplexTable(props) {
       cell: (info) => (
         <Flex align="center">
           <Text color={textColor} fontSize="sm" fontWeight="700">
-            {info.getValue() === 0 ? 'Full Payment' : '₹' + info.getValue()}
+            {transactionData.find((x) => x.id === info.getValue()).balance === 0
+              ? 'Full Payment'
+              : '₹' +
+                (transactionData.find((x) => x.id === info.getValue())
+                  .totalAmmount -
+                  transactionData.find((x) => x.id === info.getValue())
+                    .balance)}
           </Text>
         </Flex>
       ),

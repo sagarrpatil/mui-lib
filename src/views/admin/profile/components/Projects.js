@@ -141,6 +141,7 @@ export default function Projects(props) {
         name: updateProduct.name,
         quantity: updateProduct.quantity,
         buyPrice: updateProduct.buyPrice,
+        flavour: updateProduct.flavour,
         mrpOfProduct: updateProduct.mrpOfProduct,
       };
       setSellingTypes(updateProduct.sellingTypes);
@@ -183,7 +184,7 @@ export default function Projects(props) {
   };
 
   return (
-    <Card mb={{ base: '0px', '2xl': '20px' }}>
+    <>
       <Button colorScheme="blue" onClick={handleOpen}>
         New Product
       </Button>
@@ -421,6 +422,9 @@ export default function Projects(props) {
             ))}
           </ModalBody>
           <ModalFooter>
+            <Button onClick={handleClose} style={{ marginRight: 10 }}>
+              Close
+            </Button>
             <Button
               colorScheme="blue"
               onClick={() => saveProduct()}
@@ -431,6 +435,6 @@ export default function Projects(props) {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Card>
+    </>
   );
 }

@@ -30,8 +30,9 @@ import {
   RadioGroup,
   Stack,
   Checkbox,
+  Icon,
 } from '@chakra-ui/react';
-
+import { EditIcon } from '@chakra-ui/icons';
 import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
 import NFT from 'components/card/NFT';
 import Card from 'components/card/Card.js';
@@ -42,6 +43,7 @@ import {
   saveAndBillApiCall,
   fetchAvailableTransaction,
 } from 'service/apiservice';
+import Projects from '../profile/components/Projects';
 
 export default function Marketplace() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -61,9 +63,27 @@ export default function Marketplace() {
   const [paymentOption, setPaymentOption] = useState('');
   const [transaction, setTransaction] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [updateProduct, setUpdateProduct] = useState(null);
+  const [showupdateBtn, setShowupdateBtn] = useState(false);
+  const [filterSet, setFilter] = useState('Available Stock');
+  const [indexProduct, setIndexProduct] = useState(0);
+  useEffect(() => {
+    if (filterSet === 'Available Stock') {
+      setIndexProduct(0);
+    }
+    if (filterSet === 'Favorite') {
+      setIndexProduct(0);
+    }
+  }, [filterSet]);
   useEffect(() => {
     setPartialPayment(0);
   }, [paymentMode]);
+  useEffect(() => {
+    if (updateProduct === null) {
+      setTableData(null);
+      fetchAvailable();
+    }
+  }, [updateProduct]);
   useEffect(() => {
     fetchAvailable();
     fetchTransaction();
@@ -309,10 +329,40 @@ export default function Marketplace() {
                 <Link
                   color={textColorBrand}
                   fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                  to="#art"
+                  me={{ base: '34px', md: '30px' }}
+                  onClick={() => setFilter('Available Stock')}
                 >
                   Available Stock
+                </Link>
+                <Link
+                  color={textColorBrand}
+                  fontWeight="500"
+                  me={{ base: '34px', md: '30px' }}
+                  onClick={() => setFilter('Favorite')}
+                >
+                  Favorite
+                </Link>
+                <Link
+                  color={textColorBrand}
+                  fontWeight="500"
+                  me={{ base: '34px', md: '20px' }}
+                  onClick={() => setFilter('Out of Stock')}
+                >
+                  Out of Stock
+                </Link>
+                <Link
+                  color={textColorBrand}
+                  fontWeight="500"
+                  me={{ base: '20px', md: '10px' }}
+                  to="#music"
+                >
+                  <Projects
+                    fetchProductRefresh={() => fetchAvailable()}
+                    updateProduct={updateProduct}
+                    closeUpdate={() => {
+                      setUpdateProduct(null);
+                    }}
+                  />
                 </Link>
                 <Link
                   color={textColorBrand}
@@ -320,7 +370,9 @@ export default function Marketplace() {
                   me={{ base: '34px', md: '44px' }}
                   to="#music"
                 >
-                  Favorite
+                  <Button onClick={() => setShowupdateBtn((prev) => !prev)}>
+                    {showupdateBtn ? 'Close Update' : 'Update'}
+                  </Button>
                 </Link>
               </Flex>
             </Flex>
@@ -333,28 +385,46 @@ export default function Marketplace() {
                 {tableDataToSearch &&
                   tableDataToSearch.map(
                     (val) =>
-                      val.quantity > 0 && (
-                        <div
-                          style={{ cursor: 'pointer' }}
-                          onClick={() =>
-                            (Cart.find((x) => x.id === val.id)?.buyingQty ===
-                              undefined ||
-                              Cart.find((x) => x.id === val.id)?.buyingQty <
-                                val.quantity) &&
-                            pushCartData(val)
-                          }
-                        >
-                          <NFT
-                            name={val.name}
-                            productValue={val.buyPrice}
-                            rateCard={val.sellingTypes}
-                            fav={val.fav}
-                            quantity={val.quantity}
-                            data={val}
-                            buyingQty={
-                              Cart.find((x) => x.id === val.id)?.buyingQty
+                      ((val.quantity > indexProduct &&
+                        filterSet === 'Available Stock') ||
+                        (filterSet === 'Out of Stock' && val.quantity === 0) ||
+                        (filterSet === 'Favorite' && val.fav)) && (
+                        <div>
+                          <div
+                            style={{ cursor: 'pointer' }}
+                            onClick={() =>
+                              (Cart.find((x) => x.id === val.id)?.buyingQty ===
+                                undefined ||
+                                Cart.find((x) => x.id === val.id)?.buyingQty <
+                                  val.quantity) &&
+                              pushCartData(val)
                             }
-                          />
+                          >
+                            <NFT
+                              name={val.name}
+                              productValue={val.buyPrice}
+                              rateCard={val.sellingTypes}
+                              fav={val.fav}
+                              quantity={val.quantity}
+                              data={val}
+                              buyingQty={
+                                Cart.find((x) => x.id === val.id)?.buyingQty
+                              }
+                            />
+                          </div>
+                          {showupdateBtn && (
+                            <div
+                              style={{
+                                padding: 10,
+                                background: '#fff',
+                                borderRadius: 20,
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => setUpdateProduct({ ...val })}
+                            >
+                              Edit : <Icon as={EditIcon} />
+                            </div>
+                          )}
                         </div>
                       ),
                   )}

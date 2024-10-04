@@ -59,13 +59,13 @@ const routes = [
   //   icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
   //   component: <></>,
   // },
-  {
-    name: 'Store Management',
-    layout: '/admin',
-    path: '/profile',
-    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-    component: <Profile />,
-  },
+  // {
+  //   name: 'Store Management',
+  //   layout: '/admin',
+  //   path: '/profile',
+  //   icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+  //   component: <Profile />,
+  // },
   {
     name: 'Expenses',
     layout: '/admin',

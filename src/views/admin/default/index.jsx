@@ -161,7 +161,7 @@ export default function UserReports() {
           value={'₹ ' + Number(totalProfit).toLocaleString()}
           growth={'Percent: ' + Number(profitPercentage).toFixed(2) + '%'}
         />
-        <MiniStatistics name="Stock Qty Sell" value={totalBuyingQty} />
+        <MiniStatistics name="Stock Qty Sell" value={totalBuyingQty || 0} />
       </SimpleGrid>
 
       <SimpleGrid mt={4} mb={2}>

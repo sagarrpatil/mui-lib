@@ -1,4 +1,4 @@
-const CACHE_NAME = "0.0.18";
+const CACHE_NAME = "0.0.19";
 const STATIC_CACHE_URLS = ["/", "/index.html", "/manifest.json", /* Add other static asset URLs */];
 
 this.self.addEventListener("install", (event) => {

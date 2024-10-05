@@ -57,10 +57,10 @@ const ExpenseTracker = () => {
         (item) =>
           parseInt(item.date) >=
             longformatDate(
-              moment(valueDate.startDate).startOf('month').format(),
+              moment(valueDate.startDate).startOf('day').format(),
             ) &&
           parseInt(item.date) <=
-            longformatDate(moment(valueDate.endDate).endOf('month').format()),
+            longformatDate(moment(valueDate.endDate).endOf('day').format()),
       );
       if (valueDate?.startDate) {
         setExpensesFilter(filteredData);

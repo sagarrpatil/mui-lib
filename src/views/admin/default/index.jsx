@@ -34,7 +34,11 @@ import {
   columnsDataComplex,
 } from 'views/admin/default/variables/columnsData';
 import moment from 'moment';
-import { fetchAvailableTransaction, longformatDate } from 'service/apiservice';
+import {
+  fetchAvailableTransaction,
+  longformatDate,
+  fetchExpenseIn,
+} from 'service/apiservice';
 import { fetchAvailableProduct } from 'service/apiservice';
 
 export default function UserReports() {
@@ -42,6 +46,7 @@ export default function UserReports() {
   const [AvailbleStock, setAvailbleStock] = useState(null);
   const [transactionFilter, setTransactionFilter] = useState(null);
   const brandColor = useColorModeValue('brand.500', 'white');
+  const [expensesfilter, setExpensesFilter] = useState([]);
   const boxBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
   let dateDefault = {
     startDate: moment().startOf('day').format(),
@@ -53,9 +58,27 @@ export default function UserReports() {
       setAvailbleStock(response);
     });
   }, []);
+
   useEffect(() => {
     fetchAvailable();
+    fetchExpense();
   }, [valueDate]);
+
+  const fetchExpense = () => {
+    fetchExpenseIn().then((response) => {
+      const filteredData = response?.filter(
+        (item) =>
+          parseInt(item.date) >=
+            longformatDate(
+              moment(valueDate.startDate).startOf('day').format(),
+            ) &&
+          parseInt(item.date) <=
+            longformatDate(moment(valueDate.endDate).endOf('day').format()),
+      );
+      setExpensesFilter(filteredData);
+    });
+  };
+
   const fetchAvailable = () => {
     fetchAvailableTransaction().then((response) => {
       setTransaction(response);
@@ -124,6 +147,13 @@ export default function UserReports() {
 
   const profitPercentage = (totalProfit / totalBuyingCost) * 100;
 
+  const totalAmountExpense = expensesfilter
+    ? expensesfilter?.reduce(
+        (accumulator, current) => accumulator + current.amount,
+        0,
+      )
+    : 0;
+
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
       <SimpleGrid
@@ -159,9 +189,14 @@ export default function UserReports() {
         <MiniStatistics
           name="Profit Buy / Sell"
           value={'₹ ' + Number(totalProfit).toLocaleString()}
-          growth={'Percent: ' + Number(profitPercentage).toFixed(2) + '%'}
+          growth={
+            'Percent: ' +
+            (profitPercentage ? Number(profitPercentage).toFixed(2) : 0) +
+            '%'
+          }
         />
         <MiniStatistics name="Stock Qty Sell" value={totalBuyingQty || 0} />
+        <MiniStatistics name="Expenses" value={'₹ ' + totalAmountExpense} />
       </SimpleGrid>
 
       <SimpleGrid mt={4} mb={2}>

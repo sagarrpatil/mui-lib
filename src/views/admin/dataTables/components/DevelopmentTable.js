@@ -23,6 +23,7 @@ import {
   ModalCloseButton,
   FormLabel,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 import {
   createColumnHelper,
   flexRender,
@@ -41,6 +42,7 @@ const columnHelper = createColumnHelper();
 
 export default function ComplexTable(props) {
   const { transactionData } = props;
+  const navigate = useNavigate();
   const [sorting, setSorting] = React.useState([]);
   const [expandedRowIds, setExpandedRowIds] = React.useState([]);
   const [balanceSet, setbalanceSet] = React.useState(0);
@@ -274,13 +276,13 @@ export default function ComplexTable(props) {
             style={{ height: 25, fontSize: 12, padding: 15 }}
             onClick={() =>
               window.open(
-                `https://api.whatsapp.com/send?phone=91${transactionData.find((x) => x.id === info.getValue()).phoneNumber}&text=${encodeURIComponent(
+                `https://api.whatsapp.com/send?phone=91${transactionData.find((x) => x.id === info.getValue()).phoneNumber}&text=${
                   `Thank You... Be Connected \n Receipt of your order \n` +
-                    'https://reciept-chi.vercel.app/invoice/' +
-                    localStorage.getItem('token') +
-                    '/' +
-                    info.getValue(),
-                )}`,
+                  'https://reciept-chi.vercel.app/invoice/' +
+                  localStorage.getItem('token') +
+                  '/' +
+                  info.getValue()
+                }`,
               )
             }
           >
@@ -485,6 +487,30 @@ export default function ComplexTable(props) {
                                 Update Balance or Due
                               </Button>
                             )}
+                            <Button
+                              // variant="darkBrand"
+                              colorScheme="blue"
+                              style={{
+                                height: 30,
+                                fontSize: 14,
+                                marginTop: 20,
+                                marginLeft: 10,
+                              }}
+                              isDisabled={true}
+                              onClick={() => {
+                                let obj = JSON.stringify({
+                                  id: row.getValue('id'),
+                                  ...transactionData?.find(
+                                    (x) => x.id === row.getValue('id'),
+                                  ),
+                                });
+                                navigate(
+                                  '/admin/sell-marketplace?update=' + btoa(obj),
+                                );
+                              }}
+                            >
+                              Edit Details
+                            </Button>
                           </Box>
                         </Collapse>
                       </Td>
@@ -542,7 +568,6 @@ export default function ComplexTable(props) {
             >
               Update Due
             </Button>
-            {/* <Button variant='ghost'>Secondary Action</Button> */}
           </ModalFooter>
         </ModalContent>
       </Modal>

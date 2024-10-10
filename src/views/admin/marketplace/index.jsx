@@ -44,9 +44,11 @@ import {
   fetchAvailableTransaction,
 } from 'service/apiservice';
 import Projects from '../profile/components/Projects';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Marketplace() {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [searchParams] = useSearchParams();
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
   const textColor = useColorModeValue('secondaryGray.900', 'white');
@@ -67,6 +69,26 @@ export default function Marketplace() {
   const [showupdateBtn, setShowupdateBtn] = useState(false);
   const [filterSet, setFilter] = useState('Available Stock');
   const [indexProduct, setIndexProduct] = useState(0);
+
+  const [updateID, setUpdateID] = useState(null);
+
+  useEffect(() => {
+    const updateParam = searchParams.get('update');
+    if (updateParam) {
+      let updateData = JSON.parse(atob(updateParam));
+      console.log('Update parameter:', updateData);
+      setCart(updateData.Cart);
+      setPaymentMode(updateData.paymentMode);
+      setPartialPayment(updateData.partialPayment);
+      setcheckedAddittional(updateData.checkedAddittional);
+      setPhoneNumber(updateData.phoneNumber);
+      setCustomerName(updateData.customerName);
+      setReceipterName(updateData.receipterName);
+      setPaymentOption(updateData.paymentOption);
+      setUpdateID(updateData.id);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (filterSet === 'Available Stock') {
       setIndexProduct(0);
@@ -251,7 +273,9 @@ export default function Marketplace() {
     saveAndBillApiCall(obj).then((response) => {
       let receipt =
         'https://reciept-chi.vercel.app/invoice/' +
-        encodeURIComponent(localStorage.getItem('token') + '/' + response);
+        localStorage.getItem('token') +
+        '/' +
+        response;
       if (WA) {
         window.open(
           `https://api.whatsapp.com/send?phone=91${obj.phoneNumber}&text=${encodeURIComponent(
@@ -740,25 +764,40 @@ export default function Marketplace() {
             </Accordion>
           </ModalBody>
 
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              mr={3}
-              isDisabled={!isFormValid()}
-              onClick={() => saveAndPrint()}
-            >
-              Save & Print
-            </Button>
-            <Button
-              colorScheme="blue"
-              mr={3}
-              isDisabled={!isFormValid()}
-              onClick={() => saveAndPrint('WA')}
-            >
-              Save & Share WhatsApp
-            </Button>
-            <Button onClick={onCancelPopup}>Cancel</Button>
-          </ModalFooter>
+          {updateID ? (
+            <ModalFooter>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                isDisabled={!isFormValid()}
+                //  onClick={() => saveAndPrint()}
+              >
+                Update
+              </Button>
+
+              <Button onClick={onCancelPopup}>Cancel</Button>
+            </ModalFooter>
+          ) : (
+            <ModalFooter>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                isDisabled={!isFormValid()}
+                onClick={() => saveAndPrint()}
+              >
+                Save & Print
+              </Button>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                isDisabled={!isFormValid()}
+                onClick={() => saveAndPrint('WA')}
+              >
+                Save & Share WhatsApp
+              </Button>
+              <Button onClick={onCancelPopup}>Cancel</Button>
+            </ModalFooter>
+          )}
         </ModalContent>
       </Modal>
     </Box>

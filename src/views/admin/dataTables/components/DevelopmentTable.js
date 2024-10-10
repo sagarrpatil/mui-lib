@@ -38,6 +38,8 @@ import moment from 'moment';
 import {
   updateInAvailableDueBalance,
   deleteAvailableDueBalance,
+  fetchAvailableProductbyID,
+  updateInAvailableProductbyIDPutBack,
 } from 'service/apiservice';
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -326,14 +328,22 @@ export default function ComplexTable(props) {
     });
   };
   const deletedConfirmation = (obj) => {
-    let object = obj;
+    let object = JSON.parse(JSON.stringify(obj));
     object.totalAmmount = 0;
     object.paymentOption = '';
     object.partialPayment = 0;
     object.balance = 0;
-    console.log(obj, object);
+    setisDelete(null);
+    obj.Cart.map((val) => {
+      fetchAvailableProductbyID(val.id).then((response) => {
+        let datafromResponse = response;
+        datafromResponse.quantity =
+          Number(response.quantity) + Number(val.buyingQty);
+        updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
+      });
+    });
+
     deleteAvailableDueBalance(object, obj.id).then((response) => {
-      setisDelete(null);
       props.refreshTable();
     });
   };
@@ -557,11 +567,11 @@ export default function ComplexTable(props) {
           <ModalCloseButton />
           {isDelete && (
             <ModalBody>
-              Name of Customer: {isDelete.customerName}
+              Name of Customer: <b>{isDelete.customerName}</b>
               <br />
-              Phone Number of Customer: {isDelete.phoneNumber}
+              Phone Number of Customer: <b>{isDelete.phoneNumber}</b>
               <br />
-              Total Amount: {isDelete.totalAmmount}
+              Total Amount: <b>{isDelete.totalAmmount}</b>
             </ModalBody>
           )}
 
@@ -573,7 +583,7 @@ export default function ComplexTable(props) {
               colorScheme="green"
               onClick={() => deletedConfirmation(isDelete)}
             >
-              Confirm Delete
+              Confirm Delete & Put Back in Stock
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -35,7 +35,10 @@ import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import Card from 'components/card/Card';
 import Menu from 'components/menu/MainMenu';
 import moment from 'moment';
-import { updateInAvailableDueBalance } from 'service/apiservice';
+import {
+  updateInAvailableDueBalance,
+  deleteAvailableDueBalance,
+} from 'service/apiservice';
 import { ToastContainer, toast } from 'react-toastify';
 
 const columnHelper = createColumnHelper();
@@ -50,7 +53,8 @@ export default function ComplexTable(props) {
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const iconColor = useColorModeValue('secondaryGray.500', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
-
+  const [isDelete, setisDelete] = React.useState(null);
+  const finalRef = React.useRef(null);
   const handleRowToggle = (rowId) => {
     setExpandedRowIds((prev) =>
       prev.includes(rowId)
@@ -321,6 +325,18 @@ export default function ComplexTable(props) {
       props.refreshTable();
     });
   };
+  const deletedConfirmation = (obj) => {
+    let object = obj;
+    object.totalAmmount = 0;
+    object.paymentOption = '';
+    object.partialPayment = 0;
+    object.balance = 0;
+    console.log(obj, object);
+    deleteAvailableDueBalance(object, obj.id).then((response) => {
+      setisDelete(null);
+      props.refreshTable();
+    });
+  };
   return (
     <Card
       flexDirection="column"
@@ -496,20 +512,27 @@ export default function ComplexTable(props) {
                                 marginTop: 20,
                                 marginLeft: 10,
                               }}
-                              isDisabled={true}
+                              // isDisabled={true}
                               onClick={() => {
-                                let obj = JSON.stringify({
+                                // let obj = JSON.stringify({
+                                //   id: row.getValue('id'),
+                                //   ...transactionData?.find(
+                                //     (x) => x.id === row.getValue('id'),
+                                //   ),
+                                // });
+                                // navigate(
+                                //   '/admin/sell-marketplace?update=' + btoa(obj),
+                                // );
+                                let obj = {
                                   id: row.getValue('id'),
                                   ...transactionData?.find(
                                     (x) => x.id === row.getValue('id'),
                                   ),
-                                });
-                                navigate(
-                                  '/admin/sell-marketplace?update=' + btoa(obj),
-                                );
+                                };
+                                setisDelete(obj);
                               }}
                             >
-                              Edit Details
+                              Delete Transaction
                             </Button>
                           </Box>
                         </Collapse>
@@ -522,6 +545,40 @@ export default function ComplexTable(props) {
           </div>
         </Table>
       </Box>
+
+      <Modal
+        finalFocusRef={finalRef}
+        isOpen={isDelete}
+        onClose={() => setisDelete(null)}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Delete below Transaction</ModalHeader>
+          <ModalCloseButton />
+          {isDelete && (
+            <ModalBody>
+              Name of Customer: {isDelete.customerName}
+              <br />
+              Phone Number of Customer: {isDelete.phoneNumber}
+              <br />
+              Total Amount: {isDelete.totalAmmount}
+            </ModalBody>
+          )}
+
+          <ModalFooter>
+            <Button colorScheme="red" mr={3} onClick={() => setisDelete(null)}>
+              Close
+            </Button>
+            <Button
+              colorScheme="green"
+              onClick={() => deletedConfirmation(isDelete)}
+            >
+              Confirm Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       <Modal isOpen={modalOpenDue} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>

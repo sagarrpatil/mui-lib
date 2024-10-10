@@ -140,7 +140,9 @@ export default function Settings() {
             <TabPanel>
               {transactionFilter && transactionFilter.length > 0 ? (
                 <DevelopmentTable
-                  transactionData={transactionFilter.reverse()}
+                  transactionData={transactionFilter
+                    .filter((x) => x.totalAmmount !== 0)
+                    .reverse()}
                   columnsData={columnsDataDevelopment}
                   tableData={tableDataDevelopment}
                   refreshTable={() => fetchAvailable()}
@@ -156,7 +158,7 @@ export default function Settings() {
               transactionFilter.filter((x) => x.balance > 0).length > 0 ? (
                 <DevelopmentTable
                   transactionData={transactionFilter
-                    .filter((x) => x.balance > 0)
+                    .filter((x) => x.balance > 0 && x.totalAmmount !== 0)
                     .reverse()}
                   columnsData={columnsDataDevelopment}
                   tableData={tableDataDevelopment}

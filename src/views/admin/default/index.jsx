@@ -33,6 +33,7 @@ import {
   columnsDataCheck,
   columnsDataComplex,
 } from 'views/admin/default/variables/columnsData';
+import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import {
   fetchAvailableTransaction,
@@ -52,6 +53,7 @@ export default function UserReports() {
     startDate: moment().startOf('day').format(),
     endDate: moment().endOf('day').format(),
   };
+  const navigate = useNavigate();
   const [valueDate, setDateValue] = useState(dateDefault);
   useEffect(() => {
     fetchAvailableProduct().then((response) => {
@@ -172,31 +174,53 @@ export default function UserReports() {
         gap="20px"
         mb="20px"
       >
-        <MiniStatistics name="Earnings" value={'₹ ' + transactionTotalAmount} />
-
-        <MiniStatistics
-          name="Overall Total Balance / Due"
-          value={'₹ ' + trancactionDue}
-        />
-        <MiniStatistics
-          name="Filter Balance / Due"
-          value={'₹ ' + trancactionDueFilter}
-        />
-        <MiniStatistics
-          name="Recieved Amount"
-          value={'₹ ' + trancactionReceivedAmount}
-        />
-        <MiniStatistics
-          name="Profit Buy / Sell"
-          value={'₹ ' + Number(totalProfit).toLocaleString()}
-          growth={
-            'Percent: ' +
-            (profitPercentage ? Number(profitPercentage).toFixed(2) : 0) +
-            '%'
-          }
-        />
-        <MiniStatistics name="Stock Qty Sell" value={totalBuyingQty || 0} />
-        <MiniStatistics name="Expenses" value={'₹ ' + totalAmountExpense} />
+        <div>
+          <MiniStatistics
+            name="Earnings"
+            value={'₹ ' + transactionTotalAmount}
+          />
+        </div>
+        <div
+          style={{ cursor: 'pointer', padding: 0 }}
+          onClick={() => navigate('/admin/transaction?balance=true')}
+        >
+          <MiniStatistics
+            name="Overall Total Balance / Due"
+            value={'₹ ' + trancactionDue}
+          />
+        </div>
+        <div
+          style={{ cursor: 'pointer', padding: 0 }}
+          onClick={() => navigate('/admin/transaction?balance=true')}
+        >
+          <MiniStatistics
+            name="Filter Balance / Due"
+            value={'₹ ' + trancactionDueFilter}
+          />
+        </div>
+        <div>
+          <MiniStatistics
+            name="Recieved Amount"
+            value={'₹ ' + trancactionReceivedAmount}
+          />
+        </div>
+        <div>
+          <MiniStatistics
+            name="Profit Buy / Sell"
+            value={'₹ ' + Number(totalProfit).toLocaleString()}
+            growth={
+              'Percent: ' +
+              (profitPercentage ? Number(profitPercentage).toFixed(2) : 0) +
+              '%'
+            }
+          />
+        </div>
+        <div>
+          <MiniStatistics name="Stock Qty Sell" value={totalBuyingQty || 0} />
+        </div>
+        <div>
+          <MiniStatistics name="Expenses" value={'₹ ' + totalAmountExpense} />
+        </div>
       </SimpleGrid>
 
       <SimpleGrid mt={4} mb={2}>

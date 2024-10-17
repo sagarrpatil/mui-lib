@@ -22,6 +22,12 @@ import {
   ModalBody,
   ModalCloseButton,
   FormLabel,
+  FormControl,
+  Select,
+  Checkbox,
+  RadioGroup,
+  Stack,
+  Radio,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -56,6 +62,7 @@ export default function ComplexTable(props) {
   const iconColor = useColorModeValue('secondaryGray.500', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   const [isDelete, setisDelete] = React.useState(null);
+  const [isUpdate, setiisUpdate] = React.useState(null);
   const finalRef = React.useRef(null);
   const handleRowToggle = (rowId) => {
     setExpandedRowIds((prev) =>
@@ -63,6 +70,31 @@ export default function ComplexTable(props) {
         ? prev.filter((id) => id !== rowId)
         : [...prev, rowId],
     );
+  };
+  const isFormValid = () => {
+    if (
+      !isUpdate?.phoneNumber ||
+      !isUpdate?.customerName ||
+      !isUpdate?.paymentMode ||
+      !isUpdate?.receipterName ||
+      !isUpdate?.paymentOption
+    ) {
+      return false;
+    }
+    if (
+      isUpdate.checkedAddittional &&
+      (!isUpdate.checkedAddittional.type || !isUpdate.checkedAddittional.amount)
+    ) {
+      return false;
+    }
+    if (
+      isUpdate.paymentMode === 'Partial Payment' &&
+      (!isUpdate.partialPayment ||
+        isUpdate.partialPayment > isUpdate.totalAmmount)
+    ) {
+      return false;
+    }
+    return true;
   };
   const onClose = () => {
     setModalOpenDue(null);
@@ -347,6 +379,38 @@ export default function ComplexTable(props) {
       props.refreshTable();
     });
   };
+  const onChangeUpdateText = (val, state) => {
+    let obj = {
+      ...isUpdate,
+    };
+    obj[state] = val;
+    setiisUpdate(obj);
+    console.log('===================', obj);
+  };
+  const updateDetails = (obj) => {
+    let totalAmount = obj.Cart.reduce((acc, item) => {
+      return acc + Number(item.sellPrice) * Number(item.buyingQty);
+    }, 0);
+    if (obj.checkedAddittional) {
+      totalAmount += Number(obj.checkedAddittional.amount);
+    }
+    obj.totalAmmount = totalAmount;
+    obj.balance =
+      obj.paymentMode === 'Partial Payment'
+        ? totalAmount - Number(obj.partialPayment)
+        : 0;
+    setiisUpdate(null);
+    deleteAvailableDueBalance(obj, obj.id).then(() => {
+      props.refreshTable();
+    });
+  };
+  const datePickup = (id) => {
+    return moment(Number(id)).isBetween(
+      moment().subtract(1, 'days'),
+      moment().add(15, 'days'),
+    );
+  };
+
   return (
     <Card
       flexDirection="column"
@@ -490,7 +554,7 @@ export default function ComplexTable(props) {
                             ).balance > 0 && (
                               <Button
                                 // variant="darkBrand"
-                                colorScheme="red"
+                                colorScheme="green"
                                 style={{
                                   height: 30,
                                   fontSize: 14,
@@ -513,37 +577,55 @@ export default function ComplexTable(props) {
                                 Update Balance or Due
                               </Button>
                             )}
-                            <Button
-                              // variant="darkBrand"
-                              colorScheme="blue"
-                              style={{
-                                height: 30,
-                                fontSize: 14,
-                                marginTop: 20,
-                                marginLeft: 10,
-                              }}
-                              // isDisabled={true}
-                              onClick={() => {
-                                // let obj = JSON.stringify({
-                                //   id: row.getValue('id'),
-                                //   ...transactionData?.find(
-                                //     (x) => x.id === row.getValue('id'),
-                                //   ),
-                                // });
-                                // navigate(
-                                //   '/admin/sell-marketplace?update=' + btoa(obj),
-                                // );
-                                let obj = {
-                                  id: row.getValue('id'),
-                                  ...transactionData?.find(
-                                    (x) => x.id === row.getValue('id'),
-                                  ),
-                                };
-                                setisDelete(obj);
-                              }}
-                            >
-                              Delete Transaction
-                            </Button>
+
+                            {datePickup(row.getValue('id')) && (
+                              <Button
+                                colorScheme="blue"
+                                style={{
+                                  height: 30,
+                                  fontSize: 14,
+                                  marginTop: 20,
+                                  marginLeft: 10,
+                                }}
+                                // isDisabled={true}
+                                onClick={() => {
+                                  let obj = {
+                                    id: row.getValue('id'),
+                                    ...transactionData?.find(
+                                      (x) => x.id === row.getValue('id'),
+                                    ),
+                                  };
+                                  console.log(obj);
+                                  setiisUpdate(obj);
+                                }}
+                              >
+                                Edit Transaction
+                              </Button>
+                            )}
+
+                            {datePickup(row.getValue('id')) && (
+                              <Button
+                                colorScheme="red"
+                                style={{
+                                  height: 30,
+                                  fontSize: 14,
+                                  marginTop: 20,
+                                  marginLeft: 10,
+                                }}
+                                // isDisabled={true}
+                                onClick={() => {
+                                  let obj = {
+                                    id: row.getValue('id'),
+                                    ...transactionData?.find(
+                                      (x) => x.id === row.getValue('id'),
+                                    ),
+                                  };
+                                  setisDelete(obj);
+                                }}
+                              >
+                                Delete Transaction
+                              </Button>
+                            )}
                           </Box>
                         </Collapse>
                       </Td>
@@ -584,6 +666,162 @@ export default function ComplexTable(props) {
               onClick={() => deletedConfirmation(isDelete)}
             >
               Confirm Delete & Put Back in Stock
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isUpdate} onClose={() => setiisUpdate(null)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Update Transaction</ModalHeader>
+          <ModalCloseButton />
+          {isUpdate && (
+            <ModalBody>
+              <FormControl mt={4}>
+                <FormLabel>Phone Number</FormLabel>
+                <Input
+                  placeholder="Phone Number"
+                  type="number"
+                  maxLength={10}
+                  value={isUpdate.phoneNumber}
+                  onChange={(e) =>
+                    onChangeUpdateText(e.target.value, 'phoneNumber')
+                  }
+                />
+              </FormControl>{' '}
+              <br />
+              <FormControl mt={4}>
+                <FormLabel>Customer Name</FormLabel>
+                <Input
+                  placeholder="Customer Name"
+                  type="text"
+                  value={isUpdate.customerName}
+                  onChange={(e) =>
+                    onChangeUpdateText(e.target.value, 'customerName')
+                  }
+                />
+              </FormControl>
+              <br />
+              <FormControl>
+                <FormLabel>Payment Mode</FormLabel>
+                <Select
+                  placeholder="Select Payment Mode"
+                  value={isUpdate.paymentOption}
+                  onChange={(e) =>
+                    onChangeUpdateText(e.target.value, 'paymentOption')
+                  }
+                >
+                  <option value="UPI / Netbanking">UPI / Netbanking</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Cash">Card</option>
+                </Select>
+              </FormControl>
+              <br />
+              <FormControl>
+                <FormLabel>Receipter name / Notes</FormLabel>
+                <Input
+                  placeholder="Receipter name"
+                  value={isUpdate.receipterName}
+                  onChange={(e) =>
+                    onChangeUpdateText(e.target.value, 'receipterName')
+                  }
+                />
+              </FormControl>
+              <br />
+              <FormControl>
+                <Checkbox
+                  isChecked={isUpdate.checkedAddittional !== null}
+                  onChange={(e) =>
+                    onChangeUpdateText(
+                      e.target.checked
+                        ? {
+                            type: '',
+                            amount: '',
+                          }
+                        : null,
+                      'checkedAddittional',
+                    )
+                  }
+                >
+                  Additional Charges
+                </Checkbox>
+              </FormControl>
+              {isUpdate.checkedAddittional && (
+                <div style={{ display: 'flex' }}>
+                  <FormControl style={{ paddingRight: 10 }}>
+                    <FormLabel>Additional Type</FormLabel>
+                    <Input
+                      value={isUpdate.checkedAddittional.type}
+                      onChange={(e) => {
+                        let value = { ...isUpdate };
+                        value.checkedAddittional.type = e.target.value;
+                        setiisUpdate(value);
+                      }}
+                      placeholder="Additional Type"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Additional Amount</FormLabel>
+                    <Input
+                      onChange={(e) => {
+                        let value = { ...isUpdate };
+                        value.checkedAddittional.amount = Number(
+                          e.target.value,
+                        );
+                        setiisUpdate(value);
+                      }}
+                      value={isUpdate.checkedAddittional.amount}
+                      placeholder="Additional Amount"
+                      type="number"
+                    />
+                  </FormControl>
+                </div>
+              )}
+              <br />
+              <RadioGroup
+                onChange={(val) => onChangeUpdateText(val, 'paymentMode')}
+                value={isUpdate.paymentMode}
+              >
+                <Stack direction="row">
+                  <Radio value="Full Payment">Full Payment</Radio>
+                  <Radio value="Partial Payment">Partial Payment</Radio>
+                </Stack>
+              </RadioGroup>
+              <br />
+              {isUpdate.paymentMode === 'Partial Payment' && (
+                <>
+                  <FormControl>
+                    <FormLabel>Partial Payment Amount</FormLabel>
+                    <Input
+                      placeholder="Partial Payment"
+                      type="number"
+                      value={isUpdate.partialPayment}
+                      onChange={(e) =>
+                        onChangeUpdateText(e.target.value, 'partialPayment')
+                      }
+                    />
+                  </FormControl>
+                  {isUpdate.partialPayment > isUpdate.totalAmmount && (
+                    <p style={{ color: 'tomato' }}>
+                      Partial payment should not be greater than full payment.
+                    </p>
+                  )}
+                </>
+              )}
+            </ModalBody>
+          )}
+
+          <ModalFooter>
+            <Button colorScheme="red" mr={3} onClick={() => setiisUpdate(null)}>
+              Close
+            </Button>
+            <Button
+              colorScheme="green"
+              isDisabled={!isFormValid()}
+              onClick={() => updateDetails(isUpdate)}
+            >
+              Update
             </Button>
           </ModalFooter>
         </ModalContent>

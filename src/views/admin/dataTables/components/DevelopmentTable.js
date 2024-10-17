@@ -77,7 +77,8 @@ export default function ComplexTable(props) {
       !isUpdate?.customerName ||
       !isUpdate?.paymentMode ||
       !isUpdate?.receipterName ||
-      !isUpdate?.paymentOption
+      !isUpdate?.paymentOption ||
+      isUpdate?.Cart?.length === 0
     ) {
       return false;
     }
@@ -406,11 +407,17 @@ export default function ComplexTable(props) {
   };
   const datePickup = (id) => {
     return moment(Number(id)).isBetween(
-      moment().subtract(1, 'days'),
-      moment().add(15, 'days'),
+      moment().subtract(15, 'days'),
+      moment().add(1, 'days'),
     );
   };
-
+  const removeOrder = (id) => {
+    let obj = {
+      ...isUpdate,
+    };
+    obj.Cart = obj.Cart.filter((x) => x.id !== id);
+    setiisUpdate(obj);
+  };
   return (
     <Card
       flexDirection="column"
@@ -419,17 +426,6 @@ export default function ComplexTable(props) {
       overflowX={{ sm: 'scroll', lg: 'hidden' }}
     >
       <ToastContainer />
-      {/* <Flex px="25px" mb="8px" justifyContent="space-between" align="center">
-        <Text
-          color={textColor}
-          fontSize="22px"
-          fontWeight="700"
-          lineHeight="100%"
-        >
-          Transaction
-        </Text>
-        <Menu />
-      </Flex> */}
       <Box>
         <Table variant="simple" color="gray.500" mb="24px" mt="12px">
           <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
@@ -731,7 +727,10 @@ export default function ComplexTable(props) {
               <br />
               <FormControl>
                 <Checkbox
-                  isChecked={isUpdate.checkedAddittional !== null}
+                  isChecked={
+                    isUpdate.checkedAddittional !== null &&
+                    isUpdate.checkedAddittional !== undefined
+                  }
                   onChange={(e) =>
                     onChangeUpdateText(
                       e.target.checked
@@ -809,11 +808,46 @@ export default function ComplexTable(props) {
                   )}
                 </>
               )}
+              <div>
+                Order History:
+                <table style={{ width: '100%' }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left' }}>
+                      <th>Name</th>
+                      <th>Quantity</th>
+                      <th>Sell Price</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody style={{ textAlign: 'left' }}>
+                    {isUpdate.Cart.map((val) => (
+                      <tr key={val.id}>
+                        <td>{val.name}</td>
+                        <td>{val.buyingQty}</td>
+                        <td>{val.sellPrice}</td>
+                        <td>
+                          <Button
+                            size="xs"
+                            colorScheme="red"
+                            onClick={() => removeOrder(val.id)}
+                          >
+                            Remove
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </ModalBody>
           )}
 
           <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={() => setiisUpdate(null)}>
+            <Button
+              colorScheme="yellow"
+              mr={3}
+              onClick={() => setiisUpdate(null)}
+            >
               Close
             </Button>
             <Button

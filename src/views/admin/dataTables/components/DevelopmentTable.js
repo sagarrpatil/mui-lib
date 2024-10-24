@@ -401,6 +401,19 @@ export default function ComplexTable(props) {
         ? totalAmount - Number(obj.partialPayment)
         : 0;
     setiisUpdate(null);
+    let arrayOfRemoveItems = sessionStorage.getItem('arrayOfRemoveItems');
+    if (arrayOfRemoveItems) {
+      JSON.parse(arrayOfRemoveItems).map((val) => {
+        fetchAvailableProductbyID(val.id).then((response) => {
+          let datafromResponse = response;
+          datafromResponse.quantity =
+            Number(response.quantity) + Number(val.buyingQty);
+          updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
+          sessionStorage.removeItem('arrayOfRemoveItems');
+        });
+      });
+    }
+
     deleteAvailableDueBalance(obj, obj.id).then(() => {
       props.refreshTable();
     });
@@ -411,11 +424,27 @@ export default function ComplexTable(props) {
       moment().add(1, 'days'),
     );
   };
+
   const removeOrder = (id) => {
+    let arrayOfRemoveItems = sessionStorage.getItem('arrayOfRemoveItems')
+      ? JSON.parse(sessionStorage.getItem('arrayOfRemoveItems'))
+      : [];
     let obj = {
       ...isUpdate,
     };
+    arrayOfRemoveItems.push(isUpdate.Cart.find((x) => x.id === id));
+    sessionStorage.setItem(
+      'arrayOfRemoveItems',
+      JSON.stringify(arrayOfRemoveItems),
+    );
     obj.Cart = obj.Cart.filter((x) => x.id !== id);
+    setiisUpdate(obj);
+  };
+  const updatePriceStk = (value, id, i) => {
+    let obj = {
+      ...isUpdate,
+    };
+    obj.Cart[i].sellPrice = Number(value);
     setiisUpdate(obj);
   };
   return (
@@ -667,7 +696,13 @@ export default function ComplexTable(props) {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isUpdate} onClose={() => setiisUpdate(null)}>
+      <Modal
+        isOpen={isUpdate}
+        onClose={() => {
+          setiisUpdate(null);
+          sessionStorage.removeItem('arrayOfRemoveItems');
+        }}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Update Transaction</ModalHeader>
@@ -820,18 +855,27 @@ export default function ComplexTable(props) {
                     </tr>
                   </thead>
                   <tbody style={{ textAlign: 'left' }}>
-                    {isUpdate.Cart.map((val) => (
+                    {isUpdate.Cart.map((val, i) => (
                       <tr key={val.id}>
                         <td>{val.name}</td>
                         <td>{val.buyingQty}</td>
-                        <td>{val.sellPrice}</td>
+                        <td>
+                          <Input
+                            width={'90px'}
+                            value={val.sellPrice}
+                            type="number"
+                            onChange={(e) =>
+                              updatePriceStk(e.target.value, val.id, i)
+                            }
+                          />
+                        </td>
                         <td>
                           <Button
                             size="xs"
                             colorScheme="red"
                             onClick={() => removeOrder(val.id)}
                           >
-                            Remove
+                            Put Back
                           </Button>
                         </td>
                       </tr>
@@ -846,7 +890,10 @@ export default function ComplexTable(props) {
             <Button
               colorScheme="yellow"
               mr={3}
-              onClick={() => setiisUpdate(null)}
+              onClick={() => {
+                setiisUpdate(null);
+                sessionStorage.removeItem('arrayOfRemoveItems');
+              }}
             >
               Close
             </Button>

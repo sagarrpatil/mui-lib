@@ -116,7 +116,10 @@ export default function UserReports() {
     ? transactionFilter
         .reduce(
           (total, item) =>
-            Number(total) + (Number(item.balance) ?  Number(item.partialPayment) :  Number(item.totalAmmount)),
+            Number(total) +
+            (Number(item.balance)
+              ? Number(item.partialPayment)
+              : Number(item.totalAmmount)),
           0,
         )
         .toLocaleString()

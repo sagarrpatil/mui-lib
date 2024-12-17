@@ -29,6 +29,7 @@ import {
   Stack,
   Radio,
 } from '@chakra-ui/react';
+import { FixedSizeList as List } from 'react-window';
 import { useNavigate } from 'react-router-dom';
 import {
   createColumnHelper,
@@ -447,6 +448,150 @@ export default function ComplexTable(props) {
     obj.Cart[i].sellPrice = Number(value);
     setiisUpdate(obj);
   };
+
+  const Row = ({ index, style }) => {
+    const row = table.getRowModel().rows[index];
+    const isExpanded = expandedRowIds.includes(row.id);
+    const rowTransactionData = transactionData.find(
+      (x) => x.id === row.getValue('id'),
+    );
+
+    return (
+      <React.Fragment>
+        <Tr style={{ ...style }}>
+          {row.getVisibleCells().map((cell) => (
+            <Td
+              key={cell.id}
+              fontSize={{ sm: '14px' }}
+              minW={{ sm: '150px', md: '200px', lg: 'auto' }}
+              borderColor="transparent"
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </Td>
+          ))}
+        </Tr>
+        {/* Expanded row content */}
+        {isExpanded && (
+          <Tr>
+            <Td colSpan={table.getAllColumns().length} p="0">
+              <Collapse in={isExpanded} animateOpacity>
+                <Box
+                  p="10px"
+                  bg="gray.50"
+                  rounded="md"
+                  shadow="sm"
+                  display={'flex'}
+                >
+                  <table
+                    style={{
+                      width: '50%',
+                      borderCollapse: 'collapse',
+                      margin: 15,
+                      color: 'black',
+                    }}
+                  >
+                    <thead>
+                      <tr style={{ textAlign: 'left' }}>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rowTransactionData?.Cart?.map((val, idx) => (
+                        <tr key={idx}>
+                          <td>{val.name}</td>
+                          <td>{val.buyingQty}</td>
+                          <td>₹ {val.sellPrice}</td>
+                          <td>₹ {val.buyingQty * val.sellPrice}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    {rowTransactionData?.checkedAddittional && (
+                      <tbody>
+                        <tr>
+                          <td></td>
+                          <td></td>
+                          <td>{rowTransactionData.checkedAddittional.type}</td>
+                          <td>
+                            ₹ {rowTransactionData.checkedAddittional.amount}
+                          </td>
+                        </tr>
+                      </tbody>
+                    )}
+                  </table>
+                  {rowTransactionData?.balance > 0 && (
+                    <Button
+                      colorScheme="green"
+                      style={{
+                        height: 30,
+                        fontSize: 14,
+                        marginTop: 20,
+                      }}
+                      onClick={() => {
+                        setModalOpenDue({
+                          id: row.getValue('id'),
+                          ...rowTransactionData,
+                        });
+                        setbalanceSet(rowTransactionData.balance);
+                      }}
+                    >
+                      Update Balance or Due
+                    </Button>
+                  )}
+
+                  {datePickup(row.getValue('id')) && (
+                    <Button
+                      colorScheme="blue"
+                      style={{
+                        height: 30,
+                        fontSize: 14,
+                        marginTop: 20,
+                        marginLeft: 10,
+                      }}
+                      onClick={() => {
+                        const obj = {
+                          id: row.getValue('id'),
+                          ...rowTransactionData,
+                        };
+                        setiisUpdate(obj);
+                      }}
+                    >
+                      Edit Transaction
+                    </Button>
+                  )}
+
+                  {datePickup(row.getValue('id')) && (
+                    <Button
+                      colorScheme="red"
+                      style={{
+                        height: 30,
+                        fontSize: 14,
+                        marginTop: 20,
+                        marginLeft: 10,
+                      }}
+                      onClick={() => {
+                        const obj = {
+                          id: row.getValue('id'),
+                          ...rowTransactionData,
+                        };
+                        setisDelete(obj);
+                      }}
+                    >
+                      Delete Transaction
+                    </Button>
+                  )}
+                </Box>
+              </Collapse>
+            </Td>
+          </Tr>
+        )}
+      </React.Fragment>
+    );
+  };
+
   return (
     <Card
       flexDirection="column"
@@ -489,175 +634,14 @@ export default function ComplexTable(props) {
               ))}
             </Thead>
             <Tbody>
-              {table.getRowModel().rows.map((row) => {
-                const isExpanded = expandedRowIds.includes(row.id);
-                return (
-                  <React.Fragment key={row.id}>
-                    <Tr>
-                      {row.getVisibleCells().map((cell) => (
-                        <Td
-                          key={cell.id}
-                          fontSize={{ sm: '14px' }}
-                          minW={{ sm: '150px', md: '200px', lg: 'auto' }}
-                          borderColor="transparent"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </Td>
-                      ))}
-                    </Tr>
-                    {/* Expanded row content */}
-                    <Tr>
-                      <Td colSpan={columns.length} p="0">
-                        <Collapse in={isExpanded} animateOpacity>
-                          <Box
-                            p="10px"
-                            bg="gray.50"
-                            rounded="md"
-                            shadow="sm"
-                            display={'flex'}
-                          >
-                            <table
-                              style={{
-                                width: '50%',
-                                borderCollapse: 'collapse',
-                                margin: 15,
-                                color: 'black',
-                              }}
-                            >
-                              <thead>
-                                <tr style={{ textAlign: 'left' }}>
-                                  <th>Product</th>
-                                  <th>Qty</th>
-                                  <th>Price</th>
-                                  <th>Amount</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {transactionData
-                                  ?.find((x) => x.id === row.getValue('id'))
-                                  .Cart?.map((val) => (
-                                    <tr>
-                                      <td>{val.name}</td>
-                                      <td>{val.buyingQty}</td>
-                                      <td>₹ {val.sellPrice}</td>
-                                      <td>₹ {val.buyingQty * val.sellPrice}</td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-
-                              <tbody>
-                                {transactionData?.find(
-                                  (x) => x.id === row.getValue('id'),
-                                ).checkedAddittional && (
-                                  <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td>
-                                      {
-                                        transactionData?.find(
-                                          (x) => x.id === row.getValue('id'),
-                                        ).checkedAddittional.type
-                                      }
-                                    </td>
-                                    <td>
-                                      ₹{' '}
-                                      {
-                                        transactionData?.find(
-                                          (x) => x.id === row.getValue('id'),
-                                        ).checkedAddittional.amount
-                                      }
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                            {transactionData?.find(
-                              (x) => x.id === row.getValue('id'),
-                            ).balance > 0 && (
-                              <Button
-                                // variant="darkBrand"
-                                colorScheme="green"
-                                style={{
-                                  height: 30,
-                                  fontSize: 14,
-                                  marginTop: 20,
-                                }}
-                                onClick={() => {
-                                  setModalOpenDue({
-                                    id: row.getValue('id'),
-                                    ...transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ),
-                                  });
-                                  setbalanceSet(
-                                    transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ).balance,
-                                  );
-                                }}
-                              >
-                                Update Balance or Due
-                              </Button>
-                            )}
-
-                            {datePickup(row.getValue('id')) && (
-                              <Button
-                                colorScheme="blue"
-                                style={{
-                                  height: 30,
-                                  fontSize: 14,
-                                  marginTop: 20,
-                                  marginLeft: 10,
-                                }}
-                                // isDisabled={true}
-                                onClick={() => {
-                                  let obj = {
-                                    id: row.getValue('id'),
-                                    ...transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ),
-                                  };
-                                  console.log(obj);
-                                  setiisUpdate(obj);
-                                }}
-                              >
-                                Edit Transaction
-                              </Button>
-                            )}
-
-                            {datePickup(row.getValue('id')) && (
-                              <Button
-                                colorScheme="red"
-                                style={{
-                                  height: 30,
-                                  fontSize: 14,
-                                  marginTop: 20,
-                                  marginLeft: 10,
-                                }}
-                                // isDisabled={true}
-                                onClick={() => {
-                                  let obj = {
-                                    id: row.getValue('id'),
-                                    ...transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ),
-                                  };
-                                  setisDelete(obj);
-                                }}
-                              >
-                                Delete Transaction
-                              </Button>
-                            )}
-                          </Box>
-                        </Collapse>
-                      </Td>
-                    </Tr>
-                  </React.Fragment>
-                );
-              })}
+              <List
+                height={600} // Adjust the height based on available space
+                itemCount={transactionData.length}
+                itemSize={50} // Adjust row height as needed
+                width="100%"
+              >
+                {Row}
+              </List>
             </Tbody>
           </div>
         </Table>

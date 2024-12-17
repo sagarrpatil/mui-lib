@@ -69,6 +69,7 @@ export default function Marketplace() {
   const [showupdateBtn, setShowupdateBtn] = useState(false);
   const [filterSet, setFilter] = useState('Available Stock');
   const [indexProduct, setIndexProduct] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [updateID, setUpdateID] = useState(null);
 
@@ -254,6 +255,7 @@ export default function Marketplace() {
     onClose();
   };
   const saveAndPrint = (WA) => {
+    setIsLoading(true);
     const obj = {
       customerName: customerName,
       phoneNumber: phoneNumber,
@@ -289,6 +291,7 @@ export default function Marketplace() {
       setCart([]);
       fetchAvailable();
       fetchTransaction();
+      setIsLoading(false);
     });
   };
   const mergeByPhoneNumber = (data) => {
@@ -782,7 +785,7 @@ export default function Marketplace() {
               <Button
                 colorScheme="blue"
                 mr={3}
-                isDisabled={!isFormValid()}
+                isDisabled={!isFormValid() || isLoading}
                 onClick={() => saveAndPrint()}
               >
                 Save & Print
@@ -790,7 +793,7 @@ export default function Marketplace() {
               <Button
                 colorScheme="blue"
                 mr={3}
-                isDisabled={!isFormValid()}
+                isDisabled={!isFormValid() || isLoading}
                 onClick={() => saveAndPrint('WA')}
               >
                 Save & Share WhatsApp

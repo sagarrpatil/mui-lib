@@ -88,9 +88,9 @@ export const updateInAvailableProduct = async (object, id) => {
 export const saveAndBillApiCall = async (object) => {
   try {
     let dateNow = Date.now();
+    await object.Cart.map((val) => availableProductDeduction(val));
     const dataRefs = ref(realtimeDb, `${key}/transactions/${dateNow}`);
-    object.Cart.map((val) => availableProductDeduction(val));
-    set(dataRefs, object).then((snapshot) => {});
+    await set(dataRefs, object).then((snapshot) => {});
     return dateNow;
   } catch (error) {
     console.error('Error fetching data:', error);

@@ -82,7 +82,7 @@ export default function Projects(props) {
 
   const isSaveDisabled = () => {
     const { name, quantity, buyPrice, mrpOfProduct } = productDetails;
-    if (!name || quantity === "" || !buyPrice || !expDate || !mrpOfProduct)
+    if (!name || quantity === '' || !buyPrice || !expDate || !mrpOfProduct)
       return true;
     for (let i = 0; i < sellingTypes.length; i++) {
       if (!sellingTypes[i].type || !sellingTypes[i].price) return true;

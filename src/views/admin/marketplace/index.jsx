@@ -37,7 +37,7 @@ import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
 import NFT from 'components/card/NFT';
 import Card from 'components/card/Card.js';
 import Nft5 from 'assets/img/nfts/Nft5.png';
-
+import moment from 'moment';
 import { fetchAvailableProduct } from 'service/apiservice';
 import {
   saveAndBillApiCall,
@@ -315,7 +315,13 @@ export default function Marketplace() {
 
     return Object.values(mergedData);
   };
-
+  const now = moment();
+  const sixMonthsLater = moment().add(6, 'months');
+  console.log(
+    tableDataToSearch?.filter((product) =>
+      moment(product.expDate).isBetween(now, sixMonthsLater, undefined, '[]'),
+    ),
+  );
   return (
     <Box pt={{ base: '93px', md: '46px', xl: '46px' }}>
       <Grid
@@ -360,6 +366,14 @@ export default function Marketplace() {
                   onClick={() => setFilter('Available Stock')}
                 >
                   Available Stock
+                </Link>
+                <Link
+                  color={textColorBrand}
+                  fontWeight="500"
+                  me={{ base: '34px', md: '30px' }}
+                  onClick={() => setFilter('6m')}
+                >
+                  Up-Comming 6m Expiry
                 </Link>
                 <Link
                   color={textColorBrand}
@@ -414,6 +428,14 @@ export default function Marketplace() {
                     (val) =>
                       ((val.quantity > indexProduct &&
                         filterSet === 'Available Stock') ||
+                        (val.quantity > indexProduct &&
+                          filterSet === '6m' &&
+                          moment(val.expDate).isBetween(
+                            now,
+                            sixMonthsLater,
+                            undefined,
+                            '[]',
+                          )) ||
                         (filterSet === 'Out of Stock' && val.quantity === 0) ||
                         (filterSet === 'Favorite' && val.fav)) && (
                         <div>

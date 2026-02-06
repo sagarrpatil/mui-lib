@@ -60,8 +60,12 @@ export default function Settings() {
 
   useEffect(() => {
     if (phoneNumber && transaction) {
-      const matches = transaction?.filter((cust) =>
-        cust?.phoneNumber?.includes(phoneNumber),
+      const matches = transaction?.filter(
+        (cust) =>
+          cust?.phoneNumber?.includes(phoneNumber) ||
+          cust?.customerName
+            ?.toLowerCase()
+            ?.includes(phoneNumber.toLowerCase()),
       );
       setTransactionFilter(matches);
     } else {
@@ -102,9 +106,9 @@ export default function Settings() {
             <div>
               <FormControl ml={10} mt={-1.5}>
                 <Input
-                  placeholder="Search by Phone Number"
-                  type="number"
-                  maxLength={10}
+                  placeholder="Search by Name or Phone No."
+                  type="text"
+                  // maxLength={10}
                   size="sm"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}

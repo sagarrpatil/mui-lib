@@ -36,6 +36,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
+  getPaginationRowModel,
 } from '@tanstack/react-table';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import Card from 'components/card/Card';
@@ -64,6 +65,12 @@ export default function ComplexTable(props) {
   const [isDelete, setisDelete] = React.useState(null);
   const [isUpdate, setiisUpdate] = React.useState(null);
   const finalRef = React.useRef(null);
+
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
   const handleRowToggle = (rowId) => {
     setExpandedRowIds((prev) =>
       prev.includes(rowId)
@@ -336,11 +343,13 @@ export default function ComplexTable(props) {
   const table = useReactTable({
     data: transactionData,
     columns,
-    state: { sorting },
+    state: { pagination, sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     debugTable: true,
+    onPaginationChange: setPagination,
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const updateDue = (updateDues) => {
@@ -387,10 +396,12 @@ export default function ComplexTable(props) {
       });
     });
 
-    deleteAvailableDueBalance(object, obj.id).then((response) => {
-      props.refreshTable();
-    });
-  };
+  // Delete only after all updates complete
+  await deleteAvailableDueBalance(clonedObj, obj.id);
+
+  // Refresh table
+  props.refreshTable();
+};
   const onChangeUpdateText = (val, state) => {
     let obj = {
       ...isUpdate,
@@ -523,515 +534,584 @@ export default function ComplexTable(props) {
     setiisUpdate(obj);
   };
   return (
-    <Card
-      flexDirection="column"
-      w="100%"
-      px="0px"
-      overflowX={{ sm: 'scroll', lg: 'hidden' }}
-    >
-      <ToastContainer />
-      <Box>
-        <Table variant="simple" color="gray.500" mb="24px" mt="12px">
-          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-            <Thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      colSpan={header.colSpan}
-                      pe="10px"
-                      borderColor={borderColor}
-                      cursor="pointer"
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      <Flex
-                        justifyContent="space-between"
-                        align="center"
-                        fontSize={{ sm: '10px', lg: '12px' }}
-                        color="gray.400"
+    <>
+      <Card
+        flexDirection="column"
+        w="100%"
+        px="0px"
+        overflowX={{ sm: 'scroll', lg: 'hidden' }}
+      >
+        <ToastContainer />
+        <Box>
+          <Table variant="simple" color="gray.500" mb="24px" mt="12px">
+            <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        pe="10px"
+                        borderColor={borderColor}
+                        cursor="pointer"
+                        onClick={header.column.getToggleSortingHandler()}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                        {{ asc: '', desc: '' }[header.column.getIsSorted()] ??
-                          null}
-                      </Flex>
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {table.getRowModel().rows.map((row) => {
-                const isExpanded = expandedRowIds.includes(row.id);
-                return (
-                  <React.Fragment key={row.id}>
-                    <Tr>
-                      {row.getVisibleCells().map((cell) => (
-                        <Td
-                          key={cell.id}
-                          fontSize={{ sm: '14px' }}
-                          minW={{ sm: '150px', md: '200px', lg: 'auto' }}
-                          borderColor="transparent"
+                        <Flex
+                          justifyContent="space-between"
+                          align="center"
+                          fontSize={{ sm: '10px', lg: '12px' }}
+                          color="gray.400"
                         >
                           {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
+                            header.column.columnDef.header,
+                            header.getContext(),
                           )}
-                        </Td>
-                      ))}
-                    </Tr>
-                    {/* Expanded row content */}
-                    <Tr>
-                      <Td colSpan={columns.length} p="0">
-                        <Collapse in={isExpanded} animateOpacity>
-                          <Box
-                            p="10px"
-                            bg="gray.50"
-                            rounded="md"
-                            shadow="sm"
-                            display={'flex'}
-                          >
-                            <table
-                              style={{
-                                width: '50%',
-                                borderCollapse: 'collapse',
-                                margin: 15,
-                                color: 'black',
-                              }}
-                            >
-                              <thead>
-                                <tr style={{ textAlign: 'left' }}>
-                                  <th>Product</th>
-                                  <th>Qty</th>
-                                  <th>Price</th>
-                                  <th>Amount</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {transactionData
-                                  ?.find((x) => x.id === row.getValue('id'))
-                                  .Cart?.map((val) => (
-                                    <tr>
-                                      <td>{val.name}</td>
-                                      <td>{val.buyingQty}</td>
-                                      <td>₹ {val.sellPrice}</td>
-                                      <td>₹ {val.buyingQty * val.sellPrice}</td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-
-                              <tbody>
-                                {transactionData?.find(
-                                  (x) => x.id === row.getValue('id'),
-                                ).checkedAddittional && (
-                                  <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td>
-                                      {
-                                        transactionData?.find(
-                                          (x) => x.id === row.getValue('id'),
-                                        ).checkedAddittional.type
-                                      }
-                                    </td>
-                                    <td>
-                                      ₹{' '}
-                                      {
-                                        transactionData?.find(
-                                          (x) => x.id === row.getValue('id'),
-                                        ).checkedAddittional.amount
-                                      }
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                            {transactionData?.find(
-                              (x) => x.id === row.getValue('id'),
-                            ).balance > 0 && (
-                              <Button
-                                // variant="darkBrand"
-                                colorScheme="green"
-                                style={{
-                                  height: 30,
-                                  fontSize: 14,
-                                  marginTop: 20,
-                                }}
-                                onClick={() => {
-                                  setModalOpenDue({
-                                    id: row.getValue('id'),
-                                    ...transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ),
-                                  });
-                                  setbalanceSet(
-                                    transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ).balance,
-                                  );
-                                }}
-                              >
-                                Update Balance or Due
-                              </Button>
-                            )}
-
-                            {datePickup(row.getValue('id')) && (
-                              <Button
-                                colorScheme="blue"
-                                style={{
-                                  height: 30,
-                                  fontSize: 14,
-                                  marginTop: 20,
-                                  marginLeft: 10,
-                                }}
-                                // isDisabled={true}
-                                onClick={() => {
-                                  let obj = {
-                                    id: row.getValue('id'),
-                                    ...transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ),
-                                  };
-                                  console.log(obj);
-                                  setiisUpdate(obj);
-                                }}
-                              >
-                                Edit Transaction
-                              </Button>
-                            )}
-
-                            {datePickup(row.getValue('id')) && (
-                              <Button
-                                colorScheme="red"
-                                style={{
-                                  height: 30,
-                                  fontSize: 14,
-                                  marginTop: 20,
-                                  marginLeft: 10,
-                                }}
-                                // isDisabled={true}
-                                onClick={() => {
-                                  let obj = {
-                                    id: row.getValue('id'),
-                                    ...transactionData?.find(
-                                      (x) => x.id === row.getValue('id'),
-                                    ),
-                                  };
-                                  setisDelete(obj);
-                                }}
-                              >
-                                Delete Transaction
-                              </Button>
-                            )}
-                          </Box>
-                        </Collapse>
-                      </Td>
-                    </Tr>
-                  </React.Fragment>
-                );
-              })}
-            </Tbody>
-          </div>
-        </Table>
-      </Box>
-
-      <Modal
-        finalFocusRef={finalRef}
-        isOpen={isDelete}
-        onClose={() => setisDelete(null)}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Delete below Transaction</ModalHeader>
-          <ModalCloseButton />
-          {isDelete && (
-            <ModalBody>
-              Name of Customer: <b>{isDelete.customerName}</b>
-              <br />
-              Phone Number of Customer: <b>{isDelete.phoneNumber}</b>
-              <br />
-              Total Amount: <b>{isDelete.totalAmmount}</b>
-            </ModalBody>
-          )}
-
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={() => setisDelete(null)}>
-              Close
-            </Button>
-            <Button
-              colorScheme="green"
-              onClick={() => deletedConfirmation(isDelete)}
-            >
-              Confirm Delete & Put Back in Stock
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal
-        isOpen={isUpdate}
-        onClose={() => {
-          setiisUpdate(null);
-          sessionStorage.removeItem('arrayOfRemoveItems');
-        }}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Update Transaction</ModalHeader>
-          <ModalCloseButton />
-          {isUpdate && (
-            <ModalBody>
-              <FormControl mt={4}>
-                <FormLabel>Phone Number</FormLabel>
-                <Input
-                  placeholder="Phone Number"
-                  type="number"
-                  maxLength={10}
-                  value={isUpdate.phoneNumber}
-                  onChange={(e) =>
-                    onChangeUpdateText(e.target.value, 'phoneNumber')
-                  }
-                />
-              </FormControl>{' '}
-              <br />
-              <FormControl mt={4}>
-                <FormLabel>Customer Name</FormLabel>
-                <Input
-                  placeholder="Customer Name"
-                  type="text"
-                  value={isUpdate.customerName}
-                  onChange={(e) =>
-                    onChangeUpdateText(e.target.value, 'customerName')
-                  }
-                />
-              </FormControl>
-              <br />
-              <FormControl>
-                <FormLabel>Payment Mode</FormLabel>
-                <Select
-                  placeholder="Select Payment Mode"
-                  value={isUpdate.paymentOption}
-                  onChange={(e) =>
-                    onChangeUpdateText(e.target.value, 'paymentOption')
-                  }
-                >
-                  <option value="UPI / Netbanking">UPI / Netbanking</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Cash">Card</option>
-                </Select>
-              </FormControl>
-              <br />
-              <FormControl>
-                <FormLabel>Receipter name / Notes</FormLabel>
-                <Input
-                  placeholder="Receipter name"
-                  value={isUpdate.receipterName}
-                  onChange={(e) =>
-                    onChangeUpdateText(e.target.value, 'receipterName')
-                  }
-                />
-              </FormControl>
-              <br />
-              <FormControl>
-                <Checkbox
-                  isChecked={
-                    isUpdate.checkedAddittional !== null &&
-                    isUpdate.checkedAddittional !== undefined
-                  }
-                  onChange={(e) =>
-                    onChangeUpdateText(
-                      e.target.checked
-                        ? {
-                            type: '',
-                            amount: '',
-                          }
-                        : null,
-                      'checkedAddittional',
-                    )
-                  }
-                >
-                  Additional Charges
-                </Checkbox>
-              </FormControl>
-              {isUpdate.checkedAddittional && (
-                <div style={{ display: 'flex' }}>
-                  <FormControl style={{ paddingRight: 10 }}>
-                    <FormLabel>Additional Type</FormLabel>
-                    <Input
-                      value={isUpdate.checkedAddittional.type}
-                      onChange={(e) => {
-                        let value = { ...isUpdate };
-                        value.checkedAddittional.type = e.target.value;
-                        setiisUpdate(value);
-                      }}
-                      placeholder="Additional Type"
-                    />
-                  </FormControl>
-                  <FormControl>
-                    <FormLabel>Additional Amount</FormLabel>
-                    <Input
-                      onChange={(e) => {
-                        let value = { ...isUpdate };
-                        value.checkedAddittional.amount = Number(
-                          e.target.value,
-                        );
-                        setiisUpdate(value);
-                      }}
-                      value={isUpdate.checkedAddittional.amount}
-                      placeholder="Additional Amount"
-                      type="number"
-                    />
-                  </FormControl>
-                </div>
-              )}
-              <br />
-              <RadioGroup
-                onChange={(val) => onChangeUpdateText(val, 'paymentMode')}
-                value={isUpdate.paymentMode}
-              >
-                <Stack direction="row">
-                  <Radio value="Full Payment">Full Payment</Radio>
-                  <Radio value="Partial Payment">Partial Payment</Radio>
-                </Stack>
-              </RadioGroup>
-              <br />
-              {isUpdate.paymentMode === 'Partial Payment' && (
-                <>
-                  <FormControl>
-                    <FormLabel>Partial Payment Amount</FormLabel>
-                    <Input
-                      placeholder="Partial Payment"
-                      type="number"
-                      value={isUpdate.partialPayment}
-                      onChange={(e) =>
-                        onChangeUpdateText(e.target.value, 'partialPayment')
-                      }
-                    />
-                  </FormControl>
-                  {isUpdate.partialPayment > isUpdate.totalAmmount && (
-                    <p style={{ color: 'tomato' }}>
-                      Partial payment should not be greater than full payment.
-                    </p>
-                  )}
-                </>
-              )}
-              <div>
-                Order History:
-                <table style={{ width: '100%' }}>
-                  <thead>
-                    <tr style={{ textAlign: 'left' }}>
-                      <th>Name</th>
-                      <th>Quantity</th>
-                      <th>Sell Price</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody style={{ textAlign: 'left' }}>
-                    {isUpdate.Cart.map((val, i) => (
-                      <tr key={val.id}>
-                        <td>{val.name}</td>
-                        <td>{val.buyingQty}</td>
-                        <td>
-                          <Input
-                            width={'90px'}
-                            value={val.sellPrice}
-                            type="number"
-                            onChange={(e) =>
-                              updatePriceStk(e.target.value, val.id, i)
-                            }
-                          />
-                        </td>
-                        <td>
-                          <Button
-                            size="xs"
-                            colorScheme="red"
-                            onClick={() => removeOrder(val.id)}
-                          >
-                            Put Back
-                          </Button>
-                        </td>
-                      </tr>
+                          {{ asc: '', desc: '' }[header.column.getIsSorted()] ??
+                            null}
+                        </Flex>
+                      </Th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </ModalBody>
-          )}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => {
+                  const isExpanded = expandedRowIds.includes(row.id);
+                  return (
+                    <React.Fragment key={row.id}>
+                      <Tr>
+                        {row.getVisibleCells().map((cell) => (
+                          <Td
+                            key={cell.id}
+                            fontSize={{ sm: '14px' }}
+                            minW={{ sm: '150px', md: '200px', lg: 'auto' }}
+                            borderColor="transparent"
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </Td>
+                        ))}
+                      </Tr>
+                      {/* Expanded row content */}
+                      <Tr>
+                        <Td colSpan={columns.length} p="0">
+                          <Collapse in={isExpanded} animateOpacity>
+                            <Box
+                              p="10px"
+                              bg="gray.50"
+                              rounded="md"
+                              shadow="sm"
+                              display={'flex'}
+                            >
+                              <table
+                                style={{
+                                  width: '50%',
+                                  borderCollapse: 'collapse',
+                                  margin: 15,
+                                  color: 'black',
+                                }}
+                              >
+                                <thead>
+                                  <tr style={{ textAlign: 'left' }}>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Amount</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {transactionData
+                                    ?.find((x) => x.id === row.getValue('id'))
+                                    .Cart?.map((val) => (
+                                      <tr>
+                                        <td>{val.name}</td>
+                                        <td>{val.buyingQty}</td>
+                                        <td>₹ {val.sellPrice}</td>
+                                        <td>
+                                          ₹ {val.buyingQty * val.sellPrice}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                </tbody>
 
-          <ModalFooter>
-            <Button
-              colorScheme="yellow"
-              mr={3}
-              onClick={() => {
-                setiisUpdate(null);
-                sessionStorage.removeItem('arrayOfRemoveItems');
-              }}
-            >
-              Close
-            </Button>
-            <Button
-              colorScheme="green"
-              isDisabled={!isFormValid()}
-              onClick={() => updateDetails(isUpdate)}
-            >
-              Update
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+                                <tbody>
+                                  {transactionData?.find(
+                                    (x) => x.id === row.getValue('id'),
+                                  ).checkedAddittional && (
+                                    <tr>
+                                      <td></td>
+                                      <td></td>
+                                      <td>
+                                        {
+                                          transactionData?.find(
+                                            (x) => x.id === row.getValue('id'),
+                                          ).checkedAddittional.type
+                                        }
+                                      </td>
+                                      <td>
+                                        ₹{' '}
+                                        {
+                                          transactionData?.find(
+                                            (x) => x.id === row.getValue('id'),
+                                          ).checkedAddittional.amount
+                                        }
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                              {transactionData?.find(
+                                (x) => x.id === row.getValue('id'),
+                              ).balance > 0 && (
+                                <Button
+                                  // variant="darkBrand"
+                                  colorScheme="green"
+                                  style={{
+                                    height: 30,
+                                    fontSize: 14,
+                                    marginTop: 20,
+                                  }}
+                                  onClick={() => {
+                                    setModalOpenDue({
+                                      id: row.getValue('id'),
+                                      ...transactionData?.find(
+                                        (x) => x.id === row.getValue('id'),
+                                      ),
+                                    });
+                                    setbalanceSet(
+                                      transactionData?.find(
+                                        (x) => x.id === row.getValue('id'),
+                                      ).balance,
+                                    );
+                                  }}
+                                >
+                                  Update Balance or Due
+                                </Button>
+                              )}
 
-      <Modal isOpen={modalOpenDue} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Balance Due Update</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody sx={{ paddingLeft: 10 }}>
-            {modalOpenDue && (
-              <ul>
-                <li>
-                  <b>Total Amount:</b>{' '}
-                  {modalOpenDue.totalAmmount.toLocaleString()}
-                </li>
-                <li style={{ color: 'green' }}>
-                  <b>Previous Amount:</b>{' '}
-                  {modalOpenDue.partialPayment.toLocaleString()}
-                </li>
-                <li style={{ color: 'tomato' }}>
-                  <b>Balance/Due Amount:</b>{' '}
-                  {modalOpenDue.balance.toLocaleString()}
-                </li>
-              </ul>
+                              {datePickup(row.getValue('id')) && (
+                                <Button
+                                  colorScheme="blue"
+                                  style={{
+                                    height: 30,
+                                    fontSize: 14,
+                                    marginTop: 20,
+                                    marginLeft: 10,
+                                  }}
+                                  // isDisabled={true}
+                                  onClick={() => {
+                                    let obj = {
+                                      id: row.getValue('id'),
+                                      ...transactionData?.find(
+                                        (x) => x.id === row.getValue('id'),
+                                      ),
+                                    };
+                                    console.log(obj);
+                                    setiisUpdate(obj);
+                                  }}
+                                >
+                                  Edit Transaction
+                                </Button>
+                              )}
+
+                              {datePickup(row.getValue('id')) && (
+                                <Button
+                                  colorScheme="red"
+                                  style={{
+                                    height: 30,
+                                    fontSize: 14,
+                                    marginTop: 20,
+                                    marginLeft: 10,
+                                  }}
+                                  // isDisabled={true}
+                                  onClick={() => {
+                                    let obj = {
+                                      id: row.getValue('id'),
+                                      ...transactionData?.find(
+                                        (x) => x.id === row.getValue('id'),
+                                      ),
+                                    };
+                                    setisDelete(obj);
+                                  }}
+                                >
+                                  Delete Transaction
+                                </Button>
+                              )}
+                            </Box>
+                          </Collapse>
+                        </Td>
+                      </Tr>
+                    </React.Fragment>
+                  );
+                })}
+              </Tbody>
+            </div>
+          </Table>
+        </Box>
+
+        <Modal
+          finalFocusRef={finalRef}
+          isOpen={isDelete}
+          onClose={() => setisDelete(null)}
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Delete below Transaction</ModalHeader>
+            <ModalCloseButton />
+            {isDelete && (
+              <ModalBody>
+                Name of Customer: <b>{isDelete.customerName}</b>
+                <br />
+                Phone Number of Customer: <b>{isDelete.phoneNumber}</b>
+                <br />
+                Total Amount: <b>{isDelete.totalAmmount}</b>
+              </ModalBody>
             )}
-            <br />
-            <FormLabel>Balance / Due Payment</FormLabel>
-            <Input
-              placeholder="Balance / Due Payment"
-              value={balanceSet}
-              onChange={(e) => setbalanceSet(e.target.value)}
-              size="lg"
-              type="number"
-            />
-          </ModalBody>
 
-          <ModalFooter>
+            <ModalFooter>
+              <Button
+                colorScheme="red"
+                mr={3}
+                onClick={() => setisDelete(null)}
+              >
+                Close
+              </Button>
+              <Button
+                colorScheme="green"
+                onClick={() => deletedConfirmation(isDelete)}
+              >
+                Confirm Delete & Put Back in Stock
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <Modal
+          isOpen={isUpdate}
+          onClose={() => {
+            setiisUpdate(null);
+            sessionStorage.removeItem('arrayOfRemoveItems');
+          }}
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Update Transaction</ModalHeader>
+            <ModalCloseButton />
+            {isUpdate && (
+              <ModalBody>
+                <FormControl mt={4}>
+                  <FormLabel>Phone Number</FormLabel>
+                  <Input
+                    placeholder="Phone Number"
+                    type="number"
+                    maxLength={10}
+                    value={isUpdate.phoneNumber}
+                    onChange={(e) =>
+                      onChangeUpdateText(e.target.value, 'phoneNumber')
+                    }
+                  />
+                </FormControl>{' '}
+                <br />
+                <FormControl mt={4}>
+                  <FormLabel>Customer Name</FormLabel>
+                  <Input
+                    placeholder="Customer Name"
+                    type="text"
+                    value={isUpdate.customerName}
+                    onChange={(e) =>
+                      onChangeUpdateText(e.target.value, 'customerName')
+                    }
+                  />
+                </FormControl>
+                <br />
+                <FormControl>
+                  <FormLabel>Payment Mode</FormLabel>
+                  <Select
+                    placeholder="Select Payment Mode"
+                    value={isUpdate.paymentOption}
+                    onChange={(e) =>
+                      onChangeUpdateText(e.target.value, 'paymentOption')
+                    }
+                  >
+                    <option value="UPI / Netbanking">UPI / Netbanking</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Cash">Card</option>
+                  </Select>
+                </FormControl>
+                <br />
+                <FormControl>
+                  <FormLabel>Receipter name / Notes</FormLabel>
+                  <Input
+                    placeholder="Receipter name"
+                    value={isUpdate.receipterName}
+                    onChange={(e) =>
+                      onChangeUpdateText(e.target.value, 'receipterName')
+                    }
+                  />
+                </FormControl>
+                <br />
+                <FormControl>
+                  <Checkbox
+                    isChecked={
+                      isUpdate.checkedAddittional !== null &&
+                      isUpdate.checkedAddittional !== undefined
+                    }
+                    onChange={(e) =>
+                      onChangeUpdateText(
+                        e.target.checked
+                          ? {
+                              type: '',
+                              amount: '',
+                            }
+                          : null,
+                        'checkedAddittional',
+                      )
+                    }
+                  >
+                    Additional Charges
+                  </Checkbox>
+                </FormControl>
+                {isUpdate.checkedAddittional && (
+                  <div style={{ display: 'flex' }}>
+                    <FormControl style={{ paddingRight: 10 }}>
+                      <FormLabel>Additional Type</FormLabel>
+                      <Input
+                        value={isUpdate.checkedAddittional.type}
+                        onChange={(e) => {
+                          let value = { ...isUpdate };
+                          value.checkedAddittional.type = e.target.value;
+                          setiisUpdate(value);
+                        }}
+                        placeholder="Additional Type"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>Additional Amount</FormLabel>
+                      <Input
+                        onChange={(e) => {
+                          let value = { ...isUpdate };
+                          value.checkedAddittional.amount = Number(
+                            e.target.value,
+                          );
+                          setiisUpdate(value);
+                        }}
+                        value={isUpdate.checkedAddittional.amount}
+                        placeholder="Additional Amount"
+                        type="number"
+                      />
+                    </FormControl>
+                  </div>
+                )}
+                <br />
+                <RadioGroup
+                  onChange={(val) => onChangeUpdateText(val, 'paymentMode')}
+                  value={isUpdate.paymentMode}
+                >
+                  <Stack direction="row">
+                    <Radio value="Full Payment">Full Payment</Radio>
+                    <Radio value="Partial Payment">Partial Payment</Radio>
+                  </Stack>
+                </RadioGroup>
+                <br />
+                {isUpdate.paymentMode === 'Partial Payment' && (
+                  <>
+                    <FormControl>
+                      <FormLabel>Partial Payment Amount</FormLabel>
+                      <Input
+                        placeholder="Partial Payment"
+                        type="number"
+                        value={isUpdate.partialPayment}
+                        onChange={(e) =>
+                          onChangeUpdateText(e.target.value, 'partialPayment')
+                        }
+                      />
+                    </FormControl>
+                    {isUpdate.partialPayment > isUpdate.totalAmmount && (
+                      <p style={{ color: 'tomato' }}>
+                        Partial payment should not be greater than full payment.
+                      </p>
+                    )}
+                  </>
+                )}
+                <div>
+                  Order History:
+                  <table style={{ width: '100%' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left' }}>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Sell Price</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody style={{ textAlign: 'left' }}>
+                      {isUpdate.Cart.map((val, i) => (
+                        <tr key={val.id}>
+                          <td>{val.name}</td>
+                          <td>{val.buyingQty}</td>
+                          <td>
+                            <Input
+                              width={'90px'}
+                              value={val.sellPrice}
+                              type="number"
+                              onChange={(e) =>
+                                updatePriceStk(e.target.value, val.id, i)
+                              }
+                            />
+                          </td>
+                          <td>
+                            <Button
+                              size="xs"
+                              colorScheme="red"
+                              onClick={() => removeOrder(val.id)}
+                            >
+                              Put Back
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </ModalBody>
+            )}
+
+            <ModalFooter>
+              <Button
+                colorScheme="yellow"
+                mr={3}
+                onClick={() => {
+                  setiisUpdate(null);
+                  sessionStorage.removeItem('arrayOfRemoveItems');
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                colorScheme="green"
+                isDisabled={!isFormValid()}
+                onClick={() => updateDetails(isUpdate)}
+              >
+                Update
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <Modal isOpen={modalOpenDue} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Balance Due Update</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody sx={{ paddingLeft: 10 }}>
+              {modalOpenDue && (
+                <ul>
+                  <li>
+                    <b>Total Amount:</b>{' '}
+                    {modalOpenDue.totalAmmount.toLocaleString()}
+                  </li>
+                  <li style={{ color: 'green' }}>
+                    <b>Previous Amount:</b>{' '}
+                    {modalOpenDue.partialPayment.toLocaleString()}
+                  </li>
+                  <li style={{ color: 'tomato' }}>
+                    <b>Balance/Due Amount:</b>{' '}
+                    {modalOpenDue.balance.toLocaleString()}
+                  </li>
+                </ul>
+              )}
+              <br />
+              <FormLabel>Balance / Due Payment</FormLabel>
+              <Input
+                placeholder="Balance / Due Payment"
+                value={balanceSet}
+                onChange={(e) => setbalanceSet(e.target.value)}
+                size="lg"
+                type="number"
+              />
+            </ModalBody>
+
+            <ModalFooter>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                onClick={() => updateDue(modalOpenDue)}
+                isDisabled={
+                  !balanceSet ||
+                  Number(balanceSet) <= 0 ||
+                  Number(balanceSet) > modalOpenDue.balance
+                }
+              >
+                Update Due
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Card>
+      <div style={{ width: '70vw' }}>
+        <Flex
+          justify="space-between"
+          align="center"
+          mt={4}
+          flexWrap="wrap"
+          gap={4}
+        >
+          <Flex align="center" gap={2}>
             <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={() => updateDue(modalOpenDue)}
-              isDisabled={
-                !balanceSet ||
-                Number(balanceSet) <= 0 ||
-                Number(balanceSet) > modalOpenDue.balance
-              }
+              onClick={() => table.setPageIndex(0)}
+              isDisabled={!table.getCanPreviousPage()}
+              size="sm"
             >
-              Update Due
+              First
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Card>
+            <Button
+              onClick={() => table.previousPage()}
+              isDisabled={!table.getCanPreviousPage()}
+              size="sm"
+            >
+              Previous
+            </Button>
+          </Flex>
+
+          <Text fontSize="sm">
+            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount()}
+          </Text>
+
+          <Flex align="center" gap={2}>
+            <Button
+              onClick={() => table.nextPage()}
+              isDisabled={!table.getCanNextPage()}
+              size="sm"
+            >
+              Next
+            </Button>
+            <Button
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              isDisabled={!table.getCanNextPage()}
+              size="sm"
+            >
+              Last
+            </Button>
+          </Flex>
+
+          <Select
+            size="sm"
+            width="auto"
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+          >
+            {[5, 10, 20, 50].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                Show {pageSize}
+              </option>
+            ))}
+          </Select>
+        </Flex>
+      </div>
+    </>
   );
 }

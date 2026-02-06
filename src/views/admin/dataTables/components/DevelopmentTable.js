@@ -387,7 +387,8 @@ export default function ComplexTable(props) {
   };
     console.log('object for delete', object);
     setisDelete(null);
-    obj.Cart.map((val) => {
+    // use forEach for side-effects instead of map to satisfy lint rule
+    obj.Cart.forEach((val) => {
       fetchAvailableProductbyID(val.id).then((response) => {
         let datafromResponse = response;
         datafromResponse.quantity =

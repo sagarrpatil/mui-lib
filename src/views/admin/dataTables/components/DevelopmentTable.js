@@ -361,11 +361,22 @@ export default function ComplexTable(props) {
     });
   };
   const deletedConfirmation = (obj) => {
-    let object = JSON.parse(JSON.stringify(obj));
-    object.totalAmmount = 0;
-    object.paymentOption = '';
-    object.partialPayment = 0;
-    object.balance = 0;
+    // let object = JSON.parse(JSON.stringify(obj));
+  const object = {
+    ...obj,
+    totalAmmount: 0,
+    paymentOption: '',
+    partialPayment: 0,
+    balance: 0,
+    Cart: obj.Cart.map(item => ({
+      ...item,
+      mrpOfProduct: 0,
+      buyingQty: 0,
+      buyPrice: 0,
+      sellPrice: 0
+    }))
+  };
+    console.log('object for delete', object);
     setisDelete(null);
     obj.Cart.map((val) => {
       fetchAvailableProductbyID(val.id).then((response) => {
@@ -388,7 +399,39 @@ export default function ComplexTable(props) {
     setiisUpdate(obj);
     console.log('===================', obj);
   };
-  const updateDetails = (obj) => {
+  // const updateDetails = (obj) => {
+  //   let totalAmount = obj.Cart.reduce((acc, item) => {
+  //     return acc + Number(item.sellPrice) * Number(item.buyingQty);
+  //   }, 0);
+  //   if (obj.checkedAddittional) {
+  //     totalAmount += Number(obj.checkedAddittional.amount);
+  //   }
+  //   obj.totalAmmount = totalAmount;
+  //   obj.balance =
+  //     obj.paymentMode === 'Partial Payment'
+  //       ? totalAmount - Number(obj.partialPayment)
+  //       : 0;
+  //   setiisUpdate(null);
+  //   let arrayOfRemoveItems = sessionStorage.getItem('arrayOfRemoveItems');
+  //   if (arrayOfRemoveItems) {
+  //     JSON.parse(arrayOfRemoveItems).map((val) => {
+  //       fetchAvailableProductbyID(val.id).then((response) => {
+  //         let datafromResponse = response;
+  //         datafromResponse.quantity =
+  //           Number(response.quantity) + Number(val.buyingQty);
+  //         updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
+  //         sessionStorage.removeItem('arrayOfRemoveItems');
+  //       });
+  //     });
+  //   }
+
+  //   deleteAvailableDueBalance(obj, obj.id).then(() => {
+  //     props.refreshTable();
+  //   });
+  // };
+
+  // ...existing code...
+  const updateDetails = async (obj) => {
     let totalAmount = obj.Cart.reduce((acc, item) => {
       return acc + Number(item.sellPrice) * Number(item.buyingQty);
     }, 0);
@@ -400,23 +443,55 @@ export default function ComplexTable(props) {
       obj.paymentMode === 'Partial Payment'
         ? totalAmount - Number(obj.partialPayment)
         : 0;
-    setiisUpdate(null);
-    let arrayOfRemoveItems = sessionStorage.getItem('arrayOfRemoveItems');
-    if (arrayOfRemoveItems) {
-      JSON.parse(arrayOfRemoveItems).map((val) => {
-        fetchAvailableProductbyID(val.id).then((response) => {
-          let datafromResponse = response;
-          datafromResponse.quantity =
-            Number(response.quantity) + Number(val.buyingQty);
-          updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
-          sessionStorage.removeItem('arrayOfRemoveItems');
-        });
-      });
-    }
 
-    deleteAvailableDueBalance(obj, obj.id).then(() => {
+    setiisUpdate(null);
+
+    const arrayOfRemoveItems = sessionStorage.getItem('arrayOfRemoveItems');
+    try {
+      if (arrayOfRemoveItems) {
+        const items = JSON.parse(arrayOfRemoveItems);
+
+        // Put back removed items into stock (sequentially)
+        for (const val of items) {
+          const response = await fetchAvailableProductbyID(val.id);
+          if (response) {
+            const datafromResponse = { ...response };
+            datafromResponse.quantity =
+              Number(response.quantity) + Number(val.buyingQty);
+            await updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
+          }
+        }
+
+        // build object to save with Cart items zeroed for removed items
+        const sanitizedCart = obj.Cart.map((item) =>
+          items.find((p) => p.id === item.id)
+            ? {
+                ...item,
+                mrpOfProduct: 0,
+                buyingQty: 0,
+                buyPrice: 0,
+                sellPrice: 0,
+              }
+            : item,
+        );
+
+        sessionStorage.removeItem('arrayOfRemoveItems');
+
+        const objectToSave = {
+          ...obj,
+          Cart: sanitizedCart,
+        };
+
+        await deleteAvailableDueBalance(objectToSave, obj.id);
+      } else {
+        // no removed items: save original obj
+        await deleteAvailableDueBalance(obj, obj.id);
+      }
+    } catch (err) {
+      console.error('Error in updateDetails:', err);
+    } finally {
       props.refreshTable();
-    });
+    }
   };
   const datePickup = (id) => {
     return moment(Number(id)).isBetween(

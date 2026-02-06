@@ -209,13 +209,18 @@ export default function Marketplace() {
     return true;
   };
   useEffect(() => {
-    if (customerName) {
-      const matches = transaction?.filter((cust) =>
-        // cust.customerName
-        //   .toLowerCase()
-        //   .includes(customerName.toLowerCase()) ||
-        cust?.phoneNumber?.includes(phoneNumber),
-      );
+  if (customerName || phoneNumber) {
+      const nameLower = customerName ? customerName.toLowerCase() : '';
+      const phoneStr = phoneNumber ? String(phoneNumber) : '';
+      const matches = (transaction || []).filter((cust) => {
+        const custName = cust?.customerName
+          ? String(cust.customerName).toLowerCase()
+          : '';
+        const custPhone = cust?.phoneNumber ? String(cust.phoneNumber) : '';
+        const nameMatch = customerName ? custName.includes(nameLower) : false;
+        const phoneMatch = phoneNumber ? custPhone.includes(phoneStr) : false;
+        return nameMatch || phoneMatch;
+      });
       setFilteredCustomers(matches);
     } else {
       setFilteredCustomers([]);

@@ -2,19 +2,21 @@ import React from 'react';
 
 // Chakra imports
 import { Flex, useColorModeValue } from '@chakra-ui/react';
-
+import image from 'components/sidebar/components/image.png';
 // Custom components
 import { FitnessLogo } from 'components/icons/Icons';
 import { HSeparator } from 'components/separator/Separator';
 
 export function SidebarBrand() {
   //   Chakra color mode
-  let logoColor = useColorModeValue('navy.700', 'white');
+  // let logoColor = useColorModeValue('navy.700', 'white');
 
   return (
     <Flex align="center" direction="column">
-      {/* <FitnessLogo h='26px' w='175px' my='32px' color={logoColor} /> */}
-      <svg
+      <img src={image} alt="Logo"  width='130px' />
+      <br/>
+      {/* <FitnessLogo h='26px' w='175px' my='32px' color={image} /> */}
+      {/* <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"
         width="120px"
@@ -177,7 +179,7 @@ export function SidebarBrand() {
         -49 -8 -98 -6 -105 4 -101 -5 -47 133 33 82 50 115 59 115 2 0 13 -21 25 -47z"
           />
         </g>
-      </svg>
+      </svg> */}
       <HSeparator mb="20px" />
     </Flex>
   );

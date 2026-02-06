@@ -397,7 +397,7 @@ export default function ComplexTable(props) {
     });
 
   // Delete only after all updates complete
-   deleteAvailableDueBalance(clonedObj, obj.id);
+   deleteAvailableDueBalance(object, obj.id);
 
   // Refresh table
   props.refreshTable();

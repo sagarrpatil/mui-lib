@@ -198,3 +198,13 @@ export const fetchExpenseIn = async () => {
     throw error; // Re-throw the error for proper error handling
   }
 };
+export const deleteAvailableProduct = async (id) => {
+  try {
+    const dataRefs = ref(realtimeDb, `${key}/availableStock/${id}`);
+    await set(dataRefs, null); // Set to null to delete
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    throw error;
+  }
+};

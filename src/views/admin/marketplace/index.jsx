@@ -58,7 +58,7 @@ export default function Marketplace() {
   const [searchParams] = useSearchParams();
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
-  const password = localStorage.getItem("word") || "7057"
+  const password = localStorage.getItem("word") || "2222"
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const textColorBrand = useColorModeValue('brand.500', 'white');
   const [tableData, setTableData] = useState(false);

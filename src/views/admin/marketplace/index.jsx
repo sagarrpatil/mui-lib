@@ -31,6 +31,12 @@ import {
   Stack,
   Checkbox,
   Icon,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from '@chakra-ui/react';
 import { EditIcon } from '@chakra-ui/icons';
 import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
@@ -42,6 +48,7 @@ import { fetchAvailableProduct } from 'service/apiservice';
 import {
   saveAndBillApiCall,
   fetchAvailableTransaction,
+  deleteAvailableProduct,
 } from 'service/apiservice';
 import Projects from '../profile/components/Projects';
 import { useSearchParams } from 'react-router-dom';
@@ -51,6 +58,7 @@ export default function Marketplace() {
   const [searchParams] = useSearchParams();
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
+  const password = localStorage.getItem("word") || "7057"
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const textColorBrand = useColorModeValue('brand.500', 'white');
   const [tableData, setTableData] = useState(false);
@@ -72,6 +80,11 @@ export default function Marketplace() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [updateID, setUpdateID] = useState(null);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteProductId, setDeleteProductId] = useState(null);
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } =
+    useDisclosure();
+  const cancelRef = React.useRef();
 
   useEffect(() => {
     const updateParam = searchParams.get('update');
@@ -209,18 +222,13 @@ export default function Marketplace() {
     return true;
   };
   useEffect(() => {
-  if (customerName || phoneNumber) {
-      const nameLower = customerName ? customerName.toLowerCase() : '';
-      const phoneStr = phoneNumber ? String(phoneNumber) : '';
-      const matches = (transaction || []).filter((cust) => {
-        const custName = cust?.customerName
-          ? String(cust.customerName).toLowerCase()
-          : '';
-        const custPhone = cust?.phoneNumber ? String(cust.phoneNumber) : '';
-        const nameMatch = customerName ? custName.includes(nameLower) : false;
-        const phoneMatch = phoneNumber ? custPhone.includes(phoneStr) : false;
-        return nameMatch || phoneMatch;
-      });
+    if (customerName) {
+      const matches = transaction?.filter((cust) =>
+        // cust.customerName
+        //   .toLowerCase()
+        //   .includes(customerName.toLowerCase()) ||
+        cust?.phoneNumber?.includes(phoneNumber),
+      );
       setFilteredCustomers(matches);
     } else {
       setFilteredCustomers([]);
@@ -320,6 +328,24 @@ export default function Marketplace() {
 
     return Object.values(mergedData);
   };
+    const handleDeleteProduct = async () => {
+    if (deletePassword === password) {
+      try {
+        await deleteAvailableProduct(deleteProductId);
+        console.log('Product deleted successfully:', deleteProductId);
+        setDeletePassword('');
+        setDeleteProductId(null);
+        onDeleteClose();
+        fetchAvailable(); // Refresh the product list
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product');
+      }
+    } else {
+      alert('Invalid password');
+      setDeletePassword('');
+    }
+  };
   const now = moment();
   const sixMonthsLater = moment().add(6, 'months');
   console.log(
@@ -327,6 +353,7 @@ export default function Marketplace() {
       moment(product.expDate).isBetween(now, sixMonthsLater, undefined, '[]'),
     ),
   );
+  console.log(deleteProductId && tableDataToSearch?.find((product) => product.id === deleteProductId))
   return (
     <Box pt={{ base: '93px', md: '46px', xl: '46px' }}>
       <Grid
@@ -472,11 +499,29 @@ export default function Marketplace() {
                                 padding: 10,
                                 background: '#fff',
                                 borderRadius: 20,
-                                cursor: 'pointer',
+                                display: 'flex',
+                                gap: 10,
                               }}
-                              onClick={() => setUpdateProduct({ ...val })}
                             >
-                              Edit : <Icon as={EditIcon} />
+                              <div
+                                style={{
+                                  cursor: 'pointer',
+                                  flex: 1,
+                                }}
+                                onClick={() => setUpdateProduct({ ...val })}
+                              >
+                                Edit : <Icon as={EditIcon} />
+                              </div>
+                              <Button
+                                colorScheme="red"
+                                size="sm"
+                                onClick={() => {
+                                  setDeleteProductId(val.id);
+                                  onDeleteOpen();
+                                }}
+                              >
+                                Delete
+                              </Button>
                             </div>
                           )}
                         </div>
@@ -830,6 +875,45 @@ export default function Marketplace() {
           )}
         </ModalContent>
       </Modal>
+
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDeleteClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Product
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Enter password to confirm deletion:
+              <b>{" " + tableDataToSearch?.find((product) => product.id === deleteProductId)?.name || ""}</b>?
+              <Input
+                mt={4}
+                type="password"
+                placeholder="Enter password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+              />
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleDeleteProduct}
+                ml={3}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 }

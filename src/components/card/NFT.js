@@ -1,16 +1,5 @@
 // Chakra imports
-import {
-  AvatarGroup,
-  Avatar,
-  Box,
-  Button,
-  Flex,
-  Icon,
-  Image,
-  Link,
-  Text,
-  useColorModeValue,
-} from '@chakra-ui/react';
+import { Badge, Flex, Icon, Text, useColorModeValue } from '@chakra-ui/react';
 // Custom components
 import Card from 'components/card/Card.js';
 import moment from 'moment';
@@ -21,133 +10,101 @@ import { IoHeart, IoHeartOutline } from 'react-icons/io5';
 export default function NFT(props) {
   const { fav, name, productValue, quantity, buyingQty, rateCard, data } =
     props;
-  const [like, setLike] = useState(fav);
+  const [like] = useState(fav);
   const outofStock = buyingQty >= quantity;
   const textColor = useColorModeValue('navy.700', 'white');
   const textColorBid = useColorModeValue('brand.500', 'white');
+  const dividerColor = useColorModeValue('secondaryGray.100', 'whiteAlpha.100');
+  const isExpiringSoon =
+    data.expDate && moment(data.expDate).isBefore(moment().add(6, 'months'));
   return (
-    <Card p="20px">
+    <Card
+      p="18px"
+      h="100%"
+      border="2px solid"
+      borderColor={buyingQty ? 'brand.400' : 'transparent'}
+      transition="border-color .15s ease"
+    >
       <Flex
-        direction={{ base: 'column' }}
-        justify="center"
-        style={{ opacity: outofStock ? 0.3 : 1 }}
+        direction="column"
+        h="100%"
+        style={{ opacity: outofStock ? 0.4 : 1 }}
       >
-        <Box mb={{ base: '20px', '2xl': '20px' }} position="relative">
-          <Button
-            position="absolute"
-            bg="white"
-            _hover={{ bg: 'whiteAlpha.900' }}
-            _active={{ bg: 'white' }}
-            _focus={{ bg: 'white' }}
-            p="0px !important"
-            top="14px"
-            right="14px"
-            borderRadius="50%"
-            minW="36px"
-            h="36px"
-            onClick={() => {
-              // setLike(!like);
-            }}
+        <Flex justify="space-between" align="start" gap="8px" mb="10px">
+          <Text
+            color={textColor}
+            fontSize={{ base: 'md', '3xl': 'lg' }}
+            fontWeight="bold"
+            lineHeight="1.3"
           >
-            <Icon
-              transition="0.2s linear"
-              w="20px"
-              h="20px"
-              as={like ? IoHeart : IoHeartOutline}
-              color="brand.500"
-            />
-          </Button>
-        </Box>
-        <Flex flexDirection="column" justify="space-between" h="100%">
-          <Flex
-            justify="space-between"
-            direction={{
-              base: 'row',
-              md: 'column',
-              lg: 'row',
-              xl: 'column',
-              '2xl': 'row',
-            }}
-            mb="auto"
-          >
-            <Flex direction="column">
-              <Text
-                color={textColor}
-                fontSize={{
-                  base: 'xl',
-                  md: 'lg',
-                  lg: 'lg',
-                  xl: 'lg',
-                  '2xl': 'md',
-                  '3xl': 'lg',
-                }}
-                mb="5px"
-                fontWeight="bold"
-                me="14px"
-              >
-                {name + (data.flavour ? ` (${data.flavour})` : '')}
-              </Text>
+            {name + (data.flavour ? ` (${data.flavour})` : '')}
+          </Text>
+          <Icon
+            flexShrink={0}
+            w="20px"
+            h="20px"
+            as={like ? IoHeart : IoHeartOutline}
+            color="brand.500"
+          />
+        </Flex>
 
-              {rateCard.map((val) => (
-                <Text
-                  color="secondaryGray.600"
-                  fontSize={{
-                    base: 'sm',
-                  }}
-                  fontWeight="400"
-                  me="14px"
-                >
-                  {val.type} : ₹{val.price}
-                </Text>
-              ))}
-            </Flex>
-          </Flex>
-
-          {data.expDate && (
-            <Text
-              color="secondaryGray.600"
-              fontSize={{
-                base: 'sm',
-              }}
+        <Flex wrap="wrap" gap="6px" mb="12px">
+          {rateCard.map((val) => (
+            <Badge
+              key={val.type + val.price}
+              variant="subtle"
+              colorScheme="brandScheme"
+              borderRadius="8px"
+              px="8px"
+              py="2px"
+              textTransform="none"
               fontWeight="500"
-              me="14px"
             >
-              <hr />
-              EXP Date: {moment(data.expDate).format('MMM YYYY')}
-              <hr />
-            </Text>
-          )}
-          <Flex
-            align="start"
-            justify="space-between"
-            direction={{
-              base: 'row',
-              md: 'column',
-              lg: 'row',
-              xl: 'column',
-              '2xl': 'row',
-            }}
-            mt="25px"
+              {val.type}: ₹{val.price}
+            </Badge>
+          ))}
+        </Flex>
+
+        {data.expDate && (
+          <Text
+            fontSize="xs"
+            fontWeight="600"
+            color={isExpiringSoon ? 'orange.500' : 'secondaryGray.600'}
+            mb="8px"
           >
-            Quantity:
-            <Text fontWeight="700" fontSize="sm" color={textColorBid}>
+            EXP: {moment(data.expDate).format('MMM YYYY')}
+          </Text>
+        )}
+
+        <Flex
+          mt="auto"
+          pt="10px"
+          borderTop="1px solid"
+          borderColor={dividerColor}
+          justify="space-between"
+          align="center"
+        >
+          <Text fontSize="sm" color="secondaryGray.600">
+            Qty{' '}
+            <Text as="span" fontWeight="700" color={textColorBid}>
               {quantity}
             </Text>
-            <Text
-              color="secondaryGray.600"
-              fontSize={{
-                base: 'sm',
-              }}
-              fontWeight="400"
-              me="14px"
-            >
-              (P: {productValue})
-            </Text>
-          </Flex>
-          {outofStock && (
-            <Text style={{ color: 'tomato', fontSize: 14 }}>Out of Stock</Text>
-          )}
+            {buyingQty ? (
+              <Text as="span" color="secondaryGray.600">
+                {' '}
+                · {buyingQty} in cart
+              </Text>
+            ) : null}
+          </Text>
+          <Text fontSize="xs" color="secondaryGray.600">
+            P: ₹{productValue}
+          </Text>
         </Flex>
+        {outofStock && (
+          <Text color="red.500" fontSize="sm" fontWeight="600" mt="6px">
+            Out of Stock
+          </Text>
+        )}
       </Flex>
     </Card>
   );

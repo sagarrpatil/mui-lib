@@ -1,28 +1,32 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
 // Chakra imports
 import {
+  Alert,
+  AlertIcon,
   Box,
   Button,
-  Checkbox,
   Flex,
   FormControl,
   FormLabel,
   Heading,
   Icon,
+  IconButton,
   Input,
   InputGroup,
+  InputLeftElement,
   InputRightElement,
   Text,
   useColorModeValue,
 } from '@chakra-ui/react';
 // Custom components
-import { HSeparator } from 'components/separator/Separator';
 import DefaultAuth from 'layouts/auth/Default';
 // Assets
 import illustration from 'assets/img/auth/auth.png';
-import { FcGoogle } from 'react-icons/fc';
-import { MdOutlineRemoveRedEye } from 'react-icons/md';
+import {
+  MdOutlineRemoveRedEye,
+  MdOutlineEmail,
+  MdLockOutline,
+} from 'react-icons/md';
 import { RiEyeCloseLine } from 'react-icons/ri';
 import { auth } from '../../../firebase';
 import { signInWithEmailAndPassword } from '@firebase/auth';
@@ -32,26 +36,17 @@ function SignIn() {
   const [username, serUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const textColor = useColorModeValue('navy.700', 'white');
   const textColorSecondary = 'gray.400';
-  const textColorDetails = useColorModeValue('navy.700', 'secondaryGray.600');
-  const textColorBrand = useColorModeValue('brand.500', 'white');
   const brandStars = useColorModeValue('brand.500', 'brand.400');
-  const googleBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.200');
-  const googleText = useColorModeValue('navy.700', 'white');
-  const googleHover = useColorModeValue(
-    { bg: 'gray.200' },
-    { bg: 'whiteAlpha.300' },
-  );
-  const googleActive = useColorModeValue(
-    { bg: 'secondaryGray.300' },
-    { bg: 'whiteAlpha.200' },
-  );
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    setError('');
+    setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -62,178 +57,131 @@ function SignIn() {
       localStorage.setItem('token', btoa(encodeURI(user.email)));
       window.location.href = '/';
     } catch (error) {
-      setError('Invalid Credentails');
+      setError('Invalid credentials. Please check your email and password.');
+      setIsLoading(false);
     }
   };
   return (
     <DefaultAuth illustrationBackground={illustration} image={illustration}>
-      <Flex
-        maxW={{ base: '100%', md: 'max-content' }}
-        w="100%"
-        mx={{ base: 'auto', lg: '0px' }}
-        me="auto"
-        h="100%"
-        alignItems="start"
-        justifyContent="center"
-        mb={{ base: '30px', md: '60px' }}
-        px={{ base: '25px', md: '0px' }}
-        mt={{ base: '40px', md: '14vh' }}
-        flexDirection="column"
-      >
-        <Box me="auto">
-          <Heading color={textColor} fontSize="36px" mb="10px">
-            Sign In
-          </Heading>
-          <Text
-            mb="36px"
-            ms="4px"
-            color={textColorSecondary}
-            fontWeight="400"
-            fontSize="md"
-          >
-            Enter your email and password to sign in!
-          </Text>
-        </Box>
-        {error && (
-          <p
-            style={{
-              margin: 10,
-              padding: 5,
-              width: '90%',
-              color: 'tomato',
-              border: '1px solid tomato',
-            }}
-          >
-            {error}
-          </p>
-        )}
-        <Flex
-          zIndex="2"
-          direction="column"
-          w={{ base: '100%', md: '420px' }}
-          maxW="100%"
-          background="transparent"
-          borderRadius="15px"
-          mx={{ base: 'auto', lg: 'unset' }}
-          me="auto"
-          mb={{ base: '20px', md: 'auto' }}
+      <Box w="100%" maxW="420px" mx={{ base: 'auto', lg: '0' }} py="40px">
+        <Heading
+          color={textColor}
+          fontSize={{ base: '32px', md: '36px' }}
+          mb="8px"
         >
-          <FormControl>
+          Welcome back
+        </Heading>
+        <Text mb="32px" color={textColorSecondary} fontSize="md">
+          Enter your email and password to sign in.
+        </Text>
+
+        {error && (
+          <Alert status="error" borderRadius="12px" mb="24px" fontSize="sm">
+            <AlertIcon />
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <FormControl isRequired mb="20px">
             <FormLabel
-              display="flex"
               ms="4px"
               fontSize="sm"
               fontWeight="500"
               color={textColor}
               mb="8px"
+              requiredIndicator={
+                <Text as="span" color={brandStars} ms="2px">
+                  *
+                </Text>
+              }
             >
-              Email<Text color={brandStars}>*</Text>
+              Email
             </FormLabel>
-            <Input
-              isRequired={true}
-              variant="auth"
-              fontSize="sm"
-              ms={{ base: '0px', md: '0px' }}
-              type="email"
-              value={username}
-              onChange={(e) => serUsername(e.target.value)}
-              placeholder="mail@gamil.com"
-              mb="24px"
-              fontWeight="500"
-              size="lg"
-            />
+            <InputGroup size="lg">
+              <InputLeftElement pointerEvents="none" h="100%">
+                <Icon as={MdOutlineEmail} color={textColorSecondary} />
+              </InputLeftElement>
+              <Input
+                variant="auth"
+                fontSize="sm"
+                type="email"
+                autoComplete="email"
+                value={username}
+                onChange={(e) => serUsername(e.target.value)}
+                placeholder="mail@example.com"
+                fontWeight="500"
+                ps="44px"
+              />
+            </InputGroup>
+          </FormControl>
+
+          <FormControl isRequired mb="28px">
             <FormLabel
               ms="4px"
               fontSize="sm"
               fontWeight="500"
               color={textColor}
-              display="flex"
+              mb="8px"
+              requiredIndicator={
+                <Text as="span" color={brandStars} ms="2px">
+                  *
+                </Text>
+              }
             >
-              Password<Text color={brandStars}>*</Text>
+              Password
             </FormLabel>
-            <InputGroup size="md">
+            <InputGroup size="lg">
+              <InputLeftElement pointerEvents="none" h="100%">
+                <Icon as={MdLockOutline} color={textColorSecondary} />
+              </InputLeftElement>
               <Input
-                isRequired={true}
                 fontSize="sm"
                 placeholder="Min. 8 characters"
-                mb="24px"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                size="lg"
                 type={show ? 'text' : 'password'}
                 variant="auth"
+                ps="44px"
               />
-              <InputRightElement display="flex" alignItems="center" mt="4px">
-                <Icon
-                  color={textColorSecondary}
-                  _hover={{ cursor: 'pointer' }}
-                  as={show ? RiEyeCloseLine : MdOutlineRemoveRedEye}
+              <InputRightElement h="100%">
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  aria-label={show ? 'Hide password' : 'Show password'}
+                  icon={
+                    <Icon
+                      color={textColorSecondary}
+                      as={show ? RiEyeCloseLine : MdOutlineRemoveRedEye}
+                    />
+                  }
                   onClick={handleClick}
                 />
               </InputRightElement>
             </InputGroup>
-            <Flex justifyContent="space-between" align="center" mb="24px">
-              <FormControl display="flex" alignItems="center">
-                <Checkbox
-                  id="remember-login"
-                  colorScheme="brandScheme"
-                  me="10px"
-                />
-                <FormLabel
-                  htmlFor="remember-login"
-                  mb="0"
-                  fontWeight="normal"
-                  color={textColor}
-                  fontSize="sm"
-                >
-                  Keep me logged in
-                </FormLabel>
-              </FormControl>
-              <NavLink to="/auth/forgot-password">
-                <Text
-                  color={textColorBrand}
-                  fontSize="sm"
-                  w="124px"
-                  fontWeight="500"
-                >
-                  Forgot password?
-                </Text>
-              </NavLink>
-            </Flex>
-            <Button
-              fontSize="sm"
-              variant="brand"
-              fontWeight="500"
-              w="100%"
-              h="50"
-              mb="24px"
-              onClick={() => handleSubmit()}
-            >
-              Sign In
-            </Button>
           </FormControl>
-          <Flex
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="start"
-            maxW="100%"
-            mt="0px"
+
+          <Button
+            type="submit"
+            fontSize="sm"
+            variant="brand"
+            fontWeight="600"
+            w="100%"
+            h="50px"
+            isLoading={isLoading}
+            loadingText="Signing in"
           >
-            {/* <Text color={textColorDetails} fontWeight='400' fontSize='14px'>
-              Not registered yet?
-              <NavLink to='/auth/sign-up'>
-                <Text
-                  color={textColorBrand}
-                  as='span'
-                  ms='5px'
-                  fontWeight='500'>
-                  Create an Account
-                </Text>
-              </NavLink>
-            </Text> */}
-          </Flex>
+            Sign In
+          </Button>
+        </form>
+
+        <Flex justify="center" mt="24px">
+          <Text color={textColorSecondary} fontSize="xs">
+            Having trouble signing in? Contact your administrator.
+          </Text>
         </Flex>
-      </Flex>
+      </Box>
     </DefaultAuth>
   );
 }

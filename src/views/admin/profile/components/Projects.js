@@ -1,3 +1,4 @@
+import { AddIcon } from '@chakra-ui/icons';
 import {
   Grid,
   Text,
@@ -185,7 +186,7 @@ export default function Projects(props) {
 
   return (
     <>
-      <Button colorScheme="blue" onClick={handleOpen}>
+      <Button variant="brand" leftIcon={<AddIcon />} onClick={handleOpen}>
         New Product
       </Button>
 

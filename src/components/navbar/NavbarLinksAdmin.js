@@ -182,7 +182,7 @@ export default function HeaderLinks(props) {
             _hover={{ cursor: 'pointer' }}
             color="white"
             name="P P"
-            bg="#11047A"
+            bg="brand.900"
             size="sm"
             w="40px"
             h="40px"

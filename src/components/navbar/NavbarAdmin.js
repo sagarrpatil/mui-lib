@@ -5,7 +5,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   Flex,
-  Link,
   Text,
   useColorModeValue,
 } from '@chakra-ui/react';
@@ -101,28 +100,6 @@ export default function AdminNavbar(props) {
         alignItems={{ xl: 'center' }}
         mb={gap}
       >
-        <Box mb={{ sm: '8px', md: '0px' }}>
-          {/* Here we create navbar brand, based on route name */}
-          <Link
-            color={mainText}
-            href="#"
-            bg="inherit"
-            borderRadius="inherit"
-            fontWeight="bold"
-            fontSize="34px"
-            _hover={{ color: { mainText } }}
-            _active={{
-              bg: 'inherit',
-              transform: 'none',
-              borderColor: 'transparent',
-            }}
-            _focus={{
-              boxShadow: 'none',
-            }}
-          >
-            {brandText}
-          </Link>
-        </Box>
         <Box ms="auto" w={{ sm: '100%', md: 'unset' }}>
           <AdminNavbarLinks
             onOpen={props.onOpen}

@@ -10,7 +10,7 @@ import logoWhite from 'assets/img/layout/logoWhite.png';
 import React from 'react';
 
 export default function SidebarDocs() {
-  const bgColor = 'linear-gradient(135deg, #868CFF 0%, #4318FF 100%)';
+  const bgColor = 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)';
   const borderColor = useColorModeValue('white', 'navy.800');
 
   return (
@@ -25,7 +25,7 @@ export default function SidebarDocs() {
       {/* <Flex
         border='5px solid'
         borderColor={borderColor}
-        bg='linear-gradient(135deg, #868CFF 0%, #4318FF 100%)'
+        bg='linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)'
         borderRadius='50%'
         w='94px'
         h='94px'

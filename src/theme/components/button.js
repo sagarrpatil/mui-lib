@@ -45,10 +45,10 @@ export const buttonStyles = {
           },
         }),
         lightBrand: (props) => ({
-          bg: mode('#F2EFFF', 'whiteAlpha.100')(props),
+          bg: mode('#E6FBF7', 'whiteAlpha.100')(props),
           color: mode('brand.500', 'white')(props),
           _focus: {
-            bg: mode('#F2EFFF', 'whiteAlpha.100')(props),
+            bg: mode('#E6FBF7', 'whiteAlpha.100')(props),
           },
           _active: {
             bg: mode('secondaryGray.300', 'whiteAlpha.100')(props),

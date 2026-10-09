@@ -5,7 +5,6 @@ import {
   Button,
   Flex,
   Grid,
-  Link,
   Text,
   useColorModeValue,
   SimpleGrid,
@@ -20,16 +19,6 @@ import {
   ModalCloseButton,
   FormLabel,
   Input,
-  Select,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-  Radio,
-  RadioGroup,
-  Stack,
-  Checkbox,
   Icon,
   AlertDialog,
   AlertDialogBody,
@@ -37,8 +26,31 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Badge,
+  Divider,
+  FormErrorMessage,
+  FormHelperText,
+  InputGroup,
+  InputLeftAddon,
+  Switch,
 } from '@chakra-ui/react';
+import { FaWhatsapp } from 'react-icons/fa';
 import { EditIcon } from '@chakra-ui/icons';
+import {
+  MdClose,
+  MdDeleteOutline,
+  MdEdit,
+  MdInventory2,
+  MdOutlineShoppingCart,
+  MdShoppingCart,
+  MdCreditCard,
+  MdPayments,
+  MdPersonOutline,
+  MdPrint,
+  MdQrCode2,
+  MdReceiptLong,
+} from 'react-icons/md';
+import PageHeader from 'components/page/PageHeader';
 import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
 import NFT from 'components/card/NFT';
 import Card from 'components/card/Card.js';
@@ -53,14 +65,33 @@ import {
 import Projects from '../profile/components/Projects';
 import { useSearchParams } from 'react-router-dom';
 
+function SectionLabel({ icon, children }) {
+  return (
+    <Flex align="center" gap="8px" mb="12px">
+      <Icon as={icon} color="brand.500" w="18px" h="18px" />
+      <Text
+        fontSize="xs"
+        fontWeight="700"
+        letterSpacing="0.06em"
+        textTransform="uppercase"
+        color="secondaryGray.600"
+      >
+        {children}
+      </Text>
+    </Flex>
+  );
+}
+
 export default function Marketplace() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [searchParams] = useSearchParams();
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
-  const password = localStorage.getItem("word") || "2222"
+  const password = localStorage.getItem('word') || '7057';
   const textColor = useColorModeValue('secondaryGray.900', 'white');
-  const textColorBrand = useColorModeValue('brand.500', 'white');
+  const dividerColor = useColorModeValue('secondaryGray.100', 'whiteAlpha.100');
+  const segmentBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
+  const segmentActiveBg = useColorModeValue('white', 'navy.700');
   const [tableData, setTableData] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [Cart, setCart] = useState([]);
@@ -82,8 +113,11 @@ export default function Marketplace() {
   const [updateID, setUpdateID] = useState(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteProductId, setDeleteProductId] = useState(null);
-  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } =
-    useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
   const cancelRef = React.useRef();
 
   useEffect(() => {
@@ -183,7 +217,6 @@ export default function Marketplace() {
     );
   }
   const getZeroValue = Cart.filter((item) => isInvalidPrice(item.sellPrice));
-  console.log(getZeroValue.length > 0);
   const tableDataToSearch =
     filteredSuggestions.length > 0
       ? filteredSuggestions
@@ -222,18 +255,13 @@ export default function Marketplace() {
     return true;
   };
   useEffect(() => {
-  if (customerName || phoneNumber) {
-      const nameLower = customerName ? customerName.toLowerCase() : '';
-      const phoneStr = phoneNumber ? String(phoneNumber) : '';
-      const matches = (transaction || []).filter((cust) => {
-        const custName = cust?.customerName
-          ? String(cust.customerName).toLowerCase()
-          : '';
-        const custPhone = cust?.phoneNumber ? String(cust.phoneNumber) : '';
-        const nameMatch = customerName ? custName.includes(nameLower) : false;
-        const phoneMatch = phoneNumber ? custPhone.includes(phoneStr) : false;
-        return nameMatch || phoneMatch;
-      });
+    if (customerName) {
+      const matches = transaction?.filter((cust) =>
+        // cust.customerName
+        //   .toLowerCase()
+        //   .includes(customerName.toLowerCase()) ||
+        cust?.phoneNumber?.includes(phoneNumber),
+      );
       setFilteredCustomers(matches);
     } else {
       setFilteredCustomers([]);
@@ -261,7 +289,6 @@ export default function Marketplace() {
       setPhoneNumber(selectedCustomer.phoneNumber);
     }
   };
-  console.log('filteredCustomers', filteredCustomers);
   const onCancelPopup = () => {
     setcheckedAddittional(null);
     setPhoneNumber('');
@@ -333,7 +360,7 @@ export default function Marketplace() {
 
     return Object.values(mergedData);
   };
-    const handleDeleteProduct = async () => {
+  const handleDeleteProduct = async () => {
     if (deletePassword === password) {
       try {
         await deleteAvailableProduct(deleteProductId);
@@ -353,14 +380,45 @@ export default function Marketplace() {
   };
   const now = moment();
   const sixMonthsLater = moment().add(6, 'months');
-  console.log(
-    tableDataToSearch?.filter((product) =>
-      moment(product.expDate).isBetween(now, sixMonthsLater, undefined, '[]'),
-    ),
-  );
-  console.log(deleteProductId && tableDataToSearch?.find((product) => product.id === deleteProductId))
+  const isVisible = (val) =>
+    (val.quantity > indexProduct && filterSet === 'Available Stock') ||
+    (val.quantity > indexProduct &&
+      filterSet === '6m' &&
+      moment(val.expDate).isBetween(now, sixMonthsLater, undefined, '[]')) ||
+    (filterSet === 'Out of Stock' && val.quantity === 0) ||
+    (filterSet === 'Favorite' && val.fav);
+  const visibleProducts = tableDataToSearch.filter(isVisible);
+  const filterOptions = [
+    { key: 'Available Stock', label: 'Available Stock' },
+    { key: '6m', label: 'Expiring in 6m' },
+    { key: 'Favorite', label: 'Favorite' },
+    { key: 'Out of Stock', label: 'Out of Stock' },
+  ];
+  const cartItemCount = Cart.reduce((sum, item) => sum + item.buyingQty, 0);
   return (
-    <Box pt={{ base: '93px', md: '46px', xl: '46px' }}>
+    <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
+      <PageHeader
+        title="Sell Order"
+        subtitle="Pick products to add them to the cart, then create the bill"
+        actions={
+          <>
+            <Projects
+              fetchProductRefresh={() => fetchAvailable()}
+              updateProduct={updateProduct}
+              closeUpdate={() => {
+                setUpdateProduct(null);
+              }}
+            />
+            <Button
+              variant={showupdateBtn ? 'darkBrand' : 'lightBrand'}
+              leftIcon={<Icon as={showupdateBtn ? MdClose : MdEdit} />}
+              onClick={() => setShowupdateBtn((prev) => !prev)}
+            >
+              {showupdateBtn ? 'Done Editing' : 'Edit Products'}
+            </Button>
+          </>
+        }
+      />
       <Grid
         mb="20px"
         gridTemplateColumns={{ xl: 'repeat(3, 1fr)', '2xl': '1fr 0.46fr' }}
@@ -371,235 +429,228 @@ export default function Marketplace() {
           flexDirection="column"
           gridArea={{ xl: '1 / 1 / 2 / 3', '2xl': '1 / 1 / 2 / 2' }}
         >
-          {/* <Banner /> */}
-          <Flex direction="column">
+          <Card p="16px" mb="20px">
             <Flex
-              mt="45px"
-              mb="20px"
-              justifyContent="space-between"
-              direction={{ base: 'column', md: 'row' }}
-              align={{ base: 'start', md: 'center' }}
+              gap="12px"
+              justify="space-between"
+              direction={{ base: 'column', lg: 'row' }}
+              align={{ base: 'stretch', lg: 'center' }}
             >
-              <Text color={textColor} fontSize="2xl" ms="24px" fontWeight="700">
-                <SearchBar
-                  fromSellOrder={true}
-                  me="10px"
-                  borderRadius="30px"
-                  filteredSuggestionstoSell={(filteredSuggestions) =>
-                    setFilteredSuggestions(filteredSuggestions)
-                  }
-                />
-              </Text>
-              <Flex
-                align="center"
-                me="20px"
-                ms={{ base: '24px', md: '0px' }}
-                mt={{ base: '20px', md: '0px' }}
-              >
-                <Link
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '30px' }}
-                  onClick={() => setFilter('Available Stock')}
-                >
-                  Available Stock
-                </Link>
-                <Link
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '30px' }}
-                  onClick={() => setFilter('6m')}
-                >
-                  Up-Comming 6m Expiry
-                </Link>
-                <Link
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '30px' }}
-                  onClick={() => setFilter('Favorite')}
-                >
-                  Favorite
-                </Link>
-                <Link
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '20px' }}
-                  onClick={() => setFilter('Out of Stock')}
-                >
-                  Out of Stock
-                </Link>
-                <Link
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '20px', md: '10px' }}
-                  to="#music"
-                >
-                  <Projects
-                    fetchProductRefresh={() => fetchAvailable()}
-                    updateProduct={updateProduct}
-                    closeUpdate={() => {
-                      setUpdateProduct(null);
-                    }}
-                  />
-                </Link>
-                <Link
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                  to="#music"
-                >
-                  <Button onClick={() => setShowupdateBtn((prev) => !prev)}>
-                    {showupdateBtn ? 'Close Update' : 'Update'}
+              <SearchBar
+                fromSellOrder={true}
+                borderRadius="16px"
+                w={{ base: '100%', lg: '280px' }}
+                filteredSuggestionstoSell={(filteredSuggestions) =>
+                  setFilteredSuggestions(filteredSuggestions)
+                }
+              />
+              <Flex gap="8px" wrap="wrap">
+                {filterOptions.map((opt) => (
+                  <Button
+                    key={opt.key}
+                    size="sm"
+                    borderRadius="full"
+                    variant={filterSet === opt.key ? 'brand' : 'light'}
+                    onClick={() => setFilter(opt.key)}
+                  >
+                    {opt.label}
                   </Button>
-                </Link>
+                ))}
               </Flex>
             </Flex>
-            <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <SimpleGrid
-                columns={{ base: 1, md: 3 }}
-                gap="20px"
-                className="mobileSellScroll"
-              >
-                {tableDataToSearch &&
-                  tableDataToSearch.map(
-                    (val) =>
-                      ((val.quantity > indexProduct &&
-                        filterSet === 'Available Stock') ||
-                        (val.quantity > indexProduct &&
-                          filterSet === '6m' &&
-                          moment(val.expDate).isBetween(
-                            now,
-                            sixMonthsLater,
-                            undefined,
-                            '[]',
-                          )) ||
-                        (filterSet === 'Out of Stock' && val.quantity === 0) ||
-                        (filterSet === 'Favorite' && val.fav)) && (
-                        <div>
-                          <div
-                            style={{ cursor: 'pointer' }}
-                            onClick={() =>
-                              (Cart.find((x) => x.id === val.id)?.buyingQty ===
-                                undefined ||
-                                Cart.find((x) => x.id === val.id)?.buyingQty <
-                                  val.quantity) &&
-                              pushCartData(val)
-                            }
-                          >
-                            <NFT
-                              name={val.name}
-                              productValue={val.buyPrice}
-                              rateCard={val.sellingTypes}
-                              fav={val.fav}
-                              quantity={val.quantity}
-                              data={val}
-                              buyingQty={
-                                Cart.find((x) => x.id === val.id)?.buyingQty
-                              }
-                            />
-                          </div>
-                          {showupdateBtn && (
-                            <div
-                              style={{
-                                padding: 10,
-                                background: '#fff',
-                                borderRadius: 20,
-                                display: 'flex',
-                                gap: 10,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  cursor: 'pointer',
-                                  flex: 1,
-                                }}
-                                onClick={() => setUpdateProduct({ ...val })}
-                              >
-                                Edit : <Icon as={EditIcon} />
-                              </div>
-                              <Button
-                                colorScheme="red"
-                                size="sm"
-                                onClick={() => {
-                                  setDeleteProductId(val.id);
-                                  onDeleteOpen();
-                                }}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      ),
+          </Card>
+          <Text color="secondaryGray.600" fontSize="sm" mb="12px" ms="4px">
+            {tableData === null || tableData === false
+              ? 'Loading products…'
+              : `${visibleProducts.length} product${visibleProducts.length === 1 ? '' : 's'}`}
+          </Text>
+          <Box maxH={{ md: '70vh' }} overflowY={{ md: 'auto' }} pe="4px">
+            {tableData !== null &&
+              tableData !== false &&
+              visibleProducts.length === 0 && (
+                <Card py="50px" alignItems="center">
+                  <Icon
+                    as={MdInventory2}
+                    w="40px"
+                    h="40px"
+                    color="secondaryGray.500"
+                  />
+                  <Text mt="12px" color="secondaryGray.600" fontWeight="500">
+                    No products in “
+                    {filterOptions.find((o) => o.key === filterSet)?.label}”
+                  </Text>
+                </Card>
+              )}
+            <SimpleGrid
+              columns={{ base: 1, md: 2, lg: 3 }}
+              gap="20px"
+              className="mobileSellScroll"
+            >
+              {visibleProducts.map((val) => (
+                <Box key={val.id}>
+                  <Box
+                    cursor="pointer"
+                    transition="transform .15s ease"
+                    _hover={{ transform: 'translateY(-2px)' }}
+                    onClick={() =>
+                      (Cart.find((x) => x.id === val.id)?.buyingQty ===
+                        undefined ||
+                        Cart.find((x) => x.id === val.id)?.buyingQty <
+                          val.quantity) &&
+                      pushCartData(val)
+                    }
+                  >
+                    <NFT
+                      name={val.name}
+                      productValue={val.buyPrice}
+                      rateCard={val.sellingTypes}
+                      fav={val.fav}
+                      quantity={val.quantity}
+                      data={val}
+                      buyingQty={Cart.find((x) => x.id === val.id)?.buyingQty}
+                    />
+                  </Box>
+                  {showupdateBtn && (
+                    <Flex gap="8px" mt="8px">
+                      <Button
+                        flex="1"
+                        size="sm"
+                        variant="lightBrand"
+                        leftIcon={<Icon as={EditIcon} />}
+                        onClick={() => setUpdateProduct({ ...val })}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        flex="1"
+                        size="sm"
+                        colorScheme="red"
+                        variant="outline"
+                        leftIcon={<Icon as={MdDeleteOutline} />}
+                        onClick={() => {
+                          setDeleteProductId(val.id);
+                          onDeleteOpen();
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </Flex>
                   )}
-              </SimpleGrid>
-            </div>
-          </Flex>
+                </Box>
+              ))}
+            </SimpleGrid>
+          </Box>
         </Flex>
         <Flex
           flexDirection="column"
           gridArea={{ xl: '1 / 3 / 2 / 4', '2xl': '1 / 2 / 2 / 3' }}
-          pt={{ base: '40px', md: '46px', xl: '46px' }}
+          pt={{ base: '20px', xl: '0px' }}
         >
-          {Cart.length !== 0 && (
-            <Card p="0px">
-              <Flex
-                align={{ sm: 'flex-start', lg: 'center' }}
-                justify="space-between"
-                w="100%"
-                px="22px"
-                py="18px"
-              >
-                <Text color={textColor} fontSize="xl" fontWeight="600">
+          <Card p="0px" position={{ xl: 'sticky' }} top={{ xl: '100px' }}>
+            <Flex
+              align="center"
+              justify="space-between"
+              w="100%"
+              px="22px"
+              py="18px"
+              borderBottom="1px solid"
+              borderColor={dividerColor}
+            >
+              <Flex align="center" gap="10px">
+                <Icon as={MdShoppingCart} w="22px" h="22px" color="brand.500" />
+                <Text color={textColor} fontSize="xl" fontWeight="700">
                   Cart
                 </Text>
+                {cartItemCount > 0 && (
+                  <Badge colorScheme="brandScheme" borderRadius="full" px="8px">
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </Flex>
+              {Cart.length !== 0 && (
                 <Button
-                  variant="darkBrand"
-                  isDisabled={getZeroValue.length > 0}
-                  onClick={onOpen}
+                  size="sm"
+                  variant="ghost"
+                  color="red.500"
+                  onClick={() => setCart([])}
                 >
-                  Sell Order
+                  Clear
                 </Button>
-              </Flex>
-
-              <div style={{ maxHeight: '50vh', overflowY: 'scroll' }}>
-                {Cart.map((val) => (
-                  <>
-                    <HistoryItem
-                      name={val.name}
-                      buyingQty={val.buyingQty}
-                      buyPrice={val.buyPrice}
-                      id={val.id}
-                      updateCartData={(id, operation) =>
-                        updateCartData(id, operation)
-                      }
-                      sellingTypes={val.sellingTypes}
-                      quantity={val.quantity}
-                      totalAmountAndSellAndQty={(id, sellPrice, buyingQty) =>
-                        totalAmountAndSellAndQty(id, sellPrice, buyingQty)
-                      }
-                    />
-                    <hr />
-                  </>
-                ))}
-              </div>
-              {getZeroValue.length > 0 && (
-                <Text px="22px" py="2px" fontSize="13px" color="tomato">
-                  Select all selling amount
-                </Text>
               )}
-              <Flex
-                align={{ sm: 'flex-start', lg: 'center' }}
-                fontWeight="600"
-                justify="space-between"
-                w="100%"
-                px="22px"
-                py="18px"
-              >
-                Total: {totalAmmount}
+            </Flex>
+
+            {Cart.length === 0 ? (
+              <Flex direction="column" align="center" py="40px" px="22px">
+                <Icon
+                  as={MdOutlineShoppingCart}
+                  w="40px"
+                  h="40px"
+                  color="secondaryGray.500"
+                />
+                <Text mt="12px" color="secondaryGray.600" fontWeight="500">
+                  Cart is empty
+                </Text>
+                <Text
+                  color="secondaryGray.500"
+                  fontSize="sm"
+                  textAlign="center"
+                >
+                  Click a product to add it.
+                </Text>
               </Flex>
-            </Card>
-          )}
+            ) : (
+              <>
+                <Box maxH="50vh" overflowY="auto">
+                  {Cart.map((val) => (
+                    <Box
+                      key={val.id}
+                      borderBottom="1px solid"
+                      borderColor={dividerColor}
+                    >
+                      <HistoryItem
+                        name={val.name}
+                        buyingQty={val.buyingQty}
+                        buyPrice={val.buyPrice}
+                        id={val.id}
+                        updateCartData={(id, operation) =>
+                          updateCartData(id, operation)
+                        }
+                        sellingTypes={val.sellingTypes}
+                        quantity={val.quantity}
+                        totalAmountAndSellAndQty={(id, sellPrice, buyingQty) =>
+                          totalAmountAndSellAndQty(id, sellPrice, buyingQty)
+                        }
+                      />
+                    </Box>
+                  ))}
+                </Box>
+                <Box px="22px" py="18px">
+                  {getZeroValue.length > 0 && (
+                    <Text fontSize="13px" color="red.500" mb="10px">
+                      Select a selling rate for every item
+                    </Text>
+                  )}
+                  <Flex justify="space-between" align="center" mb="14px">
+                    <Text color="secondaryGray.600" fontWeight="500">
+                      Total
+                    </Text>
+                    <Text color={textColor} fontSize="2xl" fontWeight="700">
+                      ₹ {Number(totalAmmount || 0).toLocaleString()}
+                    </Text>
+                  </Flex>
+                  <Button
+                    variant="brand"
+                    w="100%"
+                    h="48px"
+                    isDisabled={getZeroValue.length > 0}
+                    onClick={onOpen}
+                  >
+                    Create Sell Order
+                  </Button>
+                </Box>
+              </>
+            )}
+          </Card>
         </Flex>
       </Grid>
 
@@ -608,79 +659,233 @@ export default function Marketplace() {
         finalFocusRef={finalRef}
         isOpen={isOpen}
         onClose={onClose}
+        isCentered
+        size="xl"
+        scrollBehavior="inside"
       >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Customer Details</ModalHeader>
-          <ModalCloseButton />
-
-          <ModalBody pb={6} style={{ maxHeight: '60vh', overflowY: 'scroll' }}>
-            <FormControl mt={4}>
-              <FormLabel>Phone Number</FormLabel>
-              <Input
-                placeholder="Phone Number"
-                type="number"
-                maxLength={10}
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
-            </FormControl>
-            <br />
-            {filteredCustomers && filteredCustomers.length > 0 && (
-              <>
-                <FormControl>
-                  <FormLabel>Select Existing Customer</FormLabel>
-                  <Select
-                    placeholder="Select Customer"
-                    onChange={handleCustomerSelect}
-                  >
-                    {mergeByPhoneNumber(filteredCustomers).map((cust) => (
-                      <option key={cust.phoneNumber} value={cust.customerName}>
-                        {cust.customerName} - {cust.phoneNumber}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <br />
-              </>
-            )}
-            <FormControl>
-              <FormLabel>Customer Name</FormLabel>
-              <Input
-                ref={initialRef}
-                placeholder="Customer Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-            </FormControl>
-            <br />
-
-            <FormControl>
-              <FormLabel>Payment Mode</FormLabel>
-              <Select
-                placeholder="Select Payment Mode"
-                value={paymentOption}
-                onChange={(e) => setPaymentOption(e.target.value)}
+        <ModalOverlay bg="blackAlpha.500" backdropFilter="blur(4px)" />
+        <ModalContent borderRadius="24px" mx="16px" overflow="hidden">
+          <ModalHeader
+            bgGradient="linear(135deg, brand.400 0%, brand.600 100%)"
+            color="white"
+            py="20px"
+          >
+            <Flex align="center" gap="12px">
+              <Flex
+                w="44px"
+                h="44px"
+                borderRadius="14px"
+                bg="whiteAlpha.300"
+                align="center"
+                justify="center"
               >
-                <option value="UPI / Netbanking">UPI / Netbanking</option>
-                <option value="Cash">Cash</option>
-                <option value="Cash">Card</option>
-              </Select>
+                <Icon as={MdReceiptLong} w="24px" h="24px" />
+              </Flex>
+              <Box>
+                <Text fontSize="lg" fontWeight="700" lineHeight="1.2">
+                  {updateID ? 'Update Order' : 'Customer Details'}
+                </Text>
+                <Text fontSize="sm" fontWeight="500" color="whiteAlpha.800">
+                  {cartItemCount} item{cartItemCount === 1 ? '' : 's'} · ₹{' '}
+                  {Number(totalAmmount || 0).toLocaleString()}
+                </Text>
+              </Box>
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton color="white" top="22px" />
+
+          <ModalBody py="20px">
+            {/* Customer */}
+            <SectionLabel icon={MdPersonOutline}>Customer</SectionLabel>
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap="14px" mb="10px">
+              <FormControl isRequired>
+                <FormLabel fontSize="sm">Phone Number</FormLabel>
+                <InputGroup>
+                  <InputLeftAddon borderLeftRadius="12px" fontSize="sm">
+                    +91
+                  </InputLeftAddon>
+                  <Input
+                    ref={initialRef}
+                    borderRightRadius="12px"
+                    placeholder="10-digit mobile"
+                    type="tel"
+                    inputMode="numeric"
+                    value={phoneNumber}
+                    onChange={(e) =>
+                      setPhoneNumber(
+                        e.target.value.replace(/\D/g, '').slice(0, 10),
+                      )
+                    }
+                  />
+                </InputGroup>
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel fontSize="sm">Customer Name</FormLabel>
+                <Input
+                  borderRadius="12px"
+                  placeholder="Customer name"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+              </FormControl>
+            </SimpleGrid>
+            {filteredCustomers && filteredCustomers.length > 0 && (
+              <Box mb="10px">
+                <Text fontSize="xs" color="secondaryGray.600" mb="6px">
+                  Existing customers — tap to fill
+                </Text>
+                <Flex gap="8px" wrap="wrap">
+                  {mergeByPhoneNumber(filteredCustomers)
+                    .slice(0, 6)
+                    .map((cust) => {
+                      const selected =
+                        cust.customerName === customerName &&
+                        cust.phoneNumber === phoneNumber;
+                      return (
+                        <Button
+                          key={cust.phoneNumber}
+                          size="sm"
+                          borderRadius="full"
+                          variant={selected ? 'brand' : 'light'}
+                          leftIcon={<Icon as={MdPersonOutline} />}
+                          onClick={() =>
+                            handleCustomerSelect({
+                              target: { value: cust.customerName },
+                            })
+                          }
+                        >
+                          {cust.customerName} · {cust.phoneNumber}
+                        </Button>
+                      );
+                    })}
+                </Flex>
+              </Box>
+            )}
+
+            <Divider my="18px" />
+
+            {/* Payment */}
+            <SectionLabel icon={MdPayments}>Payment</SectionLabel>
+            <FormControl isRequired mb="14px">
+              <FormLabel fontSize="sm">Payment Method</FormLabel>
+              <SimpleGrid columns={3} gap="8px">
+                {[
+                  {
+                    value: 'UPI / Netbanking',
+                    label: 'UPI / Bank',
+                    icon: MdQrCode2,
+                  },
+                  { value: 'Cash', label: 'Cash', icon: MdPayments },
+                  { value: 'Card', label: 'Card', icon: MdCreditCard },
+                ].map((opt) => (
+                  <Button
+                    key={opt.value}
+                    h="56px"
+                    flexDirection="column"
+                    gap="2px"
+                    fontSize="sm"
+                    borderRadius="14px"
+                    variant={paymentOption === opt.value ? 'brand' : 'light'}
+                    onClick={() => setPaymentOption(opt.value)}
+                  >
+                    <Icon as={opt.icon} w="20px" h="20px" />
+                    {opt.label}
+                  </Button>
+                ))}
+              </SimpleGrid>
             </FormControl>
-            <br />
-            <FormControl>
-              <FormLabel>Receipter name / Notes</FormLabel>
+
+            <FormControl mb="14px">
+              <FormLabel fontSize="sm">Payment Type</FormLabel>
+              <Flex bg={segmentBg} p="4px" borderRadius="14px" gap="4px">
+                {['Full Payment', 'Partial Payment'].map((mode) => (
+                  <Button
+                    key={mode}
+                    flex="1"
+                    size="sm"
+                    h="36px"
+                    borderRadius="10px"
+                    boxShadow={paymentMode === mode ? 'sm' : 'none'}
+                    bg={paymentMode === mode ? segmentActiveBg : 'transparent'}
+                    color={
+                      paymentMode === mode ? 'brand.500' : 'secondaryGray.600'
+                    }
+                    _hover={{
+                      bg:
+                        paymentMode === mode
+                          ? segmentActiveBg
+                          : 'blackAlpha.50',
+                    }}
+                    onClick={() => setPaymentMode(mode)}
+                  >
+                    {mode}
+                  </Button>
+                ))}
+              </Flex>
+            </FormControl>
+
+            {paymentMode === 'Partial Payment' && (
+              <FormControl
+                isRequired
+                mb="14px"
+                isInvalid={Number(partialPayment) > totalAmmount}
+              >
+                <FormLabel fontSize="sm">Amount Received Now</FormLabel>
+                <InputGroup>
+                  <InputLeftAddon borderLeftRadius="12px">₹</InputLeftAddon>
+                  <Input
+                    borderRightRadius="12px"
+                    placeholder="0"
+                    type="number"
+                    value={partialPayment}
+                    onChange={(e) => setPartialPayment(e.target.value)}
+                  />
+                </InputGroup>
+                {Number(partialPayment) > totalAmmount ? (
+                  <FormErrorMessage>
+                    Can't be more than the bill total (₹{' '}
+                    {Number(totalAmmount).toLocaleString()}).
+                  </FormErrorMessage>
+                ) : (
+                  <FormHelperText>
+                    Balance due: ₹{' '}
+                    {Number(
+                      totalAmmount - (Number(partialPayment) || 0),
+                    ).toLocaleString()}
+                  </FormHelperText>
+                )}
+              </FormControl>
+            )}
+
+            <FormControl isRequired mb="14px">
+              <FormLabel fontSize="sm">Receipter Name / Notes</FormLabel>
               <Input
-                ref={initialRef}
-                placeholder="Receipter name"
+                borderRadius="12px"
+                placeholder="Who received the payment, or a note"
                 value={receipterName}
                 onChange={(e) => setReceipterName(e.target.value)}
               />
             </FormControl>
-            <br />
 
-            <FormControl>
-              <Checkbox
+            <Flex
+              align="center"
+              justify="space-between"
+              bg={segmentBg}
+              borderRadius="14px"
+              px="14px"
+              py="10px"
+              mb={checkedAddittional ? '10px' : '0'}
+            >
+              <FormLabel htmlFor="additional-charges" mb="0" fontSize="sm">
+                Additional charges
+                <Text as="span" color="secondaryGray.600" fontWeight="400">
+                  {' '}
+                  (delivery, packing…)
+                </Text>
+              </FormLabel>
+              <Switch
+                id="additional-charges"
+                colorScheme="brandScheme"
                 isChecked={checkedAddittional !== null}
                 onChange={(e) =>
                   setcheckedAddittional(
@@ -692,192 +897,173 @@ export default function Marketplace() {
                       : null,
                   )
                 }
-              >
-                Additional Charges
-              </Checkbox>
-            </FormControl>
+              />
+            </Flex>
             {checkedAddittional && (
-              <div style={{ display: 'flex' }}>
-                <FormControl style={{ paddingRight: 10 }}>
-                  <FormLabel>Additional Type</FormLabel>
+              <SimpleGrid columns={2} gap="12px">
+                <FormControl isRequired>
+                  <FormLabel fontSize="sm">Charge Type</FormLabel>
                   <Input
-                    ref={initialRef}
+                    borderRadius="12px"
                     value={checkedAddittional.type}
                     onChange={(e) => {
                       let value = { ...checkedAddittional };
                       value.type = e.target.value;
                       setcheckedAddittional(value);
                     }}
-                    placeholder="Additional Type"
+                    placeholder="e.g. Delivery"
                   />
                 </FormControl>
-                <FormControl>
-                  <FormLabel>Additional Amount</FormLabel>
-                  <Input
-                    ref={initialRef}
-                    onChange={(e) => {
-                      let value = { ...checkedAddittional };
-                      value.amount = Number(e.target.value);
-                      setcheckedAddittional(value);
-                    }}
-                    value={checkedAddittional.amount}
-                    placeholder="Additional Amount"
-                    type="number"
-                  />
+                <FormControl isRequired>
+                  <FormLabel fontSize="sm">Amount</FormLabel>
+                  <InputGroup>
+                    <InputLeftAddon borderLeftRadius="12px">₹</InputLeftAddon>
+                    <Input
+                      borderRightRadius="12px"
+                      onChange={(e) => {
+                        let value = { ...checkedAddittional };
+                        value.amount = Number(e.target.value);
+                        setcheckedAddittional(value);
+                      }}
+                      value={checkedAddittional.amount}
+                      placeholder="0"
+                      type="number"
+                    />
+                  </InputGroup>
                 </FormControl>
-              </div>
+              </SimpleGrid>
             )}
 
-            <br />
-            <RadioGroup onChange={setPaymentMode} value={paymentMode}>
-              <Stack direction="row">
-                <Radio value="Full Payment">Full Payment</Radio>
-                <Radio value="Partial Payment">Partial Payment</Radio>
-              </Stack>
-            </RadioGroup>
-            <br />
+            <Divider my="18px" />
 
-            {paymentMode === 'Partial Payment' && (
-              <>
-                <br />
-                <FormControl>
-                  <FormLabel>Partial Payment Amount</FormLabel>
-                  <Input
-                    ref={initialRef}
-                    placeholder="Partial Payment"
-                    type="number"
-                    value={partialPayment}
-                    onChange={(e) => setPartialPayment(e.target.value)}
-                  />
-                </FormControl>
-                {partialPayment > totalAmmount && (
-                  <p style={{ color: 'tomato' }}>
-                    Partial payment should not be greater than full payment.
-                  </p>
-                )}
-              </>
-            )}
-
-            <br />
-            <Accordion allowToggle>
-              <AccordionItem>
-                <h2>
-                  <AccordionButton>
-                    <Box as="span" flex="1" textAlign="left">
-                      Order Details
-                    </Box>
-                    <AccordionIcon />
-                  </AccordionButton>
-                </h2>
-                <AccordionPanel pb={4} bg="aliceblue">
-                  <Flex
-                    flexDirection="column"
-                    gridArea={{ xl: '1 / 3 / 2 / 4', '2xl': '1 / 2 / 2 / 3' }}
-                  >
-                    <table
-                      style={{ width: '100%', borderCollapse: 'collapse' }}
-                    >
-                      <thead>
-                        <tr style={{ textAlign: 'left' }}>
-                          <th>Name</th>
-                          <th>Qty</th>
-                          <th>Price</th>
-                          <th>Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Cart.map((val) => (
-                          <tr>
-                            <td>{val.name}</td>
-                            <td>{val.buyingQty}</td>
-                            <td>₹ {val.sellPrice}</td>
-                            <td>₹ {val.buyingQty * val.sellPrice}</td>
-                          </tr>
-                        ))}
-                        {checkedAddittional && (
-                          <tr>
-                            <td></td>
-                            <td></td>
-                            <td style={{ fontWeight: 'bold' }}>
-                              {checkedAddittional.type} Charges
-                            </td>
-                            <td style={{ fontWeight: 'bold' }}>
-                              ₹ {checkedAddittional.amount}
-                            </td>
-                          </tr>
-                        )}
-                        <tr>
-                          <td></td>
-                          <td></td>
-                          <td style={{ fontWeight: 'bold' }}>Total Amount</td>
-                          <td style={{ fontWeight: 'bold' }}>
-                            ₹ {totalAmmount}
-                          </td>
-                        </tr>
-                        {paymentMode === 'Partial Payment' && (
-                          <tr style={{ color: 'green' }}>
-                            <td></td>
-                            <td></td>
-                            <td style={{ fontWeight: 'bold' }}>
-                              Partial Payment
-                            </td>
-                            <td style={{ fontWeight: 'bold' }}>
-                              ₹ {partialPayment}
-                            </td>
-                          </tr>
-                        )}
-                        {paymentMode === 'Partial Payment' && (
-                          <tr style={{ color: 'tomato' }}>
-                            <td></td>
-                            <td></td>
-                            <td style={{ fontWeight: 'bold' }}>Balance</td>
-                            <td style={{ fontWeight: 'bold' }}>
-                              ₹ {totalAmmount - partialPayment}
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+            {/* Summary */}
+            <SectionLabel icon={MdShoppingCart}>Order Summary</SectionLabel>
+            <Box bg={segmentBg} borderRadius="16px" p="14px">
+              {Cart.map((val) => (
+                <Flex
+                  key={val.id}
+                  justify="space-between"
+                  fontSize="sm"
+                  py="6px"
+                  gap="12px"
+                >
+                  <Text color={textColor} noOfLines={1}>
+                    {val.name}
+                    <Text as="span" color="secondaryGray.600">
+                      {' '}
+                      × {val.buyingQty} @ ₹{val.sellPrice}
+                    </Text>
+                  </Text>
+                  <Text fontWeight="600" color={textColor} whiteSpace="nowrap">
+                    ₹ {Number(val.buyingQty * val.sellPrice).toLocaleString()}
+                  </Text>
+                </Flex>
+              ))}
+              {checkedAddittional && (
+                <Flex justify="space-between" fontSize="sm" py="6px">
+                  <Text color="secondaryGray.600">
+                    {checkedAddittional.type || 'Additional'} charges
+                  </Text>
+                  <Text fontWeight="600" color={textColor}>
+                    ₹ {Number(checkedAddittional.amount || 0).toLocaleString()}
+                  </Text>
+                </Flex>
+              )}
+              <Divider my="8px" />
+              <Flex justify="space-between" align="center">
+                <Text fontWeight="700" color={textColor}>
+                  Total
+                </Text>
+                <Text fontWeight="700" fontSize="xl" color={textColor}>
+                  ₹ {Number(totalAmmount || 0).toLocaleString()}
+                </Text>
+              </Flex>
+              {paymentMode === 'Partial Payment' && (
+                <>
+                  <Flex justify="space-between" fontSize="sm" mt="6px">
+                    <Text color="green.500" fontWeight="600">
+                      Paid now
+                    </Text>
+                    <Text color="green.500" fontWeight="600">
+                      ₹ {Number(partialPayment || 0).toLocaleString()}
+                    </Text>
                   </Flex>
-                </AccordionPanel>
-              </AccordionItem>
-            </Accordion>
+                  <Flex justify="space-between" fontSize="sm" mt="4px">
+                    <Text color="red.500" fontWeight="600">
+                      Balance due
+                    </Text>
+                    <Text color="red.500" fontWeight="600">
+                      ₹{' '}
+                      {Number(
+                        totalAmmount - (Number(partialPayment) || 0),
+                      ).toLocaleString()}
+                    </Text>
+                  </Flex>
+                </>
+              )}
+            </Box>
           </ModalBody>
 
-          {updateID ? (
-            <ModalFooter>
-              <Button
-                colorScheme="blue"
-                mr={3}
-                isDisabled={!isFormValid()}
-                //  onClick={() => saveAndPrint()}
-              >
-                Update
-              </Button>
-
-              <Button onClick={onCancelPopup}>Cancel</Button>
-            </ModalFooter>
-          ) : (
-            <ModalFooter>
-              <Button
-                colorScheme="blue"
-                mr={3}
-                isDisabled={!isFormValid() || isLoading}
-                onClick={() => saveAndPrint()}
-              >
-                Save & Print
-              </Button>
-              <Button
-                colorScheme="blue"
-                mr={3}
-                isDisabled={!isFormValid() || isLoading}
-                onClick={() => saveAndPrint('WA')}
-              >
-                Save & Share WhatsApp
-              </Button>
-              <Button onClick={onCancelPopup}>Cancel</Button>
-            </ModalFooter>
-          )}
+          <ModalFooter
+            borderTop="1px solid"
+            borderColor={dividerColor}
+            flexDirection="column"
+            alignItems="stretch"
+            gap="10px"
+          >
+            {!isFormValid() && (
+              <Text fontSize="xs" color="secondaryGray.600" textAlign="center">
+                Fill in all required fields (*) to continue
+              </Text>
+            )}
+            {updateID ? (
+              <Flex gap="10px" justify="flex-end">
+                <Button variant="ghost" onClick={onCancelPopup}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="brand"
+                  isDisabled={!isFormValid()}
+                  //  onClick={() => saveAndPrint()}
+                >
+                  Update
+                </Button>
+              </Flex>
+            ) : (
+              <Flex gap="10px" direction={{ base: 'column', sm: 'row' }}>
+                <Button
+                  variant="ghost"
+                  onClick={onCancelPopup}
+                  order={{ base: 3, sm: 0 }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  flex="1"
+                  variant="lightBrand"
+                  leftIcon={<Icon as={MdPrint} w="18px" h="18px" />}
+                  isDisabled={!isFormValid() || isLoading}
+                  isLoading={isLoading}
+                  onClick={() => saveAndPrint()}
+                >
+                  Save & Print
+                </Button>
+                <Button
+                  flex="1"
+                  bg="#25D366"
+                  color="white"
+                  _hover={{ bg: '#1EBE5A' }}
+                  _active={{ bg: '#1EBE5A' }}
+                  leftIcon={<Icon as={FaWhatsapp} w="18px" h="18px" />}
+                  isDisabled={!isFormValid() || isLoading}
+                  isLoading={isLoading}
+                  onClick={() => saveAndPrint('WA')}
+                >
+                  Save & WhatsApp
+                </Button>
+              </Flex>
+            )}
+          </ModalFooter>
         </ModalContent>
       </Modal>
 
@@ -886,15 +1072,21 @@ export default function Marketplace() {
         leastDestructiveRef={cancelRef}
         onClose={onDeleteClose}
       >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
+        <AlertDialogOverlay bg="blackAlpha.400" backdropFilter="blur(4px)">
+          <AlertDialogContent borderRadius="20px" mx="16px">
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Delete Product
             </AlertDialogHeader>
 
             <AlertDialogBody>
               Enter password to confirm deletion:
-              <b>{" " + tableDataToSearch?.find((product) => product.id === deleteProductId)?.name || ""}</b>?
+              <b>
+                {' ' +
+                  tableDataToSearch?.find(
+                    (product) => product.id === deleteProductId,
+                  )?.name || ''}
+              </b>
+              ?
               <Input
                 mt={4}
                 type="password"
@@ -908,11 +1100,7 @@ export default function Marketplace() {
               <Button ref={cancelRef} onClick={onDeleteClose}>
                 Cancel
               </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleDeleteProduct}
-                ml={3}
-              >
+              <Button colorScheme="red" onClick={handleDeleteProduct} ml={3}>
                 Delete
               </Button>
             </AlertDialogFooter>

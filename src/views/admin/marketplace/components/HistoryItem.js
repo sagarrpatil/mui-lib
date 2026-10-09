@@ -7,17 +7,22 @@ import {
   Text,
   useColorModeValue,
   Input,
+  IconButton,
 } from '@chakra-ui/react';
+import { AddIcon, MinusIcon } from '@chakra-ui/icons';
 // Custom components
 import Card from 'components/card/Card.js';
 // Assets
-import { FaEthereum } from 'react-icons/fa';
 
 export default function NFT(props) {
   const { buyingQty, name, buyPrice, id, sellingTypes, quantity } = props;
   const [selectedValue, setSelectedValue] = React.useState('');
   const [customInput, setCustomInput] = React.useState('');
-  const textColor = useColorModeValue('brands.900', 'white');
+  const textColor = useColorModeValue('secondaryGray.900', 'white');
+  const stepperBorder = useColorModeValue(
+    'secondaryGray.100',
+    'whiteAlpha.200',
+  );
   const bgItem = useColorModeValue(
     { bg: 'white', boxShadow: '0px 40px 58px -20px rgba(112, 144, 176, 0.12)' },
     { bg: 'navy.700', boxShadow: 'unset' },
@@ -73,6 +78,7 @@ export default function NFT(props) {
                 placeholder="Select Rate per quantity"
                 size="xs"
                 width={150}
+                borderRadius="8px"
                 value={selectedValue}
                 onChange={handleSelectChange}
               >
@@ -98,44 +104,43 @@ export default function NFT(props) {
             me={{ base: '4px', md: '32px', xl: '10px', '3xl': '32px' }}
             align="center"
           >
-            <Text
-              fontWeight="700"
-              fontSize="md"
-              color={textColor}
-              style={{ display: 'flex' }}
+            <Flex
+              align="center"
+              border="1px solid"
+              borderColor={stepperBorder}
+              borderRadius="12px"
+              overflow="hidden"
             >
-              <Button
-                style={{
-                  backgroundColor: 'tomato',
-                  color: '#fff',
-                  height: 25,
-                  width: 6,
-                }}
+              <IconButton
+                aria-label="Decrease quantity"
+                size="sm"
+                variant="ghost"
+                borderRadius="0"
+                color="red.500"
+                icon={<MinusIcon w="10px" />}
                 onClick={() => props.updateCartData(id, 'decrement')}
-              >
-                -
-              </Button>
-              <p style={{ paddingLeft: 10, paddingRight: 10 }}>{buyingQty}</p>
-
-              <Button
-                style={{
-                  backgroundColor: 'green',
-                  color: '#fff',
-                  height: 25,
-                  width: 6,
-                }}
+              />
+              <Text minW="28px" textAlign="center" fontWeight="700">
+                {buyingQty}
+              </Text>
+              <IconButton
+                aria-label="Increase quantity"
+                size="sm"
+                variant="ghost"
+                borderRadius="0"
+                color="green.500"
+                isDisabled={quantity <= buyingQty}
+                icon={<AddIcon w="10px" />}
                 onClick={() =>
                   quantity > buyingQty && props.updateCartData(id, 'increment')
                 }
-              >
-                +
-              </Button>
-            </Text>
+              />
+            </Flex>
           </Flex>
         </Flex>
 
-        <Flex style={{ justifyContent: 'space-between', paddingTop: 10 }}>
-          <Text style={{ textAlign: 'right', fontSize: 12, color: 'grey' }}>
+        <Flex justify="space-between" align="center" pt="10px">
+          <Text fontSize="xs" color="secondaryGray.600">
             P:{buyPrice},{' '}
             {sellPrice && (
               <>
@@ -145,9 +150,11 @@ export default function NFT(props) {
               </>
             )}
           </Text>
-          <Text style={{ textAlign: 'right', fontSize: 14 }}>
-            Amount:
-            <b>{sellPrice * buyingQty}</b>
+          <Text fontSize="sm" color="secondaryGray.600">
+            Amount:{' '}
+            <Text as="b" color={textColor}>
+              ₹ {Number(sellPrice * buyingQty || 0).toLocaleString()}
+            </Text>
           </Text>
         </Flex>
       </Flex>

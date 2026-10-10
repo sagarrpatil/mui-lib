@@ -17,6 +17,7 @@ import SalesTrend from 'views/admin/default/components/SalesTrend';
 import TopProducts from 'views/admin/default/components/TopProducts';
 import PaymentSplit from 'views/admin/default/components/PaymentSplit';
 import StockAlerts from 'views/admin/default/components/StockAlerts';
+import MonthlyTopProfit from 'views/admin/default/components/MonthlyTopProfit';
 import { SectionTitle } from 'components/page/PageHeader';
 import DateRangeFilter from 'components/page/DateRangeFilter';
 import { useNavigate } from 'react-router-dom';
@@ -319,6 +320,10 @@ export default function UserReports() {
         <TopProducts transactions={transactionFilter} />
         <StockAlerts stock={AvailbleStock} />
       </Grid>
+
+      <Box mb="20px">
+        <MonthlyTopProfit transactions={transaction} />
+      </Box>
     </Box>
   );
 }

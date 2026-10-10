@@ -12,6 +12,7 @@ import initialTheme from './theme/theme'; //  { themeGreen }
 import { useState } from 'react';
 import './App.css';
 import 'react-toastify/dist/ReactToastify.css';
+import UpdatePrompt from 'components/pwa/UpdatePrompt';
 
 export default function Main() {
   const [authCheck, setAuthCheck] = useState(localStorage.getItem('token'));
@@ -36,6 +37,7 @@ export default function Main() {
           />
           <Route path="/" element={<Navigate to="/admin" replace />} />
         </Routes>
+        <UpdatePrompt />
       </ChakraProvider>
     );
   else {
@@ -49,6 +51,7 @@ export default function Main() {
             element={<Navigate to="/auth/sign-in" replace />}
           />
         </Routes>
+        <UpdatePrompt />
       </ChakraProvider>
     );
   }

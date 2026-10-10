@@ -1,5 +1,5 @@
 // Chakra imports
-import { Box, Flex, Heading, Icon, Text } from '@chakra-ui/react';
+import { Box, Flex, Heading, Icon, Image, Text } from '@chakra-ui/react';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Footer from 'components/footer/FooterAuth';
@@ -33,20 +33,15 @@ function AuthIllustration(props) {
         py={{ base: '32px', md: '40px' }}
       >
         <Flex align="center" gap="10px">
-          <Flex
-            w="40px"
-            h="40px"
+          <Image
+            src={`${process.env.PUBLIC_URL}/icons/icon-192.png`}
+            alt=""
+            w="44px"
+            h="44px"
             borderRadius="12px"
-            bgGradient="linear(to-br, brand.400, brand.600)"
-            align="center"
-            justify="center"
-            color="white"
-            fontWeight="700"
-          >
-            F
-          </Flex>
+          />
           <Text fontWeight="700" fontSize="lg" color="secondaryGray.900">
-            Fitness Space
+            DY Nutritions
           </Text>
         </Flex>
         <Flex flex="1" align="center">

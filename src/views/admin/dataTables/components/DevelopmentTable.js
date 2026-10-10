@@ -24,10 +24,6 @@ import {
   FormLabel,
   FormControl,
   Select,
-  Checkbox,
-  RadioGroup,
-  Stack,
-  Radio,
   Divider,
   FormErrorMessage,
   FormHelperText,
@@ -37,6 +33,8 @@ import {
   SimpleGrid,
   Switch,
   Tooltip,
+  Avatar,
+  Badge,
 } from '@chakra-ui/react';
 import {
   MdCreditCard,
@@ -47,6 +45,10 @@ import {
   MdSave,
   MdShoppingCart,
   MdUndo,
+  MdAccountBalanceWallet,
+  MdDeleteOutline,
+  MdEdit,
+  MdReceiptLong,
 } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -57,7 +59,16 @@ import {
   useReactTable,
   getPaginationRowModel,
 } from '@tanstack/react-table';
-import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  TriangleDownIcon,
+  TriangleUpIcon,
+} from '@chakra-ui/icons';
+import { FaWhatsapp } from 'react-icons/fa';
 import Card from 'components/card/Card';
 import Menu from 'components/menu/MainMenu';
 import moment from 'moment';
@@ -70,6 +81,13 @@ import {
 import { ToastContainer, toast } from 'react-toastify';
 
 const columnHelper = createColumnHelper();
+
+const inr = (n) => '₹ ' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const MODE_ICONS = {
+  'UPI / Netbanking': MdQrCode2,
+  Cash: MdPayments,
+  Card: MdCreditCard,
+};
 
 function EditSection({ icon, children }) {
   return (
@@ -99,6 +117,10 @@ export default function ComplexTable(props) {
   const iconColor = useColorModeValue('secondaryGray.500', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   const softBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
+  const headBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.50');
+  const rowHover = useColorModeValue('gray.50', 'whiteAlpha.50');
+  const expandedBg = useColorModeValue('#F7FAFC', 'whiteAlpha.50');
+  const panelBg = useColorModeValue('white', 'navy.800');
   const segmentActiveBg = useColorModeValue('white', 'navy.700');
   const [isDelete, setisDelete] = React.useState(null);
   const [isUpdate, setiisUpdate] = React.useState(null);
@@ -151,231 +173,220 @@ export default function ComplexTable(props) {
     {
       id: 'expander',
       header: '',
+      enableSorting: false,
       cell: (info) => {
-        const rowId = info.row.id; // Get row ID
-        const isExpanded = expandedRowIds.includes(rowId); // Check if this row is expanded
+        const isExpanded = expandedRowIds.includes(info.row.id);
         return (
           <IconButton
-            aria-label="Expand row"
-            icon={
-              isExpanded ? (
-                <ChevronUpIcon style={{ fontSize: 30 }} />
-              ) : (
-                <ChevronDownIcon style={{ fontSize: 30 }} />
-              )
-            }
-            onClick={() => handleRowToggle(rowId)} // Toggle row expansion
+            size="sm"
             variant="ghost"
+            aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
+            aria-expanded={isExpanded}
+            icon={
+              <ChevronDownIcon
+                w="20px"
+                h="20px"
+                transition="transform .2s"
+                transform={isExpanded ? 'rotate(180deg)' : 'none'}
+              />
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowToggle(info.row.id);
+            }}
           />
         );
       },
     },
     columnHelper.accessor('id', {
       id: 'id',
-      header: () => (
-        <Text fontSize={{ sm: '10px', lg: '12px' }} color="gray.400">
-          DATE
-        </Text>
-      ),
-      cell: (info) => (
-        <Text color={textColor} fontSize="sm" fontWeight="700">
-          {moment(Number(info.getValue())).format('MMM DD, YYYY - hh:mm a')}
-        </Text>
-      ),
+      header: () => 'Date',
+      sortingFn: (a, b) => Number(a.original.id) - Number(b.original.id),
+      cell: (info) => {
+        const m = moment(Number(info.getValue()));
+        return (
+          <Box whiteSpace="nowrap">
+            <Text color={textColor} fontSize="sm" fontWeight="700">
+              {m.format('DD MMM YYYY')}
+            </Text>
+            <Text color="secondaryGray.600" fontSize="xs">
+              {m.format('hh:mm A')}
+            </Text>
+          </Box>
+        );
+      },
     }),
     columnHelper.accessor('customerName', {
       id: 'customerName',
-      header: () => (
-        <Text fontSize={{ sm: '10px', lg: '12px' }} color="gray.400">
-          Customer Name
-        </Text>
-      ),
+      header: () => 'Customer',
       cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            {info.getValue()}
-          </Text>
-        </Flex>
-      ),
-    }),
-    columnHelper.accessor('phoneNumber', {
-      id: 'phoneNumber',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          Phone
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            {info.getValue()}
-          </Text>
+        <Flex align="center" gap="10px" minW="160px">
+          <Avatar
+            size="sm"
+            name={info.getValue() || '?'}
+            bg="brand.100"
+            color="brand.700"
+            fontWeight="700"
+          />
+          <Box minW="0">
+            <Text
+              color={textColor}
+              fontSize="sm"
+              fontWeight="700"
+              noOfLines={1}
+            >
+              {info.getValue() || '—'}
+            </Text>
+            <Text color="secondaryGray.600" fontSize="xs">
+              {info.row.original.phoneNumber}
+            </Text>
+          </Box>
         </Flex>
       ),
     }),
     columnHelper.accessor('receipterName', {
       id: 'receipterName',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          Receipter
-        </Text>
-      ),
+      header: () => 'Receipter',
+      enableSorting: false,
       cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            {info.getValue()}
-          </Text>
-        </Flex>
+        <Text
+          color="secondaryGray.600"
+          fontSize="sm"
+          noOfLines={1}
+          maxW="140px"
+        >
+          {info.getValue() || '—'}
+        </Text>
       ),
     }),
     columnHelper.accessor('paymentOption', {
       id: 'paymentOption',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          Mode
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            {info.getValue()}
-          </Text>
-        </Flex>
-      ),
+      header: () => 'Mode',
+      cell: (info) => {
+        const v = info.getValue();
+        return v ? (
+          <Badge
+            variant="subtle"
+            colorScheme="gray"
+            borderRadius="8px"
+            px="8px"
+            py="2px"
+            textTransform="none"
+            fontWeight="600"
+            display="inline-flex"
+            alignItems="center"
+            gap="4px"
+            whiteSpace="nowrap"
+          >
+            <Icon as={MODE_ICONS[v] || MdPayments} />
+            {v === 'UPI / Netbanking' ? 'UPI / Bank' : v}
+          </Badge>
+        ) : (
+          <Text color="secondaryGray.500">—</Text>
+        );
+      },
     }),
     columnHelper.accessor('totalAmmount', {
       id: 'totalAmmount',
-      header: () => (
+      header: () => 'Total',
+      meta: { isNumeric: true },
+      cell: (info) => (
         <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
+          color={textColor}
+          fontSize="sm"
+          fontWeight="700"
+          whiteSpace="nowrap"
         >
-          Total Amount
+          {inr(info.getValue())}
         </Text>
       ),
-      cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            ₹ {info.getValue()}
-          </Text>
-        </Flex>
-      ),
     }),
-    columnHelper.accessor('id', {
-      id: 'id',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          Paid Amount
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            {transactionData.find((x) => x.id === info.getValue()).balance === 0
-              ? 'Full Payment'
-              : '₹' +
-                (transactionData.find((x) => x.id === info.getValue())
-                  .totalAmmount -
-                  transactionData.find((x) => x.id === info.getValue())
-                    .balance)}
+    columnHelper.accessor(
+      (row) => Number(row.totalAmmount || 0) - Number(row.balance || 0),
+      {
+        id: 'paid',
+        header: () => 'Paid',
+        meta: { isNumeric: true },
+        cell: (info) => (
+          <Text color="secondaryGray.600" fontSize="sm" whiteSpace="nowrap">
+            {inr(info.getValue())}
           </Text>
-        </Flex>
-      ),
-    }),
+        ),
+      },
+    ),
     columnHelper.accessor('balance', {
       id: 'balance',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          Balance / Due
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            ₹ {info.getValue()}
-          </Text>
-        </Flex>
-      ),
-    }),
-    columnHelper.accessor('id', {
-      id: 'id',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          Bill
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center" justifyContent={'space-around'}>
-          <Button
-            variant="darkBrand"
-            colorScheme="blue"
-            style={{ height: 25, fontSize: 12, padding: 15 }}
-            onClick={() =>
-              window.open(
-                'https://reciept-chi.vercel.app/invoice/' +
-                  localStorage.getItem('token') +
-                  '/' +
-                  info.getValue(),
-              )
-            }
+      header: () => 'Status',
+      cell: (info) => {
+        const due = Number(info.getValue()) || 0;
+        return due > 0 ? (
+          <Badge
+            colorScheme="red"
+            borderRadius="8px"
+            px="8px"
+            py="2px"
+            textTransform="none"
+            whiteSpace="nowrap"
           >
-            Receipt
-          </Button>
-          <div style={{ width: 5 }}></div>
-          <Button
-            variant="darkBrand"
-            colorScheme="blue"
-            style={{ height: 25, fontSize: 12, padding: 15 }}
-            onClick={() =>
-              window.open(
-                `https://api.whatsapp.com/send?phone=91${transactionData.find((x) => x.id === info.getValue()).phoneNumber}&text=${
-                  `Thank You... Be Connected \n Receipt of your order \n` +
-                  'https://reciept-chi.vercel.app/invoice/' +
-                  localStorage.getItem('token') +
-                  '/' +
-                  info.getValue()
-                }`,
-              )
-            }
+            {inr(due)} due
+          </Badge>
+        ) : (
+          <Badge
+            colorScheme="green"
+            borderRadius="8px"
+            px="8px"
+            py="2px"
+            textTransform="none"
           >
-            Share <br />
-            Receipt
-          </Button>
-        </Flex>
-      ),
+            Paid
+          </Badge>
+        );
+      },
     }),
+    {
+      id: 'actions',
+      header: () => 'Bill',
+      enableSorting: false,
+      cell: (info) => {
+        const tx = info.row.original;
+        const receipt =
+          'https://reciept-chi.vercel.app/invoice/' +
+          localStorage.getItem('token') +
+          '/' +
+          tx.id;
+        return (
+          <Flex gap="6px" onClick={(e) => e.stopPropagation()}>
+            <Tooltip label="Open receipt" hasArrow>
+              <IconButton
+                size="sm"
+                variant="lightBrand"
+                aria-label="Open receipt"
+                icon={<Icon as={MdReceiptLong} w="18px" h="18px" />}
+                onClick={() => window.open(receipt)}
+              />
+            </Tooltip>
+            <Tooltip label="Share on WhatsApp" hasArrow>
+              <IconButton
+                size="sm"
+                bg="#E7F9EE"
+                color="#128C4B"
+                _hover={{ bg: '#D2F4DF' }}
+                aria-label="Share receipt on WhatsApp"
+                icon={<Icon as={FaWhatsapp} w="18px" h="18px" />}
+                onClick={() =>
+                  window.open(
+                    `https://api.whatsapp.com/send?phone=91${tx.phoneNumber}&text=${
+                      `Thank You... Be Connected \n Receipt of your order \n` +
+                      receipt
+                    }`,
+                  )
+                }
+              />
+            </Tooltip>
+          </Flex>
+        );
+      },
+    },
   ];
 
   const table = useReactTable({
@@ -385,7 +396,6 @@ export default function ComplexTable(props) {
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    debugTable: true,
     onPaginationChange: setPagination,
     getPaginationRowModel: getPaginationRowModel(),
   });
@@ -509,220 +519,300 @@ export default function ComplexTable(props) {
   };
   return (
     <>
-      <Card
-        flexDirection="column"
-        w="100%"
-        px="0px"
-        overflowX={{ sm: 'scroll', lg: 'hidden' }}
-      >
+      <Card flexDirection="column" w="100%" p="0px" overflow="hidden">
         <ToastContainer />
-        <Box>
-          <Table variant="simple" color="gray.500" mb="24px" mt="12px">
-            <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
+        <Box overflowX="auto">
+          <Table variant="simple" size="md">
+            <Thead bg={headBg}>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const canSort = header.column.getCanSort();
+                    const sorted = header.column.getIsSorted();
+                    return (
                       <Th
                         key={header.id}
                         colSpan={header.colSpan}
-                        pe="10px"
                         borderColor={borderColor}
-                        cursor="pointer"
-                        onClick={header.column.getToggleSortingHandler()}
+                        color="secondaryGray.600"
+                        fontSize="11px"
+                        letterSpacing="0.05em"
+                        py="14px"
+                        px="12px"
+                        isNumeric={header.column.columnDef.meta?.isNumeric}
+                        cursor={canSort ? 'pointer' : 'default'}
+                        userSelect="none"
+                        onClick={
+                          canSort
+                            ? header.column.getToggleSortingHandler()
+                            : undefined
+                        }
+                        aria-sort={
+                          sorted === 'asc'
+                            ? 'ascending'
+                            : sorted === 'desc'
+                              ? 'descending'
+                              : undefined
+                        }
                       >
                         <Flex
-                          justifyContent="space-between"
                           align="center"
-                          fontSize={{ sm: '10px', lg: '12px' }}
-                          color="gray.400"
+                          gap="4px"
+                          justify={
+                            header.column.columnDef.meta?.isNumeric
+                              ? 'flex-end'
+                              : 'flex-start'
+                          }
                         >
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
-                          {{ asc: '', desc: '' }[header.column.getIsSorted()] ??
-                            null}
+                          {canSort &&
+                            (sorted === 'asc' ? (
+                              <TriangleUpIcon w="8px" color="brand.500" />
+                            ) : sorted === 'desc' ? (
+                              <TriangleDownIcon w="8px" color="brand.500" />
+                            ) : (
+                              <TriangleDownIcon w="8px" opacity={0.25} />
+                            ))}
                         </Flex>
                       </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row) => {
-                  const isExpanded = expandedRowIds.includes(row.id);
-                  return (
-                    <React.Fragment key={row.id}>
-                      <Tr>
-                        {row.getVisibleCells().map((cell) => (
-                          <Td
-                            key={cell.id}
-                            fontSize={{ sm: '14px' }}
-                            minW={{ sm: '150px', md: '200px', lg: 'auto' }}
-                            borderColor="transparent"
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </Td>
-                        ))}
-                      </Tr>
-                      {/* Expanded row content */}
-                      <Tr>
-                        <Td colSpan={columns.length} p="0">
-                          <Collapse in={isExpanded} animateOpacity>
-                            <Box
-                              p="10px"
-                              bg="gray.50"
-                              rounded="md"
-                              shadow="sm"
-                              display={'flex'}
-                            >
-                              <table
-                                style={{
-                                  width: '50%',
-                                  borderCollapse: 'collapse',
-                                  margin: 15,
-                                  color: 'black',
-                                }}
-                              >
-                                <thead>
-                                  <tr style={{ textAlign: 'left' }}>
-                                    <th>Product</th>
-                                    <th>Qty</th>
-                                    <th>Price</th>
-                                    <th>Amount</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {transactionData
-                                    ?.find((x) => x.id === row.getValue('id'))
-                                    .Cart?.map((val) => (
-                                      <tr>
-                                        <td>{val.name}</td>
-                                        <td>{val.buyingQty}</td>
-                                        <td>₹ {val.sellPrice}</td>
-                                        <td>
-                                          ₹ {val.buyingQty * val.sellPrice}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                </tbody>
-
-                                <tbody>
-                                  {transactionData?.find(
-                                    (x) => x.id === row.getValue('id'),
-                                  ).checkedAddittional && (
-                                    <tr>
-                                      <td></td>
-                                      <td></td>
-                                      <td>
-                                        {
-                                          transactionData?.find(
-                                            (x) => x.id === row.getValue('id'),
-                                          ).checkedAddittional.type
-                                        }
-                                      </td>
-                                      <td>
-                                        ₹{' '}
-                                        {
-                                          transactionData?.find(
-                                            (x) => x.id === row.getValue('id'),
-                                          ).checkedAddittional.amount
-                                        }
-                                      </td>
-                                    </tr>
-                                  )}
-                                </tbody>
-                              </table>
-                              {transactionData?.find(
-                                (x) => x.id === row.getValue('id'),
-                              ).balance > 0 && (
-                                <Button
-                                  // variant="darkBrand"
-                                  colorScheme="green"
-                                  style={{
-                                    height: 30,
-                                    fontSize: 14,
-                                    marginTop: 20,
-                                  }}
-                                  onClick={() => {
-                                    setModalOpenDue({
-                                      id: row.getValue('id'),
-                                      ...transactionData?.find(
-                                        (x) => x.id === row.getValue('id'),
-                                      ),
-                                    });
-                                    setbalanceSet(
-                                      transactionData?.find(
-                                        (x) => x.id === row.getValue('id'),
-                                      ).balance,
-                                    );
-                                  }}
-                                >
-                                  Update Balance or Due
-                                </Button>
-                              )}
-
-                              {datePickup(row.getValue('id')) && (
-                                <Button
-                                  colorScheme="blue"
-                                  style={{
-                                    height: 30,
-                                    fontSize: 14,
-                                    marginTop: 20,
-                                    marginLeft: 10,
-                                  }}
-                                  // isDisabled={true}
-                                  onClick={() => {
-                                    let obj = {
-                                      id: row.getValue('id'),
-                                      ...transactionData?.find(
-                                        (x) => x.id === row.getValue('id'),
-                                      ),
-                                    };
-                                    console.log(obj);
-                                    setiisUpdate(obj);
-                                  }}
-                                >
-                                  Edit Transaction
-                                </Button>
-                              )}
-
-                              {datePickup(row.getValue('id')) && (
-                                <Button
-                                  colorScheme="red"
-                                  style={{
-                                    height: 30,
-                                    fontSize: 14,
-                                    marginTop: 20,
-                                    marginLeft: 10,
-                                  }}
-                                  // isDisabled={true}
-                                  onClick={() => {
-                                    let obj = {
-                                      id: row.getValue('id'),
-                                      ...transactionData?.find(
-                                        (x) => x.id === row.getValue('id'),
-                                      ),
-                                    };
-                                    setisDelete(obj);
-                                  }}
-                                >
-                                  Delete Transaction
-                                </Button>
-                              )}
-                            </Box>
-                          </Collapse>
+                    );
+                  })}
+                </Tr>
+              ))}
+            </Thead>
+            <Tbody>
+              {table.getRowModel().rows.map((row) => {
+                const isExpanded = expandedRowIds.includes(row.id);
+                const tx = row.original;
+                const subtotal = (tx.Cart || []).reduce(
+                  (sum, c) => sum + Number(c.buyingQty) * Number(c.sellPrice),
+                  0,
+                );
+                const editable = datePickup(tx.id);
+                return (
+                  <React.Fragment key={row.id}>
+                    <Tr
+                      cursor="pointer"
+                      bg={isExpanded ? expandedBg : undefined}
+                      _hover={{ bg: rowHover }}
+                      transition="background .15s"
+                      onClick={() => handleRowToggle(row.id)}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <Td
+                          key={cell.id}
+                          px="12px"
+                          py="12px"
+                          borderColor={borderColor}
+                          borderBottomWidth={isExpanded ? '0' : '1px'}
+                          isNumeric={cell.column.columnDef.meta?.isNumeric}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </Td>
-                      </Tr>
-                    </React.Fragment>
-                  );
-                })}
-              </Tbody>
-            </div>
+                      ))}
+                    </Tr>
+                    {/* Expanded row content */}
+                    <Tr>
+                      <Td
+                        colSpan={columns.length}
+                        p="0"
+                        borderColor={borderColor}
+                        borderBottomWidth={isExpanded ? '1px' : '0'}
+                      >
+                        <Collapse in={isExpanded} animateOpacity>
+                          <Flex
+                            bg={expandedBg}
+                            px={{ base: '12px', md: '24px' }}
+                            pb="20px"
+                            pt="4px"
+                            gap="20px"
+                            direction={{ base: 'column', lg: 'row' }}
+                          >
+                            <Box
+                              flex="2"
+                              alignSelf="flex-start"
+                              w="100%"
+                              bg={panelBg}
+                              borderRadius="16px"
+                              overflow="hidden"
+                              border="1px solid"
+                              borderColor={borderColor}
+                            >
+                              <Table size="sm">
+                                <Thead>
+                                  <Tr>
+                                    <Th color="secondaryGray.600">Product</Th>
+                                    <Th color="secondaryGray.600" isNumeric>
+                                      Qty
+                                    </Th>
+                                    <Th color="secondaryGray.600" isNumeric>
+                                      Price
+                                    </Th>
+                                    <Th color="secondaryGray.600" isNumeric>
+                                      Amount
+                                    </Th>
+                                  </Tr>
+                                </Thead>
+                                <Tbody>
+                                  {(tx.Cart || []).map((val, i) => (
+                                    <Tr key={(val.id || '') + i}>
+                                      <Td color={textColor} fontWeight="500">
+                                        {val.name}
+                                        {val.flavour ? ` (${val.flavour})` : ''}
+                                      </Td>
+                                      <Td isNumeric>{val.buyingQty}</Td>
+                                      <Td isNumeric>{inr(val.sellPrice)}</Td>
+                                      <Td
+                                        isNumeric
+                                        color={textColor}
+                                        fontWeight="600"
+                                      >
+                                        {inr(val.buyingQty * val.sellPrice)}
+                                      </Td>
+                                    </Tr>
+                                  ))}
+                                </Tbody>
+                              </Table>
+                            </Box>
+
+                            <Flex
+                              flex="1"
+                              direction="column"
+                              gap="12px"
+                              minW={{ lg: '260px' }}
+                            >
+                              <Box
+                                bg={panelBg}
+                                borderRadius="16px"
+                                p="14px"
+                                border="1px solid"
+                                borderColor={borderColor}
+                                fontSize="sm"
+                              >
+                                <Flex justify="space-between" mb="4px">
+                                  <Text color="secondaryGray.600">Items</Text>
+                                  <Text color={textColor}>{inr(subtotal)}</Text>
+                                </Flex>
+                                {tx.checkedAddittional && (
+                                  <Flex justify="space-between" mb="4px">
+                                    <Text color="secondaryGray.600">
+                                      {tx.checkedAddittional.type ||
+                                        'Additional'}{' '}
+                                      charges
+                                    </Text>
+                                    <Text color={textColor}>
+                                      {inr(tx.checkedAddittional.amount)}
+                                    </Text>
+                                  </Flex>
+                                )}
+                                <Flex
+                                  justify="space-between"
+                                  fontWeight="700"
+                                  borderTop="1px dashed"
+                                  borderColor={borderColor}
+                                  pt="6px"
+                                  mt="6px"
+                                >
+                                  <Text color={textColor}>Total</Text>
+                                  <Text color={textColor}>
+                                    {inr(tx.totalAmmount)}
+                                  </Text>
+                                </Flex>
+                                <Flex justify="space-between" mt="4px">
+                                  <Text color="green.500">Paid</Text>
+                                  <Text color="green.500" fontWeight="600">
+                                    {inr(
+                                      Number(tx.totalAmmount || 0) -
+                                        Number(tx.balance || 0),
+                                    )}
+                                  </Text>
+                                </Flex>
+                                {tx.balance > 0 && (
+                                  <Flex justify="space-between" mt="4px">
+                                    <Text color="red.500">Balance due</Text>
+                                    <Text color="red.500" fontWeight="700">
+                                      {inr(tx.balance)}
+                                    </Text>
+                                  </Flex>
+                                )}
+                                <Text
+                                  color="secondaryGray.600"
+                                  fontSize="xs"
+                                  mt="8px"
+                                >
+                                  {tx.paymentMode}
+                                  {tx.receipterName
+                                    ? ` · by ${tx.receipterName}`
+                                    : ''}
+                                </Text>
+                              </Box>
+
+                              <Flex gap="8px" direction="column">
+                                {tx.balance > 0 && (
+                                  <Button
+                                    size="sm"
+                                    w="100%"
+                                    variant="brand"
+                                    leftIcon={
+                                      <Icon as={MdAccountBalanceWallet} />
+                                    }
+                                    onClick={() => {
+                                      setModalOpenDue({ ...tx, id: tx.id });
+                                      setbalanceSet(tx.balance);
+                                    }}
+                                  >
+                                    Receive Due
+                                  </Button>
+                                )}
+                                {editable && (
+                                  <Button
+                                    size="sm"
+                                    w="100%"
+                                    variant="lightBrand"
+                                    leftIcon={<Icon as={MdEdit} />}
+                                    onClick={() =>
+                                      setiisUpdate({ ...tx, id: tx.id })
+                                    }
+                                  >
+                                    Edit Transaction
+                                  </Button>
+                                )}
+                                {editable && (
+                                  <Button
+                                    size="sm"
+                                    w="100%"
+                                    variant="outline"
+                                    colorScheme="red"
+                                    leftIcon={<Icon as={MdDeleteOutline} />}
+                                    onClick={() =>
+                                      setisDelete({ ...tx, id: tx.id })
+                                    }
+                                  >
+                                    Delete Transaction
+                                  </Button>
+                                )}
+                              </Flex>
+                              {!editable && (
+                                <Text fontSize="xs" color="secondaryGray.500">
+                                  Edit and delete are available for 45 days
+                                  after the sale.
+                                </Text>
+                              )}
+                            </Flex>
+                          </Flex>
+                        </Collapse>
+                      </Td>
+                    </Tr>
+                  </React.Fragment>
+                );
+              })}
+            </Tbody>
           </Table>
         </Box>
 
@@ -1218,67 +1308,85 @@ export default function ComplexTable(props) {
           </ModalContent>
         </Modal>
       </Card>
-      <div style={{ width: '70vw' }}>
-        <Flex
-          justify="space-between"
-          align="center"
-          mt={4}
-          flexWrap="wrap"
-          gap={4}
-        >
-          <Flex align="center" gap={2}>
-            <Button
-              onClick={() => table.setPageIndex(0)}
-              isDisabled={!table.getCanPreviousPage()}
-              size="sm"
-            >
-              First
-            </Button>
-            <Button
-              onClick={() => table.previousPage()}
-              isDisabled={!table.getCanPreviousPage()}
-              size="sm"
-            >
-              Previous
-            </Button>
-          </Flex>
+      <Flex
+        justify="space-between"
+        align="center"
+        mt="16px"
+        px="4px"
+        flexWrap="wrap"
+        gap="12px"
+      >
+        <Text fontSize="sm" color="secondaryGray.600">
+          Showing{' '}
+          <b>
+            {transactionData.length
+              ? table.getState().pagination.pageIndex *
+                  table.getState().pagination.pageSize +
+                1
+              : 0}
+            –
+            {Math.min(
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
+              transactionData.length,
+            )}
+          </b>{' '}
+          of <b>{transactionData.length}</b>
+        </Text>
 
-          <Text fontSize="sm">
-            Page {table.getState().pagination.pageIndex + 1} of{' '}
-            {table.getPageCount()}
-          </Text>
-
-          <Flex align="center" gap={2}>
-            <Button
-              onClick={() => table.nextPage()}
-              isDisabled={!table.getCanNextPage()}
-              size="sm"
-            >
-              Next
-            </Button>
-            <Button
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              isDisabled={!table.getCanNextPage()}
-              size="sm"
-            >
-              Last
-            </Button>
-          </Flex>
-
+        <Flex align="center" gap="6px">
           <Select
             size="sm"
             width="auto"
+            borderRadius="10px"
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
+            aria-label="Rows per page"
           >
             {[5, 10, 20, 50].map((pageSize) => (
               <option key={pageSize} value={pageSize}>
-                Show {pageSize}
+                {pageSize} / page
               </option>
             ))}
           </Select>
+          <IconButton
+            size="sm"
+            variant="light"
+            aria-label="First page"
+            icon={<ArrowLeftIcon w="10px" />}
+            onClick={() => table.setPageIndex(0)}
+            isDisabled={!table.getCanPreviousPage()}
+          />
+          <IconButton
+            size="sm"
+            variant="light"
+            aria-label="Previous page"
+            icon={<ChevronLeftIcon w="20px" h="20px" />}
+            onClick={() => table.previousPage()}
+            isDisabled={!table.getCanPreviousPage()}
+          />
+          <Text fontSize="sm" color={textColor} px="6px" whiteSpace="nowrap">
+            {table.getState().pagination.pageIndex + 1} /{' '}
+            {Math.max(table.getPageCount(), 1)}
+          </Text>
+          <IconButton
+            size="sm"
+            variant="light"
+            aria-label="Next page"
+            icon={<ChevronRightIcon w="20px" h="20px" />}
+            onClick={() => table.nextPage()}
+            isDisabled={!table.getCanNextPage()}
+          />
+          <IconButton
+            size="sm"
+            variant="light"
+            aria-label="Last page"
+            icon={<ArrowRightIcon w="10px" />}
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            isDisabled={!table.getCanNextPage()}
+          />
         </Flex>
-      </div>
+      </Flex>
     </>
   );
 }

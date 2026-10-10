@@ -1,5 +1,4 @@
-import Datepicker from 'react-tailwindcss-datepicker';
-import { Box, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react';
+import { Box, Flex, Grid, Heading, SimpleGrid, Text } from '@chakra-ui/react';
 import MiniStatistics from 'components/card/MiniStatistics';
 import React, { useState, useEffect } from 'react';
 import {
@@ -12,8 +11,14 @@ import {
   MdReceiptLong,
   MdInventory2,
   MdStorefront,
+  MdSavings,
 } from 'react-icons/md';
-import { SectionTitle, DateFilter } from 'components/page/PageHeader';
+import SalesTrend from 'views/admin/default/components/SalesTrend';
+import TopProducts from 'views/admin/default/components/TopProducts';
+import PaymentSplit from 'views/admin/default/components/PaymentSplit';
+import StockAlerts from 'views/admin/default/components/StockAlerts';
+import { SectionTitle } from 'components/page/PageHeader';
+import DateRangeFilter from 'components/page/DateRangeFilter';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import {
@@ -131,12 +136,17 @@ export default function UserReports() {
 
   const profitPercentage = (totalProfit / totalBuyingCost) * 100;
 
+  const salesCount = transactionFilter
+    ? transactionFilter.filter((t) => t.totalAmmount).length
+    : 0;
   const totalAmountExpense = expensesfilter
     ? expensesfilter?.reduce(
         (accumulator, current) => accumulator + current.amount,
         0,
       )
     : 0;
+
+  const netProfit = Number(totalProfit) - Number(totalAmountExpense || 0);
 
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
@@ -197,27 +207,17 @@ export default function UserReports() {
               </Text>
             </Text>
           </Box>
-          <DateFilter color="gray.700">
-            <Datepicker
-              value={valueDate}
-              onChange={(newValue) => setDateValue(newValue)}
-              showShortcuts={true}
-              primaryColor="teal"
-            />
-          </DateFilter>
+          <DateRangeFilter value={valueDate} onChange={setDateValue} />
         </Flex>
       </Box>
 
-      <SectionTitle>Transactions</SectionTitle>
-      <SimpleGrid
-        columns={{ base: 1, md: 2, lg: 3, '2xl': 4 }}
-        gap="20px"
-        mb="32px"
-      >
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap="20px" mb="28px">
         <MiniStatistics
           icon={MdAttachMoney}
           name="Earnings"
           value={'₹ ' + transactionTotalAmount}
+          growth={`${salesCount} order${salesCount === 1 ? '' : 's'}`}
+          growthColor="secondaryGray.600"
         />
         <MiniStatistics
           icon={MdAccountBalanceWallet}
@@ -237,11 +237,17 @@ export default function UserReports() {
           growthColor={totalProfit < 0 ? 'red.500' : 'green.500'}
         />
         <MiniStatistics
-          icon={MdOutlineShoppingBag}
-          accent="orange"
-          name="Stock Qty Sold"
-          value={totalBuyingQty || 0}
+          icon={MdSavings}
+          accent={netProfit < 0 ? 'red' : 'green'}
+          name="Net Profit (after expenses)"
+          value={'₹ ' + Math.round(netProfit).toLocaleString()}
+          growth={`Expenses ₹ ${totalAmountExpense.toLocaleString()}`}
+          growthColor="secondaryGray.600"
         />
+      </SimpleGrid>
+
+      <SectionTitle>Dues & Expenses</SectionTitle>
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px" mb="28px">
         <MiniStatistics
           icon={MdHourglassBottom}
           accent="red"
@@ -265,20 +271,26 @@ export default function UserReports() {
           accent="orange"
           name="Expenses"
           value={'₹ ' + totalAmountExpense.toLocaleString()}
+          growth="View expenses →"
+          growthColor="brand.500"
           onClick={() => navigate('/admin/Expense')}
         />
       </SimpleGrid>
 
-      <SectionTitle>Stock Available</SectionTitle>
-      <SimpleGrid
-        columns={{ base: 1, md: 2, lg: 3, '2xl': 4 }}
-        gap="20px"
-        mb="20px"
-      >
+      <SectionTitle>Stock</SectionTitle>
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="20px" mb="28px">
+        <MiniStatistics
+          icon={MdOutlineShoppingBag}
+          accent="orange"
+          name="Stock Qty Sold"
+          value={totalBuyingQty || 0}
+        />
         <MiniStatistics
           icon={MdInventory2}
           name="Stock in Quantity"
           value={totalQuantity.toLocaleString()}
+          growth="Open stock →"
+          growthColor="brand.500"
           onClick={() => navigate('/admin/sell-marketplace')}
         />
         <MiniStatistics
@@ -288,6 +300,25 @@ export default function UserReports() {
           value={'₹ ' + totalCostAvailbleStock.toLocaleString()}
         />
       </SimpleGrid>
+
+      <SectionTitle>Insights</SectionTitle>
+      <Grid
+        templateColumns={{ base: '1fr', xl: '2fr 1fr' }}
+        gap="20px"
+        mb="20px"
+      >
+        <SalesTrend transactions={transactionFilter} range={valueDate} />
+        <PaymentSplit transactions={transactionFilter} />
+      </Grid>
+
+      <Grid
+        templateColumns={{ base: '1fr', xl: '3fr 2fr' }}
+        gap="20px"
+        mb="20px"
+      >
+        <TopProducts transactions={transactionFilter} />
+        <StockAlerts stock={AvailbleStock} />
+      </Grid>
     </Box>
   );
 }

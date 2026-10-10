@@ -19,6 +19,7 @@ import {
   ModalCloseButton,
   FormLabel,
   Input,
+  Select,
   Icon,
   AlertDialog,
   AlertDialogBody,
@@ -43,6 +44,7 @@ import {
   MdInventory2,
   MdOutlineShoppingCart,
   MdShoppingCart,
+  MdSort,
   MdCreditCard,
   MdPayments,
   MdPersonOutline,
@@ -51,6 +53,7 @@ import {
   MdReceiptLong,
 } from 'react-icons/md';
 import PageHeader from 'components/page/PageHeader';
+import { LOW_STOCK_LIMIT } from 'views/admin/default/components/StockAlerts';
 import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
 import NFT from 'components/card/NFT';
 import Card from 'components/card/Card.js';
@@ -107,6 +110,7 @@ export default function Marketplace() {
   const [updateProduct, setUpdateProduct] = useState(null);
   const [showupdateBtn, setShowupdateBtn] = useState(false);
   const [filterSet, setFilter] = useState('Available Stock');
+  const [sortBy, setSortBy] = useState('name');
   const [indexProduct, setIndexProduct] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -380,23 +384,42 @@ export default function Marketplace() {
   };
   const now = moment();
   const sixMonthsLater = moment().add(6, 'months');
-  const isVisible = (val) =>
-    (val.quantity > indexProduct && filterSet === 'Available Stock') ||
+  const matchesFilter = (val, key) =>
+    (val.quantity > indexProduct && key === 'Available Stock') ||
     (val.quantity > indexProduct &&
-      filterSet === '6m' &&
+      key === '6m' &&
       moment(val.expDate).isBetween(now, sixMonthsLater, undefined, '[]')) ||
-    (filterSet === 'Out of Stock' && val.quantity === 0) ||
-    (filterSet === 'Favorite' && val.fav);
-  const visibleProducts = tableDataToSearch.filter(isVisible);
+    (key === 'Low' && val.quantity > 0 && val.quantity <= LOW_STOCK_LIMIT) ||
+    (key === 'Out of Stock' && val.quantity === 0) ||
+    (key === 'Favorite' && val.fav);
+  const sorters = {
+    name: (a, b) => (a.name || '').localeCompare(b.name || ''),
+    qtyAsc: (a, b) => a.quantity - b.quantity,
+    qtyDesc: (a, b) => b.quantity - a.quantity,
+    expiry: (a, b) =>
+      (a.expDate ? moment(a.expDate).valueOf() : Infinity) -
+      (b.expDate ? moment(b.expDate).valueOf() : Infinity),
+  };
+  const visibleProducts = tableDataToSearch
+    .filter((val) => matchesFilter(val, filterSet))
+    .sort(sorters[sortBy] || sorters.name);
   const filterOptions = [
-    { key: 'Available Stock', label: 'Available Stock' },
+    { key: 'Available Stock', label: 'Available' },
+    { key: 'Low', label: `Low stock (≤${LOW_STOCK_LIMIT})` },
     { key: '6m', label: 'Expiring in 6m' },
     { key: 'Favorite', label: 'Favorite' },
     { key: 'Out of Stock', label: 'Out of Stock' },
-  ];
+  ].map((opt) => ({
+    ...opt,
+    count: tableDataToSearch.filter((val) => matchesFilter(val, opt.key))
+      .length,
+  }));
   const cartItemCount = Cart.reduce((sum, item) => sum + item.buyingQty, 0);
   return (
-    <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
+    <Box
+      pt={{ base: '130px', md: '80px', xl: '80px' }}
+      pb={{ base: Cart.length ? '90px' : '0', xl: '0' }}
+    >
       <PageHeader
         title="Sell Order"
         subtitle="Pick products to add them to the cart, then create the bill"
@@ -444,7 +467,7 @@ export default function Marketplace() {
                   setFilteredSuggestions(filteredSuggestions)
                 }
               />
-              <Flex gap="8px" wrap="wrap">
+              <Flex gap="8px" wrap="wrap" align="center">
                 {filterOptions.map((opt) => (
                   <Button
                     key={opt.key}
@@ -454,16 +477,49 @@ export default function Marketplace() {
                     onClick={() => setFilter(opt.key)}
                   >
                     {opt.label}
+                    <Text
+                      as="span"
+                      ms="6px"
+                      fontSize="xs"
+                      fontWeight="700"
+                      opacity={filterSet === opt.key ? 0.9 : 0.6}
+                    >
+                      {opt.count}
+                    </Text>
                   </Button>
                 ))}
               </Flex>
             </Flex>
           </Card>
-          <Text color="secondaryGray.600" fontSize="sm" mb="12px" ms="4px">
-            {tableData === null || tableData === false
-              ? 'Loading products…'
-              : `${visibleProducts.length} product${visibleProducts.length === 1 ? '' : 's'}`}
-          </Text>
+          <Flex
+            justify="space-between"
+            align="center"
+            mb="12px"
+            ms="4px"
+            gap="12px"
+          >
+            <Text color="secondaryGray.600" fontSize="sm">
+              {tableData === null || tableData === false
+                ? 'Loading products…'
+                : `${visibleProducts.length} product${visibleProducts.length === 1 ? '' : 's'}`}
+            </Text>
+            <Flex align="center" gap="8px">
+              <Icon as={MdSort} color="secondaryGray.600" />
+              <Select
+                size="sm"
+                w="170px"
+                borderRadius="10px"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Sort products"
+              >
+                <option value="name">Name (A–Z)</option>
+                <option value="qtyAsc">Quantity: low to high</option>
+                <option value="qtyDesc">Quantity: high to low</option>
+                <option value="expiry">Expiry: soonest first</option>
+              </Select>
+            </Flex>
+          </Flex>
           <Box maxH={{ md: '70vh' }} overflowY={{ md: 'auto' }} pe="4px">
             {tableData !== null &&
               tableData !== false &&
@@ -478,6 +534,9 @@ export default function Marketplace() {
                   <Text mt="12px" color="secondaryGray.600" fontWeight="500">
                     No products in “
                     {filterOptions.find((o) => o.key === filterSet)?.label}”
+                  </Text>
+                  <Text color="secondaryGray.500" fontSize="sm">
+                    Try another filter or clear the search.
                   </Text>
                 </Card>
               )}
@@ -546,7 +605,12 @@ export default function Marketplace() {
           gridArea={{ xl: '1 / 3 / 2 / 4', '2xl': '1 / 2 / 2 / 3' }}
           pt={{ base: '20px', xl: '0px' }}
         >
-          <Card p="0px" position={{ xl: 'sticky' }} top={{ xl: '100px' }}>
+          <Card
+            id="cart-panel"
+            p="0px"
+            position={{ xl: 'sticky' }}
+            top={{ xl: '100px' }}
+          >
             <Flex
               align="center"
               justify="space-between"
@@ -653,6 +717,41 @@ export default function Marketplace() {
           </Card>
         </Flex>
       </Grid>
+
+      {Cart.length > 0 && (
+        <Flex
+          display={{ base: 'flex', xl: 'none' }}
+          position="fixed"
+          bottom="16px"
+          left="16px"
+          right="16px"
+          zIndex={20}
+          bg="brand.600"
+          color="white"
+          borderRadius="16px"
+          px="18px"
+          py="12px"
+          align="center"
+          justify="space-between"
+          boxShadow="0 12px 30px -8px rgba(13, 148, 136, 0.55)"
+          cursor="pointer"
+          onClick={() =>
+            document
+              .getElementById('cart-panel')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        >
+          <Flex align="center" gap="10px">
+            <Icon as={MdShoppingCart} w="22px" h="22px" />
+            <Text fontWeight="600">
+              {cartItemCount} item{cartItemCount === 1 ? '' : 's'}
+            </Text>
+          </Flex>
+          <Text fontWeight="700">
+            ₹ {Number(totalAmmount || 0).toLocaleString()} · View cart
+          </Text>
+        </Flex>
+      )}
 
       <Modal
         initialFocusRef={initialRef}

@@ -15,6 +15,7 @@ export default function NFT(props) {
   const textColor = useColorModeValue('navy.700', 'white');
   const textColorBid = useColorModeValue('brand.500', 'white');
   const dividerColor = useColorModeValue('secondaryGray.100', 'whiteAlpha.100');
+  const isLowStock = quantity > 0 && quantity <= 5;
   const isExpiringSoon =
     data.expDate && moment(data.expDate).isBefore(moment().add(6, 'months'));
   return (
@@ -65,15 +66,28 @@ export default function NFT(props) {
           ))}
         </Flex>
 
-        {data.expDate && (
-          <Text
-            fontSize="xs"
-            fontWeight="600"
-            color={isExpiringSoon ? 'orange.500' : 'secondaryGray.600'}
-            mb="8px"
-          >
-            EXP: {moment(data.expDate).format('MMM YYYY')}
-          </Text>
+        {(data.expDate || isLowStock) && (
+          <Flex gap="6px" wrap="wrap" mb="8px" align="center">
+            {data.expDate && (
+              <Text
+                fontSize="xs"
+                fontWeight="600"
+                color={isExpiringSoon ? 'orange.500' : 'secondaryGray.600'}
+              >
+                EXP: {moment(data.expDate).format('MMM YYYY')}
+              </Text>
+            )}
+            {isLowStock && (
+              <Badge
+                colorScheme="orange"
+                borderRadius="6px"
+                fontSize="10px"
+                px="6px"
+              >
+                Low stock
+              </Badge>
+            )}
+          </Flex>
         )}
 
         <Flex

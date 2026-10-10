@@ -1,13 +1,5 @@
 import { realtimeDb } from '../firebase';
-import {
-  getDatabase,
-  ref,
-  onValue,
-  once,
-  set,
-  push,
-  get,
-} from '@firebase/database';
+import { ref, set, push, get } from '@firebase/database';
 const key = localStorage.getItem('token');
 
 export const fetchAvailableProduct = async () => {

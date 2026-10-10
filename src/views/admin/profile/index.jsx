@@ -31,7 +31,8 @@ import {
 } from '@chakra-ui/react';
 import Card from 'components/card/Card';
 import MiniStatistics from 'components/card/MiniStatistics';
-import PageHeader, { DateFilter } from 'components/page/PageHeader';
+import PageHeader from 'components/page/PageHeader';
+import DateRangeFilter from 'components/page/DateRangeFilter';
 import {
   MdAdd,
   MdCalendarToday,
@@ -39,7 +40,6 @@ import {
   MdReceiptLong,
 } from 'react-icons/md';
 import moment from 'moment';
-import Datepicker from 'react-tailwindcss-datepicker';
 import {
   addExpenseIn,
   longformatDate,
@@ -124,14 +124,11 @@ const ExpenseTracker = () => {
         }
         actions={
           <>
-            <DateFilter>
-              <Datepicker
-                value={valueDate}
-                onChange={(newValue) => setDateValue(newValue)}
-                showShortcuts={true}
-                primaryColor="teal"
-              />
-            </DateFilter>
+            <DateRangeFilter
+              value={valueDate}
+              onChange={setDateValue}
+              allowAllTime
+            />
             <Button
               variant="brand"
               leftIcon={<Icon as={MdAdd} w="20px" h="20px" />}

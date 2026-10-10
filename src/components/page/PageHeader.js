@@ -52,22 +52,3 @@ export function SectionTitle({ children, ...rest }) {
     </Text>
   );
 }
-
-// Wraps react-tailwindcss-datepicker so it matches the Chakra inputs
-export function DateFilter({ children, ...rest }) {
-  const bg = useColorModeValue('white', 'navy.800');
-  const border = useColorModeValue('secondaryGray.100', 'whiteAlpha.100');
-  return (
-    <Box
-      bg={bg}
-      border="1px solid"
-      borderColor={border}
-      borderRadius="16px"
-      minW={{ base: '100%', md: '300px' }}
-      sx={{ input: { borderRadius: '16px', fontSize: '14px' } }}
-      {...rest}
-    >
-      {children}
-    </Box>
-  );
-}

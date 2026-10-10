@@ -30,12 +30,9 @@ export default function AdminNavbar(props) {
   let secondaryText = useColorModeValue('gray.700', 'white');
   let navbarPosition = 'fixed';
   let navbarFilter = 'none';
-  let navbarBackdrop = 'blur(20px)';
+  let navbarBackdrop = 'none';
   let navbarShadow = 'none';
-  let navbarBg = useColorModeValue(
-    'rgba(244, 247, 254, 0.2)',
-    'rgba(11,20,55,0.5)',
-  );
+  let navbarBg = 'transparent';
   let navbarBorder = 'transparent';
   let secondaryMargin = '0px';
   let paddingX = '15px';
@@ -59,12 +56,9 @@ export default function AdminNavbar(props) {
       backgroundPosition="center"
       backgroundSize="cover"
       borderRadius="16px"
-      borderWidth="1.5px"
+      borderWidth="0px"
+      pointerEvents="none"
       borderStyle="solid"
-      transitionDelay="0s, 0s, 0s, 0s"
-      transitionDuration=" 0.25s, 0.25s, 0.25s, 0s"
-      transition-property="box-shadow, background-color, filter, border"
-      transitionTimingFunction="linear, linear, linear, linear"
       alignItems={{ xl: 'center' }}
       display={secondary ? 'block' : 'flex'}
       minH="75px"
@@ -100,7 +94,7 @@ export default function AdminNavbar(props) {
         alignItems={{ xl: 'center' }}
         mb={gap}
       >
-        <Box ms="auto" w={{ sm: '100%', md: 'unset' }}>
+        <Box ms="auto" w={{ sm: '100%', md: 'unset' }} pointerEvents="auto">
           <AdminNavbarLinks
             onOpen={props.onOpen}
             logoText={props.logoText}

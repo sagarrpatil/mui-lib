@@ -18,7 +18,8 @@ import {
 } from '@chakra-ui/react';
 import Card from 'components/card/Card';
 import MiniStatistics from 'components/card/MiniStatistics';
-import PageHeader, { DateFilter } from 'components/page/PageHeader';
+import PageHeader from 'components/page/PageHeader';
+import DateRangeFilter from 'components/page/DateRangeFilter';
 import DevelopmentTable from 'views/admin/dataTables/components/DevelopmentTable';
 import { columnsDataDevelopment } from 'views/admin/dataTables/variables/columnsData';
 import tableDataDevelopment from 'views/admin/dataTables/variables/tableDataDevelopment.json';
@@ -32,7 +33,6 @@ import {
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { exportTransactionsToExcel } from 'service/exportTransactions';
-import Datepicker from 'react-tailwindcss-datepicker';
 import React, { useEffect, useState } from 'react';
 import { fetchAvailableTransaction, longformatDate } from 'service/apiservice';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
@@ -263,14 +263,7 @@ export default function Settings() {
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </InputGroup>
-          <DateFilter>
-            <Datepicker
-              value={value}
-              onChange={(newValue) => setValue(newValue)}
-              showShortcuts={true}
-              primaryColor="teal"
-            />
-          </DateFilter>
+          <DateRangeFilter value={value} onChange={setValue} allowAllTime />
         </Flex>
       </Card>
 

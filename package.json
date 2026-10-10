@@ -39,7 +39,6 @@
     "react-is": "^18.3.1",
     "react-router-dom": "^6.25.1",
     "react-scripts": "^5.0.0",
-    "react-tailwindcss-datepicker": "^1.7.2",
     "react-toastify": "^10.0.5",
     "rsuite": "^5.70.3",
     "styled-components": "^6.1.13",
@@ -50,13 +49,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
-   "build": "CI=false react-scripts build",
+    "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "preinstall": "npx npm-force-resolutions",
-    
     "format": "prettier --write \"./{src,test}/**/*.{ts,tsx,js,jsx,css}\""
   },
   "resolutions": {

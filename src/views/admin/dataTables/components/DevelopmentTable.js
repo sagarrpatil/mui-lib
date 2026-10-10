@@ -28,7 +28,26 @@ import {
   RadioGroup,
   Stack,
   Radio,
+  Divider,
+  FormErrorMessage,
+  FormHelperText,
+  Icon,
+  InputGroup,
+  InputLeftAddon,
+  SimpleGrid,
+  Switch,
+  Tooltip,
 } from '@chakra-ui/react';
+import {
+  MdCreditCard,
+  MdEditNote,
+  MdPayments,
+  MdPersonOutline,
+  MdQrCode2,
+  MdSave,
+  MdShoppingCart,
+  MdUndo,
+} from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import {
   createColumnHelper,
@@ -52,6 +71,23 @@ import { ToastContainer, toast } from 'react-toastify';
 
 const columnHelper = createColumnHelper();
 
+function EditSection({ icon, children }) {
+  return (
+    <Flex align="center" gap="8px" mb="12px">
+      <Icon as={icon} color="brand.500" w="18px" h="18px" />
+      <Text
+        fontSize="xs"
+        fontWeight="700"
+        letterSpacing="0.06em"
+        textTransform="uppercase"
+        color="secondaryGray.600"
+      >
+        {children}
+      </Text>
+    </Flex>
+  );
+}
+
 export default function ComplexTable(props) {
   const { transactionData } = props;
   const navigate = useNavigate();
@@ -62,6 +98,8 @@ export default function ComplexTable(props) {
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const iconColor = useColorModeValue('secondaryGray.500', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
+  const softBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
+  const segmentActiveBg = useColorModeValue('white', 'navy.700');
   const [isDelete, setisDelete] = React.useState(null);
   const [isUpdate, setiisUpdate] = React.useState(null);
   const finalRef = React.useRef(null);
@@ -377,11 +415,11 @@ export default function ComplexTable(props) {
     object.balance = 0;
     setisDelete(null);
     obj.Cart.map(async (val) => {
-     await fetchAvailableProductbyID(val.id).then(async (response) => {
+      await fetchAvailableProductbyID(val.id).then(async (response) => {
         let datafromResponse = response;
         datafromResponse.quantity =
           Number(response.quantity) + Number(val.buyingQty);
-          await updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
+        await updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
       });
     });
 
@@ -395,7 +433,6 @@ export default function ComplexTable(props) {
     };
     obj[state] = val;
     setiisUpdate(obj);
-    console.log('===================', obj);
   };
   const updateDetails = (obj) => {
     let totalAmount = obj.Cart.reduce((acc, item) => {
@@ -427,9 +464,23 @@ export default function ComplexTable(props) {
       props.refreshTable();
     });
   };
+  const closeUpdate = () => {
+    setiisUpdate(null);
+    sessionStorage.removeItem('arrayOfRemoveItems');
+  };
+  // Live total, same formula updateDetails saves with
+  const editTotal = isUpdate
+    ? isUpdate.Cart.reduce(
+        (acc, item) => acc + Number(item.sellPrice) * Number(item.buyingQty),
+        0,
+      ) +
+      (isUpdate.checkedAddittional
+        ? Number(isUpdate.checkedAddittional.amount) || 0
+        : 0)
+    : 0;
   const datePickup = (id) => {
     return moment(Number(id)).isBetween(
-      moment().subtract(15, 'days'),
+      moment().subtract(45, 'days'),
       moment().add(1, 'days'),
     );
   };
@@ -714,212 +765,405 @@ export default function ComplexTable(props) {
 
         <Modal
           isOpen={isUpdate}
-          onClose={() => {
-            setiisUpdate(null);
-            sessionStorage.removeItem('arrayOfRemoveItems');
-          }}
+          onClose={closeUpdate}
+          isCentered
+          size="xl"
+          scrollBehavior="inside"
         >
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Update Transaction</ModalHeader>
-            <ModalCloseButton />
-            {isUpdate && (
-              <ModalBody>
-                <FormControl mt={4}>
-                  <FormLabel>Phone Number</FormLabel>
-                  <Input
-                    placeholder="Phone Number"
-                    type="number"
-                    maxLength={10}
-                    value={isUpdate.phoneNumber}
-                    onChange={(e) =>
-                      onChangeUpdateText(e.target.value, 'phoneNumber')
-                    }
-                  />
-                </FormControl>{' '}
-                <br />
-                <FormControl mt={4}>
-                  <FormLabel>Customer Name</FormLabel>
-                  <Input
-                    placeholder="Customer Name"
-                    type="text"
-                    value={isUpdate.customerName}
-                    onChange={(e) =>
-                      onChangeUpdateText(e.target.value, 'customerName')
-                    }
-                  />
-                </FormControl>
-                <br />
-                <FormControl>
-                  <FormLabel>Payment Mode</FormLabel>
-                  <Select
-                    placeholder="Select Payment Mode"
-                    value={isUpdate.paymentOption}
-                    onChange={(e) =>
-                      onChangeUpdateText(e.target.value, 'paymentOption')
-                    }
-                  >
-                    <option value="UPI / Netbanking">UPI / Netbanking</option>
-                    <option value="Cash">Cash</option>
-                    <option value="Cash">Card</option>
-                  </Select>
-                </FormControl>
-                <br />
-                <FormControl>
-                  <FormLabel>Receipter name / Notes</FormLabel>
-                  <Input
-                    placeholder="Receipter name"
-                    value={isUpdate.receipterName}
-                    onChange={(e) =>
-                      onChangeUpdateText(e.target.value, 'receipterName')
-                    }
-                  />
-                </FormControl>
-                <br />
-                <FormControl>
-                  <Checkbox
-                    isChecked={
-                      isUpdate.checkedAddittional !== null &&
-                      isUpdate.checkedAddittional !== undefined
-                    }
-                    onChange={(e) =>
-                      onChangeUpdateText(
-                        e.target.checked
-                          ? {
-                              type: '',
-                              amount: '',
-                            }
-                          : null,
-                        'checkedAddittional',
-                      )
-                    }
-                  >
-                    Additional Charges
-                  </Checkbox>
-                </FormControl>
-                {isUpdate.checkedAddittional && (
-                  <div style={{ display: 'flex' }}>
-                    <FormControl style={{ paddingRight: 10 }}>
-                      <FormLabel>Additional Type</FormLabel>
-                      <Input
-                        value={isUpdate.checkedAddittional.type}
-                        onChange={(e) => {
-                          let value = { ...isUpdate };
-                          value.checkedAddittional.type = e.target.value;
-                          setiisUpdate(value);
-                        }}
-                        placeholder="Additional Type"
-                      />
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>Additional Amount</FormLabel>
-                      <Input
-                        onChange={(e) => {
-                          let value = { ...isUpdate };
-                          value.checkedAddittional.amount = Number(
-                            e.target.value,
-                          );
-                          setiisUpdate(value);
-                        }}
-                        value={isUpdate.checkedAddittional.amount}
-                        placeholder="Additional Amount"
-                        type="number"
-                      />
-                    </FormControl>
-                  </div>
-                )}
-                <br />
-                <RadioGroup
-                  onChange={(val) => onChangeUpdateText(val, 'paymentMode')}
-                  value={isUpdate.paymentMode}
+          <ModalOverlay bg="blackAlpha.500" backdropFilter="blur(4px)" />
+          <ModalContent borderRadius="24px" mx="16px" overflow="hidden">
+            <ModalHeader
+              bgGradient="linear(135deg, brand.400 0%, brand.600 100%)"
+              color="white"
+              py="20px"
+            >
+              <Flex align="center" gap="12px">
+                <Flex
+                  w="44px"
+                  h="44px"
+                  borderRadius="14px"
+                  bg="whiteAlpha.300"
+                  align="center"
+                  justify="center"
                 >
-                  <Stack direction="row">
-                    <Radio value="Full Payment">Full Payment</Radio>
-                    <Radio value="Partial Payment">Partial Payment</Radio>
-                  </Stack>
-                </RadioGroup>
-                <br />
-                {isUpdate.paymentMode === 'Partial Payment' && (
-                  <>
-                    <FormControl>
-                      <FormLabel>Partial Payment Amount</FormLabel>
+                  <Icon as={MdEditNote} w="26px" h="26px" />
+                </Flex>
+                <Box>
+                  <Text fontSize="lg" fontWeight="700" lineHeight="1.2">
+                    Edit Transaction
+                  </Text>
+                  {isUpdate && (
+                    <Text fontSize="sm" fontWeight="500" color="whiteAlpha.800">
+                      Bill #{isUpdate.id} ·{' '}
+                      {moment(Number(isUpdate.id)).format(
+                        'DD MMM YYYY, hh:mm A',
+                      )}
+                    </Text>
+                  )}
+                </Box>
+              </Flex>
+            </ModalHeader>
+            <ModalCloseButton color="white" top="22px" />
+            {isUpdate && (
+              <ModalBody py="20px">
+                <EditSection icon={MdPersonOutline}>Customer</EditSection>
+                <SimpleGrid columns={{ base: 1, md: 2 }} gap="14px">
+                  <FormControl isRequired>
+                    <FormLabel fontSize="sm">Phone Number</FormLabel>
+                    <InputGroup>
+                      <InputLeftAddon borderLeftRadius="12px" fontSize="sm">
+                        +91
+                      </InputLeftAddon>
                       <Input
-                        placeholder="Partial Payment"
+                        borderRightRadius="12px"
+                        placeholder="10-digit mobile"
+                        type="tel"
+                        inputMode="numeric"
+                        value={isUpdate.phoneNumber}
+                        onChange={(e) =>
+                          onChangeUpdateText(
+                            e.target.value.replace(/\D/g, '').slice(0, 10),
+                            'phoneNumber',
+                          )
+                        }
+                      />
+                    </InputGroup>
+                  </FormControl>
+                  <FormControl isRequired>
+                    <FormLabel fontSize="sm">Customer Name</FormLabel>
+                    <Input
+                      borderRadius="12px"
+                      placeholder="Customer name"
+                      value={isUpdate.customerName}
+                      onChange={(e) =>
+                        onChangeUpdateText(e.target.value, 'customerName')
+                      }
+                    />
+                  </FormControl>
+                </SimpleGrid>
+
+                <Divider my="18px" />
+
+                <EditSection icon={MdShoppingCart}>
+                  Items ({isUpdate.Cart.length})
+                </EditSection>
+                {isUpdate.Cart.length === 0 ? (
+                  <Text
+                    fontSize="sm"
+                    color="red.500"
+                    bg={softBg}
+                    borderRadius="12px"
+                    p="12px"
+                  >
+                    All items were put back. Add at least one item, or close
+                    without saving.
+                  </Text>
+                ) : (
+                  <Box
+                    border="1px solid"
+                    borderColor={borderColor}
+                    borderRadius="16px"
+                    overflow="hidden"
+                  >
+                    {isUpdate.Cart.map((val, i) => (
+                      <Flex
+                        key={val.id}
+                        align="center"
+                        gap="12px"
+                        px="14px"
+                        py="10px"
+                        borderTop={i ? '1px solid' : 'none'}
+                        borderColor={borderColor}
+                      >
+                        <Box flex="1" minW="0">
+                          <Text
+                            color={textColor}
+                            fontSize="sm"
+                            fontWeight="600"
+                            noOfLines={1}
+                          >
+                            {val.name}
+                            {val.flavour ? ` (${val.flavour})` : ''}
+                          </Text>
+                          <Text fontSize="xs" color="secondaryGray.600">
+                            Qty {val.buyingQty} · Amount ₹{' '}
+                            {Number(
+                              (Number(val.sellPrice) || 0) * val.buyingQty,
+                            ).toLocaleString()}
+                          </Text>
+                        </Box>
+                        <InputGroup size="sm" w="120px">
+                          <InputLeftAddon borderLeftRadius="10px">
+                            ₹
+                          </InputLeftAddon>
+                          <Input
+                            borderRightRadius="10px"
+                            type="number"
+                            value={val.sellPrice}
+                            aria-label={`Sell price for ${val.name}`}
+                            onChange={(e) =>
+                              updatePriceStk(e.target.value, val.id, i)
+                            }
+                          />
+                        </InputGroup>
+                        <Tooltip label="Put back to stock" hasArrow>
+                          <IconButton
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            aria-label={`Put ${val.name} back to stock`}
+                            icon={<Icon as={MdUndo} w="18px" h="18px" />}
+                            onClick={() => removeOrder(val.id)}
+                          />
+                        </Tooltip>
+                      </Flex>
+                    ))}
+                  </Box>
+                )}
+
+                <Divider my="18px" />
+
+                <EditSection icon={MdPayments}>Payment</EditSection>
+                <FormControl isRequired mb="14px">
+                  <FormLabel fontSize="sm">Payment Method</FormLabel>
+                  <SimpleGrid columns={3} gap="8px">
+                    {[
+                      {
+                        value: 'UPI / Netbanking',
+                        label: 'UPI / Bank',
+                        icon: MdQrCode2,
+                      },
+                      { value: 'Cash', label: 'Cash', icon: MdPayments },
+                      { value: 'Card', label: 'Card', icon: MdCreditCard },
+                    ].map((opt) => (
+                      <Button
+                        key={opt.value}
+                        h="56px"
+                        flexDirection="column"
+                        gap="2px"
+                        fontSize="sm"
+                        borderRadius="14px"
+                        variant={
+                          isUpdate.paymentOption === opt.value
+                            ? 'brand'
+                            : 'light'
+                        }
+                        onClick={() =>
+                          onChangeUpdateText(opt.value, 'paymentOption')
+                        }
+                      >
+                        <Icon as={opt.icon} w="20px" h="20px" />
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </SimpleGrid>
+                </FormControl>
+
+                <FormControl mb="14px">
+                  <FormLabel fontSize="sm">Payment Type</FormLabel>
+                  <Flex bg={softBg} p="4px" borderRadius="14px" gap="4px">
+                    {['Full Payment', 'Partial Payment'].map((mode) => {
+                      const active = isUpdate.paymentMode === mode;
+                      return (
+                        <Button
+                          key={mode}
+                          flex="1"
+                          size="sm"
+                          h="36px"
+                          borderRadius="10px"
+                          boxShadow={active ? 'sm' : 'none'}
+                          bg={active ? segmentActiveBg : 'transparent'}
+                          color={active ? 'brand.500' : 'secondaryGray.600'}
+                          _hover={{
+                            bg: active ? segmentActiveBg : 'blackAlpha.50',
+                          }}
+                          onClick={() =>
+                            onChangeUpdateText(mode, 'paymentMode')
+                          }
+                        >
+                          {mode}
+                        </Button>
+                      );
+                    })}
+                  </Flex>
+                </FormControl>
+
+                {isUpdate.paymentMode === 'Partial Payment' && (
+                  <FormControl
+                    isRequired
+                    mb="14px"
+                    isInvalid={Number(isUpdate.partialPayment) > editTotal}
+                  >
+                    <FormLabel fontSize="sm">Amount Paid</FormLabel>
+                    <InputGroup>
+                      <InputLeftAddon borderLeftRadius="12px">₹</InputLeftAddon>
+                      <Input
+                        borderRightRadius="12px"
+                        placeholder="0"
                         type="number"
                         value={isUpdate.partialPayment}
                         onChange={(e) =>
                           onChangeUpdateText(e.target.value, 'partialPayment')
                         }
                       />
-                    </FormControl>
-                    {isUpdate.partialPayment > isUpdate.totalAmmount && (
-                      <p style={{ color: 'tomato' }}>
-                        Partial payment should not be greater than full payment.
-                      </p>
+                    </InputGroup>
+                    {Number(isUpdate.partialPayment) > editTotal ? (
+                      <FormErrorMessage>
+                        Can't be more than the bill total (₹{' '}
+                        {editTotal.toLocaleString()}).
+                      </FormErrorMessage>
+                    ) : (
+                      <FormHelperText>
+                        Balance due: ₹{' '}
+                        {Number(
+                          editTotal - (Number(isUpdate.partialPayment) || 0),
+                        ).toLocaleString()}
+                      </FormHelperText>
                     )}
-                  </>
+                  </FormControl>
                 )}
-                <div>
-                  Order History:
-                  <table style={{ width: '100%' }}>
-                    <thead>
-                      <tr style={{ textAlign: 'left' }}>
-                        <th>Name</th>
-                        <th>Quantity</th>
-                        <th>Sell Price</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody style={{ textAlign: 'left' }}>
-                      {isUpdate.Cart.map((val, i) => (
-                        <tr key={val.id}>
-                          <td>{val.name}</td>
-                          <td>{val.buyingQty}</td>
-                          <td>
-                            <Input
-                              width={'90px'}
-                              value={val.sellPrice}
-                              type="number"
-                              onChange={(e) =>
-                                updatePriceStk(e.target.value, val.id, i)
-                              }
-                            />
-                          </td>
-                          <td>
-                            <Button
-                              size="xs"
-                              colorScheme="red"
-                              onClick={() => removeOrder(val.id)}
-                            >
-                              Put Back
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+
+                <FormControl isRequired mb="14px">
+                  <FormLabel fontSize="sm">Receipter Name / Notes</FormLabel>
+                  <Input
+                    borderRadius="12px"
+                    placeholder="Who received the payment, or a note"
+                    value={isUpdate.receipterName}
+                    onChange={(e) =>
+                      onChangeUpdateText(e.target.value, 'receipterName')
+                    }
+                  />
+                </FormControl>
+
+                <Flex
+                  align="center"
+                  justify="space-between"
+                  bg={softBg}
+                  borderRadius="14px"
+                  px="14px"
+                  py="10px"
+                  mb={isUpdate.checkedAddittional ? '10px' : '0'}
+                >
+                  <FormLabel htmlFor="edit-additional" mb="0" fontSize="sm">
+                    Additional charges
+                  </FormLabel>
+                  <Switch
+                    id="edit-additional"
+                    colorScheme="brandScheme"
+                    isChecked={
+                      isUpdate.checkedAddittional !== null &&
+                      isUpdate.checkedAddittional !== undefined
+                    }
+                    onChange={(e) =>
+                      onChangeUpdateText(
+                        e.target.checked ? { type: '', amount: '' } : null,
+                        'checkedAddittional',
+                      )
+                    }
+                  />
+                </Flex>
+                {isUpdate.checkedAddittional && (
+                  <SimpleGrid columns={2} gap="12px">
+                    <FormControl isRequired>
+                      <FormLabel fontSize="sm">Charge Type</FormLabel>
+                      <Input
+                        borderRadius="12px"
+                        value={isUpdate.checkedAddittional.type}
+                        onChange={(e) => {
+                          let value = { ...isUpdate };
+                          value.checkedAddittional.type = e.target.value;
+                          setiisUpdate(value);
+                        }}
+                        placeholder="e.g. Delivery"
+                      />
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel fontSize="sm">Amount</FormLabel>
+                      <InputGroup>
+                        <InputLeftAddon borderLeftRadius="12px">
+                          ₹
+                        </InputLeftAddon>
+                        <Input
+                          borderRightRadius="12px"
+                          onChange={(e) => {
+                            let value = { ...isUpdate };
+                            value.checkedAddittional.amount = Number(
+                              e.target.value,
+                            );
+                            setiisUpdate(value);
+                          }}
+                          value={isUpdate.checkedAddittional.amount}
+                          placeholder="0"
+                          type="number"
+                        />
+                      </InputGroup>
+                    </FormControl>
+                  </SimpleGrid>
+                )}
+
+                <Box bg={softBg} borderRadius="16px" p="14px" mt="18px">
+                  {editTotal !== Number(isUpdate.totalAmmount) && (
+                    <Flex justify="space-between" fontSize="sm" mb="4px">
+                      <Text color="secondaryGray.600">Previous total</Text>
+                      <Text color="secondaryGray.600" as="s">
+                        ₹ {Number(isUpdate.totalAmmount || 0).toLocaleString()}
+                      </Text>
+                    </Flex>
+                  )}
+                  <Flex justify="space-between" align="center">
+                    <Text fontWeight="700" color={textColor}>
+                      New total
+                    </Text>
+                    <Text fontWeight="700" fontSize="xl" color={textColor}>
+                      ₹ {editTotal.toLocaleString()}
+                    </Text>
+                  </Flex>
+                  {isUpdate.paymentMode === 'Partial Payment' && (
+                    <Flex justify="space-between" fontSize="sm" mt="4px">
+                      <Text color="red.500" fontWeight="600">
+                        Balance due
+                      </Text>
+                      <Text color="red.500" fontWeight="600">
+                        ₹{' '}
+                        {Number(
+                          editTotal - (Number(isUpdate.partialPayment) || 0),
+                        ).toLocaleString()}
+                      </Text>
+                    </Flex>
+                  )}
+                </Box>
               </ModalBody>
             )}
 
-            <ModalFooter>
-              <Button
-                colorScheme="yellow"
-                mr={3}
-                onClick={() => {
-                  setiisUpdate(null);
-                  sessionStorage.removeItem('arrayOfRemoveItems');
-                }}
-              >
-                Close
-              </Button>
-              <Button
-                colorScheme="green"
-                isDisabled={!isFormValid()}
-                onClick={() => updateDetails(isUpdate)}
-              >
-                Update
-              </Button>
+            <ModalFooter
+              borderTop="1px solid"
+              borderColor={borderColor}
+              flexDirection="column"
+              alignItems="stretch"
+              gap="10px"
+            >
+              {!isFormValid() && (
+                <Text
+                  fontSize="xs"
+                  color="secondaryGray.600"
+                  textAlign="center"
+                >
+                  Fill in all required fields (*) to save
+                </Text>
+              )}
+              <Flex gap="10px" justify="flex-end">
+                <Button variant="ghost" onClick={closeUpdate}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="brand"
+                  leftIcon={<Icon as={MdSave} w="18px" h="18px" />}
+                  isDisabled={!isFormValid()}
+                  onClick={() => updateDetails(isUpdate)}
+                >
+                  Save Changes
+                </Button>
+              </Flex>
             </ModalFooter>
           </ModalContent>
         </Modal>

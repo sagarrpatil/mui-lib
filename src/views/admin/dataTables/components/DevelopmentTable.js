@@ -541,7 +541,7 @@ export default function ComplexTable(props) {
     : 0;
   const datePickup = (id) => {
     return moment(Number(id)).isBetween(
-      moment().subtract(45, 'days'),
+      moment().subtract(90, 'days'),
       moment().add(1, 'days'),
     );
   };

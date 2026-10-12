@@ -37,6 +37,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchAvailableTransaction, longformatDate } from 'service/apiservice';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 import moment from 'moment';
+import { billTime, isDeletedBill } from 'service/bill';
 
 export default function Settings() {
   const [searchParams] = useSearchParams();
@@ -60,9 +61,9 @@ export default function Settings() {
     if (value.startDate && value.endDate) {
       const filteredData = (transaction || []).filter(
         (item) =>
-          parseInt(item.id) >=
+          billTime(item) >=
             longformatDate(moment(value.startDate).startOf('day').format()) &&
-          parseInt(item.id) <=
+          billTime(item) <=
             longformatDate(moment(value.endDate).endOf('day').format()),
       );
       // setPhoneNumber("")
@@ -87,7 +88,9 @@ export default function Settings() {
     }
   }, [phoneNumber]);
   const allRows = transactionFilter
-    ? transactionFilter.filter((x) => x.totalAmmount !== 0).reverse()
+    ? transactionFilter
+        .filter((x) => !isDeletedBill(x))
+        .sort((a, b) => billTime(b) - billTime(a))
     : null;
   const dueRows = allRows ? allRows.filter((x) => x.balance > 0) : null;
   const totalAmount = transactionFilter

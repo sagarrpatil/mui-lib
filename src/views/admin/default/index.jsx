@@ -28,6 +28,8 @@ import {
   fetchExpenseIn,
 } from 'service/apiservice';
 import { fetchAvailableProduct } from 'service/apiservice';
+import { summarizeProfit, toNum } from 'service/profit';
+import { billTime } from 'service/bill';
 
 export default function UserReports() {
   const [transaction, setTransaction] = useState(null);
@@ -71,11 +73,11 @@ export default function UserReports() {
       setTransaction(response);
       const filteredData = (response || []).filter(
         (item) =>
-          parseInt(item.id) >=
+          billTime(item) >=
             longformatDate(
               moment(valueDate.startDate).startOf('day').format(),
             ) &&
-          parseInt(item.id) <=
+          billTime(item) <=
             longformatDate(moment(valueDate.endDate).endOf('day').format()),
       );
       setTransactionFilter(filteredData);
@@ -109,33 +111,27 @@ export default function UserReports() {
         )
         .toLocaleString()
     : 0;
-  const totalQuantity = AvailbleStock
-    ? AvailbleStock?.reduce((total, item) => total + item.quantity, 0)
+  const totalQuantity = (AvailbleStock || []).reduce(
+    (total, item) => total + (toNum(item.quantity) || 0),
+    0,
+  );
+  // Skip stub nodes left behind for deleted products (no buyPrice)
+  const totalCostAvailbleStock = (AvailbleStock || []).reduce(
+    (total, item) =>
+      total + (toNum(item.quantity) || 0) * (toNum(item.buyPrice) || 0),
+    0,
+  );
+
+  // Uses the price snapshot saved in each bill, so deleted products still
+  // count, and deleted bills (zeroed totals) are excluded
+  const profitSummary = summarizeProfit(transactionFilter, AvailbleStock);
+  const totalBuyingQty = profitSummary.qty;
+  const totalBuyingCost = profitSummary.cost;
+  const totalProfit = Number(profitSummary.profit.toFixed(2));
+
+  const profitPercentage = totalBuyingCost
+    ? (totalProfit / totalBuyingCost) * 100
     : 0;
-  const totalCostAvailbleStock = AvailbleStock
-    ? AvailbleStock?.reduce((total, item) => {
-        return total + item.quantity * parseFloat(item.buyPrice);
-      }, 0)
-    : 0;
-  const totalBuyingQty = transactionFilter?.reduce((total, item) => {
-    return (
-      total + item.Cart.reduce((sum, cartItem) => sum + cartItem.buyingQty, 0)
-    );
-  }, 0);
-
-  let totalBuyingCost = 0;
-  let totalSellingRevenue = 0;
-
-  transactionFilter?.forEach((item) => {
-    item?.Cart?.forEach((cartItem) => {
-      totalBuyingCost += parseFloat(cartItem.buyPrice) * cartItem.buyingQty;
-      totalSellingRevenue +=
-        parseFloat(cartItem.sellPrice) * cartItem.buyingQty;
-    });
-  });
-  const totalProfit = Number(totalSellingRevenue - totalBuyingCost).toFixed(2);
-
-  const profitPercentage = (totalProfit / totalBuyingCost) * 100;
 
   const salesCount = transactionFilter
     ? transactionFilter.filter((t) => t.totalAmmount).length
@@ -232,8 +228,11 @@ export default function UserReports() {
           name="Profit (Buy / Sell)"
           value={'₹ ' + Number(totalProfit).toLocaleString()}
           growth={
-            (profitPercentage ? Number(profitPercentage).toFixed(2) : 0) +
-            '% margin on cost'
+            profitPercentage.toFixed(2) +
+            '% margin on cost' +
+            (profitSummary.missingCost
+              ? ` · ${profitSummary.missingCost} item(s) without buy price`
+              : '')
           }
           growthColor={totalProfit < 0 ? 'red.500' : 'green.500'}
         />
@@ -317,12 +316,12 @@ export default function UserReports() {
         gap="20px"
         mb="20px"
       >
-        <TopProducts transactions={transactionFilter} />
+        <TopProducts transactions={transactionFilter} stock={AvailbleStock} />
         <StockAlerts stock={AvailbleStock} />
       </Grid>
 
       <Box mb="20px">
-        <MonthlyTopProfit transactions={transaction} />
+        <MonthlyTopProfit transactions={transaction} stock={AvailbleStock} />
       </Box>
     </Box>
   );

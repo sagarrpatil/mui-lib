@@ -11,8 +11,10 @@ import {
   DrawerOverlay,
   useDisclosure,
   DrawerContent,
-  DrawerCloseButton,
+  IconButton,
 } from '@chakra-ui/react';
+import { useLocation } from 'react-router-dom';
+import { MdClose } from 'react-icons/md';
 import Content from 'components/sidebar/components/Content';
 import {
   renderThumb,
@@ -68,53 +70,73 @@ function Sidebar(props) {
   );
 }
 
-// FUNCTIONS
+// Mobile / tablet: slide-in drawer with the same content
 export function SidebarResponsive(props) {
-  let sidebarBackgroundColor = useColorModeValue('white', 'navy.800');
-  let menuColor = useColorModeValue('gray.400', 'white');
-  // // SIDEBAR
+  const drawerBg = useColorModeValue('white', 'navy.800');
+  const menuColor = useColorModeValue('secondaryGray.700', 'white');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef();
-
+  const location = useLocation();
   const { routes } = props;
-  // let isWindows = navigator.platform.startsWith("Win");
-  //  BRAND
+  const rtl = document.documentElement.dir === 'rtl';
+
+  // Close after navigating (also covers browser back/forward)
+  React.useEffect(() => {
+    onClose();
+  }, [location.pathname, onClose]);
 
   return (
     <Flex display={{ sm: 'flex', xl: 'none' }} alignItems="center">
-      <Flex ref={btnRef} w="max-content" h="max-content" onClick={onOpen}>
-        <Icon
-          as={IoMenuOutline}
-          color={menuColor}
-          my="auto"
-          w="20px"
-          h="20px"
-          me="10px"
-          _hover={{ cursor: 'pointer' }}
-        />
-      </Flex>
+      <IconButton
+        ref={btnRef}
+        variant="ghost"
+        size="sm"
+        me="6px"
+        borderRadius="10px"
+        aria-label="Open menu"
+        aria-expanded={isOpen}
+        icon={<Icon as={IoMenuOutline} color={menuColor} w="22px" h="22px" />}
+        onClick={onOpen}
+      />
       <Drawer
         isOpen={isOpen}
         onClose={onClose}
-        placement={document.documentElement.dir === 'rtl' ? 'right' : 'left'}
+        placement={rtl ? 'right' : 'left'}
         finalFocusRef={btnRef}
       >
-        <DrawerOverlay />
-        <DrawerContent w="285px" maxW="285px" bg={sidebarBackgroundColor}>
-          <DrawerCloseButton
-            zIndex="3"
-            onClose={onClose}
-            _focus={{ boxShadow: 'none' }}
-            _hover={{ boxShadow: 'none' }}
-          />
-          <DrawerBody maxW="285px" px="0rem" pb="0">
+        <DrawerOverlay bg="blackAlpha.500" backdropFilter="blur(4px)" />
+        <DrawerContent
+          w="300px"
+          maxW="86vw"
+          bg={drawerBg}
+          {...(rtl
+            ? { borderLeftRadius: '24px' }
+            : { borderRightRadius: '24px' })}
+          overflow="hidden"
+          pt="env(safe-area-inset-top)"
+          pb="env(safe-area-inset-bottom)"
+        >
+          <DrawerBody p="0">
             <Scrollbars
               autoHide
               renderTrackVertical={renderTrack}
               renderThumbVertical={renderThumb}
               renderView={renderView}
             >
-              <Content routes={routes} />
+              <Content
+                routes={routes}
+                onNavigate={onClose}
+                headerAction={
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    borderRadius="10px"
+                    aria-label="Close menu"
+                    icon={<Icon as={MdClose} w="20px" h="20px" />}
+                    onClick={onClose}
+                  />
+                }
+              />
             </Scrollbars>
           </DrawerBody>
         </DrawerContent>

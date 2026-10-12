@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SearchBar } from 'components/navbar/searchBar/SearchBar';
 import {
   Box,
@@ -59,6 +59,10 @@ import NFT from 'components/card/NFT';
 import Card from 'components/card/Card.js';
 import Nft5 from 'assets/img/nfts/Nft5.png';
 import moment from 'moment';
+import ReceipterField, {
+  DEFAULT_RECEIPTER,
+} from 'components/fields/ReceipterField';
+import { billTime } from 'service/bill';
 import { fetchAvailableProduct } from 'service/apiservice';
 import {
   saveAndBillApiCall,
@@ -103,10 +107,9 @@ export default function Marketplace() {
   const [checkedAddittional, setcheckedAddittional] = React.useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customerName, setCustomerName] = useState('');
-  const [receipterName, setReceipterName] = useState('');
+  const [receipterName, setReceipterName] = useState(DEFAULT_RECEIPTER);
   const [paymentOption, setPaymentOption] = useState('');
   const [transaction, setTransaction] = useState([]);
-  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [updateProduct, setUpdateProduct] = useState(null);
   const [showupdateBtn, setShowupdateBtn] = useState(false);
   const [filterSet, setFilter] = useState('Available Stock');
@@ -258,46 +261,67 @@ export default function Marketplace() {
     }
     return true;
   };
-  useEffect(() => {
-    if (customerName) {
-      const matches = transaction?.filter((cust) =>
-        // cust.customerName
-        //   .toLowerCase()
-        //   .includes(customerName.toLowerCase()) ||
-        cust?.phoneNumber?.includes(phoneNumber),
+  // Unique customers by phone + name (a family can share one phone), with
+  // phones reduced to their last 10 digits so "+91 98xxx" matches "98xxx"
+  const customers = useMemo(() => {
+    const byKey = {};
+    (transaction || []).forEach((t) => {
+      const phone = String(t?.phoneNumber ?? '')
+        .replace(/\D/g, '')
+        .slice(-10);
+      const name = String(t?.customerName ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!phone || !name) return;
+      const id = billTime(t);
+      const k = `${phone}|${name.toLowerCase()}`;
+      if (!byKey[k] || id >= byKey[k].lastId)
+        byKey[k] = { phoneNumber: phone, customerName: name, lastId: id };
+    });
+    return Object.values(byKey);
+  }, [transaction]);
+
+  // Filters by whatever the user typed: name (case-insensitive, any word
+  // order), phone digits, or both
+  const filteredCustomers = useMemo(() => {
+    const name = String(customerName || '')
+      .trim()
+      .toLowerCase();
+    const nameTerms = name.split(/\s+/).filter(Boolean);
+    const phone = String(phoneNumber || '').trim();
+    if (!nameTerms.length && !phone) return [];
+    const rank = (c) => {
+      const n = c.customerName.toLowerCase();
+      if (n === name) return 0;
+      if (nameTerms.length && n.startsWith(nameTerms[0])) return 1;
+      return 2;
+    };
+    const nameOk = (c) => {
+      const n = c.customerName.toLowerCase();
+      return (
+        nameTerms.length > 0 && nameTerms.every((term) => n.includes(term))
       );
-      setFilteredCustomers(matches);
-    } else {
-      setFilteredCustomers([]);
-    }
-  }, [customerName]);
-  useEffect(() => {
-    if (phoneNumber) {
-      const matches = transaction?.filter((cust) =>
-        // cust.customerName
-        //   .toLowerCase()
-        //   .includes(customerName.toLowerCase()) ||
-        cust?.phoneNumber?.includes(phoneNumber),
-      );
-      setFilteredCustomers(matches);
-    } else {
-      setFilteredCustomers([]);
-    }
-  }, [phoneNumber]);
-  const handleCustomerSelect = (e) => {
-    const selectedCustomer = transaction.find(
-      (cust) => cust.customerName === e.target.value,
+    };
+    const phoneOk = (c) => phone.length > 0 && c.phoneNumber.includes(phone);
+    // Prefer customers matching everything typed; if a half-typed or
+    // different phone rules them all out, still show the name (or phone) hits
+    let matches = customers.filter(
+      (c) => (!nameTerms.length || nameOk(c)) && (!phone || phoneOk(c)),
     );
-    if (selectedCustomer) {
-      setCustomerName(selectedCustomer.customerName);
-      setPhoneNumber(selectedCustomer.phoneNumber);
-    }
+    if (!matches.length)
+      matches = customers.filter((c) => nameOk(c) || phoneOk(c));
+    return matches.sort((a, b) => rank(a) - rank(b) || b.lastId - a.lastId);
+  }, [customers, customerName, phoneNumber]);
+
+  const handleCustomerSelect = (cust) => {
+    setCustomerName(cust.customerName);
+    setPhoneNumber(cust.phoneNumber);
   };
   const onCancelPopup = () => {
     setcheckedAddittional(null);
     setPhoneNumber('');
     setCustomerName('');
-    setReceipterName('');
+    setReceipterName(DEFAULT_RECEIPTER);
     setPaymentOption('');
     setPaymentMode('Full Payment');
     setPartialPayment(0);
@@ -342,27 +366,6 @@ export default function Marketplace() {
       fetchTransaction();
       setIsLoading(false);
     });
-  };
-  const mergeByPhoneNumber = (data) => {
-    const mergedData = {};
-
-    data.forEach((entry) => {
-      const phoneNumber = entry.phoneNumber;
-
-      if (!mergedData[phoneNumber]) {
-        mergedData[phoneNumber] = {
-          ...entry,
-          Cart: [...entry.Cart],
-          totalAmmount: entry.totalAmmount,
-        };
-      } else {
-        // Merge cart items and total amount
-        mergedData[phoneNumber].Cart.push(...entry.Cart);
-        mergedData[phoneNumber].totalAmmount += entry.totalAmmount;
-      }
-    });
-
-    return Object.values(mergedData);
   };
   const handleDeleteProduct = async () => {
     if (deletePassword === password) {
@@ -828,35 +831,29 @@ export default function Marketplace() {
                 />
               </FormControl>
             </SimpleGrid>
-            {filteredCustomers && filteredCustomers.length > 0 && (
+            {filteredCustomers.length > 0 && (
               <Box mb="10px">
                 <Text fontSize="xs" color="secondaryGray.600" mb="6px">
                   Existing customers — tap to fill
                 </Text>
                 <Flex gap="8px" wrap="wrap">
-                  {mergeByPhoneNumber(filteredCustomers)
-                    .slice(0, 6)
-                    .map((cust) => {
-                      const selected =
-                        cust.customerName === customerName &&
-                        cust.phoneNumber === phoneNumber;
-                      return (
-                        <Button
-                          key={cust.phoneNumber}
-                          size="sm"
-                          borderRadius="full"
-                          variant={selected ? 'brand' : 'light'}
-                          leftIcon={<Icon as={MdPersonOutline} />}
-                          onClick={() =>
-                            handleCustomerSelect({
-                              target: { value: cust.customerName },
-                            })
-                          }
-                        >
-                          {cust.customerName} · {cust.phoneNumber}
-                        </Button>
-                      );
-                    })}
+                  {filteredCustomers.slice(0, 6).map((cust) => {
+                    const selected =
+                      cust.customerName === customerName &&
+                      cust.phoneNumber === phoneNumber;
+                    return (
+                      <Button
+                        key={`${cust.phoneNumber}|${cust.customerName}`}
+                        size="sm"
+                        borderRadius="full"
+                        variant={selected ? 'brand' : 'light'}
+                        leftIcon={<Icon as={MdPersonOutline} />}
+                        onClick={() => handleCustomerSelect(cust)}
+                      >
+                        {cust.customerName} · {cust.phoneNumber}
+                      </Button>
+                    );
+                  })}
                 </Flex>
               </Box>
             )}
@@ -956,15 +953,7 @@ export default function Marketplace() {
               </FormControl>
             )}
 
-            <FormControl isRequired mb="14px">
-              <FormLabel fontSize="sm">Receipter Name / Notes</FormLabel>
-              <Input
-                borderRadius="12px"
-                placeholder="Who received the payment, or a note"
-                value={receipterName}
-                onChange={(e) => setReceipterName(e.target.value)}
-              />
-            </FormControl>
+            <ReceipterField value={receipterName} onChange={setReceipterName} />
 
             <Flex
               align="center"

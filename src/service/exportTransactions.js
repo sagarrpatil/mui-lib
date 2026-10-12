@@ -1,7 +1,9 @@
 import { utils, writeFile } from 'xlsx';
 import moment from 'moment';
+import { billTime } from 'service/bill';
+import { cartLine, toNum } from 'service/profit';
 
-const formatDate = (id) => moment(Number(id)).format('DD-MM-YYYY hh:mm A');
+const formatDate = (t) => moment(billTime(t)).format('DD-MM-YYYY hh:mm A');
 
 // Same rule the dashboard uses for "Received Amount"
 const paidAmount = (item) =>
@@ -21,7 +23,7 @@ export const exportTransactionsToExcel = (transactions, fileLabel) => {
   const list = transactions || [];
 
   const summaryRows = list.map((item) => ({
-    Date: formatDate(item.id),
+    Date: formatDate(item),
     'Bill No': item.id,
     Customer: item.customerName || '',
     Phone: item.phoneNumber || '',
@@ -54,20 +56,18 @@ export const exportTransactionsToExcel = (transactions, fileLabel) => {
 
   const itemRows = list.flatMap((item) =>
     (item.Cart || []).map((c) => {
-      const qty = Number(c.buyingQty) || 0;
-      const buy = parseFloat(c.buyPrice) || 0;
-      const sell = parseFloat(c.sellPrice) || 0;
+      const l = cartLine(c);
       return {
-        Date: formatDate(item.id),
+        Date: formatDate(item),
         'Bill No': item.id,
         Customer: item.customerName || '',
         Phone: item.phoneNumber || '',
-        Product: c.name + (c.flavour ? ` (${c.flavour})` : ''),
-        Qty: qty,
-        'Buy Price': buy,
-        'Sell Price': sell,
-        Amount: qty * sell,
-        Profit: qty * (sell - buy),
+        Product: l.name,
+        Qty: l.qty,
+        'Buy Price': l.costKnown ? toNum(c.buyPrice) : '',
+        'Sell Price': toNum(c.sellPrice) || 0,
+        Amount: l.revenue,
+        Profit: l.costKnown ? l.profit : '',
       };
     }),
   );

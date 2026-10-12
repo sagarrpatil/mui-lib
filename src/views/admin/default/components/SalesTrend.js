@@ -8,6 +8,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import moment from 'moment';
+import { billTime } from 'service/bill';
 import Card from 'components/card/Card';
 
 const inr = (n) => '₹ ' + Math.round(n).toLocaleString('en-IN');
@@ -51,7 +52,7 @@ export default function SalesTrend({ transactions, range }) {
     const ord = keys.map(() => 0);
     const rec = keys.map(() => 0);
     (transactions || []).forEach((t) => {
-      const i = idx[moment(Number(t.id)).format(fmtKey)];
+      const i = idx[moment(billTime(t)).format(fmtKey)];
       if (i === undefined || !t.totalAmmount) return;
       rev[i] += Number(t.totalAmmount) || 0;
       ord[i] += 1;

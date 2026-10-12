@@ -8,6 +8,7 @@ import {
   MdLock,
   MdOutlineShoppingCart,
   MdExpandCircleDown,
+  MdReceiptLong,
 } from 'react-icons/md';
 
 // Admin Imports
@@ -63,7 +64,9 @@ const routes = [
     name: 'Expense',
     layout: '/admin',
     path: '/Expense',
-    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    icon: (
+      <Icon as={MdReceiptLong} width="20px" height="20px" color="inherit" />
+    ),
     component: <Profile />,
   },
   {

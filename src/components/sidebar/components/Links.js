@@ -1,140 +1,109 @@
-/* eslint-disable */
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-// chakra imports
-import { Box, Flex, HStack, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Flex, Text, useColorModeValue } from '@chakra-ui/react';
 
-export function SidebarLinks(props) {
-  //   Chakra color mode
-  let location = useLocation();
-  let activeColor = useColorModeValue('gray.700', 'white');
-  let inactiveColor = useColorModeValue(
+// Navigation rows for the sidebar and the mobile drawer. Auth routes (Log
+// out) are rendered separately by SidebarContent.
+export function SidebarLinks({ routes, onNavigate }) {
+  const location = useLocation();
+  const textColor = useColorModeValue('secondaryGray.700', 'secondaryGray.500');
+  const activeText = useColorModeValue('brand.600', 'white');
+  const activeBg = useColorModeValue('brand.50', 'whiteAlpha.100');
+  const hoverBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.50');
+  const iconBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
+  const activeIconBg = useColorModeValue('brand.500', 'brand.400');
+  const categoryColor = useColorModeValue(
     'secondaryGray.600',
-    'secondaryGray.600',
+    'secondaryGray.500',
   );
-  let activeIcon = useColorModeValue('brand.500', 'white');
-  let textColor = useColorModeValue('secondaryGray.500', 'white');
-  let brandColor = useColorModeValue('brand.500', 'brand.400');
 
-  const { routes } = props;
+  const isActive = (route) =>
+    location.pathname.toLowerCase() ===
+      (route.layout + route.path).toLowerCase() ||
+    location.pathname
+      .toLowerCase()
+      .startsWith((route.layout + route.path).toLowerCase() + '/');
 
-  // verifies if routeName is the one active (in browser input)
-  const activeRoute = (routeName) => {
-    return location.pathname.includes(routeName);
-  };
-
-  // this function creates the links from the secondary accordions (for example auth -> sign-in -> default)
-  const createLinks = (routes) => {
-    return routes.map((route, index) => {
+  const createLinks = (list) =>
+    list.map((route) => {
       if (route.category) {
         return (
-          <>
+          <React.Fragment key={`cat-${route.name}`}>
             <Text
-              fontSize={'md'}
-              color={activeColor}
-              fontWeight="bold"
-              mx="auto"
-              ps={{
-                sm: '10px',
-                xl: '16px',
-              }}
+              fontSize="xs"
+              fontWeight="700"
+              letterSpacing="0.08em"
+              textTransform="uppercase"
+              color={categoryColor}
+              px="12px"
               pt="18px"
-              pb="12px"
-              key={index}
+              pb="8px"
             >
               {route.name}
             </Text>
             {createLinks(route.items)}
-          </>
-        );
-      } else if (
-        route.layout === '/admin' ||
-        route.layout === '/auth' ||
-        route.layout === '/rtl'
-      ) {
-        return (
-          <NavLink key={index} to={route.layout + route.path}>
-            {route.icon ? (
-              <Box>
-                <HStack
-                  spacing={
-                    activeRoute(route.path.toLowerCase()) ? '22px' : '26px'
-                  }
-                  py="5px"
-                  ps="10px"
-                >
-                  <Flex w="100%" alignItems="center" justifyContent="center">
-                    <Box
-                      color={
-                        activeRoute(route.path.toLowerCase())
-                          ? activeIcon
-                          : textColor
-                      }
-                      me="18px"
-                    >
-                      {route.icon}
-                    </Box>
-                    <Text
-                      me="auto"
-                      color={
-                        activeRoute(route.path.toLowerCase())
-                          ? activeColor
-                          : textColor
-                      }
-                      fontWeight={
-                        activeRoute(route.path.toLowerCase())
-                          ? 'bold'
-                          : 'normal'
-                      }
-                    >
-                      {route.name}
-                    </Text>
-                  </Flex>
-                  <Box
-                    h="36px"
-                    w="4px"
-                    bg={
-                      activeRoute(route.path.toLowerCase())
-                        ? brandColor
-                        : 'transparent'
-                    }
-                    borderRadius="5px"
-                  />
-                </HStack>
-              </Box>
-            ) : (
-              <Box>
-                <HStack
-                  spacing={
-                    activeRoute(route.path.toLowerCase()) ? '22px' : '26px'
-                  }
-                  py="5px"
-                  ps="10px"
-                >
-                  <Text
-                    me="auto"
-                    color={
-                      activeRoute(route.path.toLowerCase())
-                        ? activeColor
-                        : inactiveColor
-                    }
-                    fontWeight={
-                      activeRoute(route.path.toLowerCase()) ? 'bold' : 'normal'
-                    }
-                  >
-                    {route.name}
-                  </Text>
-                  <Box h="36px" w="4px" bg="brand.400" borderRadius="5px" />
-                </HStack>
-              </Box>
-            )}
-          </NavLink>
+          </React.Fragment>
         );
       }
+      if (route.layout !== '/admin' && route.layout !== '/rtl') return null;
+      const active = isActive(route);
+      return (
+        <NavLink
+          key={route.layout + route.path}
+          to={route.layout + route.path}
+          onClick={onNavigate}
+          aria-current={active ? 'page' : undefined}
+        >
+          <Flex
+            align="center"
+            gap="12px"
+            px="10px"
+            minH="48px"
+            mb="4px"
+            borderRadius="14px"
+            position="relative"
+            bg={active ? activeBg : 'transparent'}
+            color={active ? activeText : textColor}
+            transition="background .15s ease, color .15s ease"
+            _hover={{ bg: active ? activeBg : hoverBg }}
+          >
+            <Flex
+              w="34px"
+              h="34px"
+              flexShrink={0}
+              align="center"
+              justify="center"
+              borderRadius="10px"
+              bg={active ? activeIconBg : iconBg}
+              color={active ? 'white' : 'inherit'}
+              transition="background .15s ease"
+            >
+              {route.icon}
+            </Flex>
+            <Text
+              fontSize="sm"
+              fontWeight={active ? '700' : '500'}
+              noOfLines={1}
+            >
+              {route.name}
+            </Text>
+            {active && (
+              <Box
+                position="absolute"
+                right="0"
+                top="12px"
+                bottom="12px"
+                w="4px"
+                borderLeftRadius="4px"
+                bg={activeIconBg}
+              />
+            )}
+          </Flex>
+        </NavLink>
+      );
     });
-  };
-  //  BRAND
-  return createLinks(routes);
+
+  return <Box as="nav">{createLinks(routes)}</Box>;
 }
 
 export default SidebarLinks;

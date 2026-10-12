@@ -8,32 +8,36 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import Card from 'components/card/Card';
+import { buildCostLookup, cartLine, isActiveBill } from 'service/profit';
 
 const inr = (n) => '₹ ' + Math.round(n).toLocaleString('en-IN');
 
-export default function TopProducts({ transactions, limit = 6 }) {
+export default function TopProducts({ transactions, stock, limit = 6 }) {
   const { colorMode } = useColorMode();
   const dark = colorMode === 'dark';
   const textColor = useColorModeValue('secondaryGray.900', 'white');
 
   const rows = useMemo(() => {
     const map = {};
-    (transactions || []).forEach((t) =>
+    const lookup = buildCostLookup(stock);
+    (transactions || []).filter(isActiveBill).forEach((t) =>
       (t.Cart || []).forEach((c) => {
-        const name = c.name + (c.flavour ? ` (${c.flavour})` : '');
-        const qty = Number(c.buyingQty) || 0;
-        const sell = parseFloat(c.sellPrice) || 0;
-        const buy = parseFloat(c.buyPrice) || 0;
-        map[name] = map[name] || { name, qty: 0, revenue: 0, profit: 0 };
-        map[name].qty += qty;
-        map[name].revenue += qty * sell;
-        map[name].profit += qty * (sell - buy);
+        const l = cartLine(c, lookup);
+        map[l.name] = map[l.name] || {
+          name: l.name,
+          qty: 0,
+          revenue: 0,
+          profit: 0,
+        };
+        map[l.name].qty += l.qty;
+        map[l.name].revenue += l.revenue;
+        map[l.name].profit += l.profit;
       }),
     );
     return Object.values(map)
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, limit);
-  }, [transactions, limit]);
+  }, [transactions, stock, limit]);
 
   const axisColor = dark ? '#A3AED0' : '#8F9BBA';
   const options = {

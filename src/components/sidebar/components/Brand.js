@@ -1,31 +1,35 @@
 import React from 'react';
-
-// Chakra imports
-import { Flex, Image, useColorModeValue } from '@chakra-ui/react';
-
-// Custom components
-import { FitnessLogo } from 'components/icons/Icons';
-import { HSeparator } from 'components/separator/Separator';
+import { Box, Flex, Image, Text, useColorModeValue } from '@chakra-ui/react';
 
 export function SidebarBrand() {
-  //   Chakra color mode
-  let logoColor = useColorModeValue('navy.700', 'white');
+  const titleColor = useColorModeValue('navy.700', 'white');
 
   return (
-    <Flex align="center" direction="column" color={logoColor}>
-      {/* <FitnessLogo h='26px' w='175px' my='32px' color={logoColor} /> */}
+    <Flex align="center" gap="12px" px="6px">
       <Image
         src={`${process.env.PUBLIC_URL}/image.62d15fd0db1e7f62a4a0.png`}
-        alt="DY Nutritions"
-        w="110px"
-        h="110px"
+        alt=""
+        w="48px"
+        h="48px"
+        flexShrink={0}
         objectFit="cover"
-        borderRadius="24px"
-        boxShadow="0 10px 30px -10px rgba(0, 0, 0, 0.35)"
-        mt="24px"
-        mb="20px"
+        borderRadius="14px"
+        boxShadow="0 8px 20px -8px rgba(0, 0, 0, 0.35)"
       />
-      <HSeparator mb="20px" />
+      <Box minW="0">
+        <Text
+          color={titleColor}
+          fontSize="lg"
+          fontWeight="800"
+          lineHeight="1.2"
+          noOfLines={1}
+        >
+          DY Nutritions
+        </Text>
+        <Text color="secondaryGray.600" fontSize="xs" fontWeight="500">
+          Store admin
+        </Text>
+      </Box>
     </Flex>
   );
 }

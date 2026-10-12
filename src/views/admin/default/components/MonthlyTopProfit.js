@@ -11,14 +11,16 @@ import {
 } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import moment from 'moment';
+import { billTime } from 'service/bill';
 import Card from 'components/card/Card';
+import { buildCostLookup, cartLine, isActiveBill, toNum } from 'service/profit';
 
 const inr = (n) =>
   (n < 0 ? '-₹ ' : '₹ ') + Math.abs(Math.round(n)).toLocaleString('en-IN');
 
 // Top N products by profit for one calendar month, independent of the
 // dashboard's date filter (it needs the full transaction list)
-export default function MonthlyTopProfit({ transactions, limit = 5 }) {
+export default function MonthlyTopProfit({ transactions, stock, limit = 5 }) {
   const { colorMode } = useColorMode();
   const dark = colorMode === 'dark';
   const textColor = useColorModeValue('secondaryGray.900', 'white');
@@ -26,38 +28,31 @@ export default function MonthlyTopProfit({ transactions, limit = 5 }) {
   // { 'YYYY-MM': { productName: {qty, revenue, profit} } }
   const byMonth = useMemo(() => {
     const out = {};
-    (transactions || []).forEach((t) => {
-      if (!t.totalAmmount) return;
-      const key = moment(Number(t.id)).format('YYYY-MM');
+    const lookup = buildCostLookup(stock);
+    (transactions || []).filter(isActiveBill).forEach((t) => {
+      const key = moment(billTime(t)).format('YYYY-MM');
+      const lines = (t.Cart || []).map((c) => cartLine(c, lookup));
       // Split the bill's outstanding balance across its items by value
-      const itemsTotal = (t.Cart || []).reduce(
-        (sum, c) =>
-          sum + (Number(c.buyingQty) || 0) * (parseFloat(c.sellPrice) || 0),
-        0,
-      );
-      const balance = Number(t.balance) || 0;
-      (t.Cart || []).forEach((c) => {
-        const name = c.name + (c.flavour ? ` (${c.flavour})` : '');
-        const qty = Number(c.buyingQty) || 0;
-        const sell = parseFloat(c.sellPrice) || 0;
-        const buy = parseFloat(c.buyPrice) || 0;
+      const itemsTotal = lines.reduce((sum, l) => sum + l.revenue, 0);
+      const balance = toNum(t.balance) || 0;
+      lines.forEach((l) => {
         out[key] = out[key] || {};
-        const p = (out[key][name] = out[key][name] || {
-          name,
+        const p = (out[key][l.name] = out[key][l.name] || {
+          name: l.name,
           qty: 0,
           revenue: 0,
           profit: 0,
           dues: 0,
         });
-        p.qty += qty;
-        p.revenue += qty * sell;
-        p.profit += qty * (sell - buy);
+        p.qty += l.qty;
+        p.revenue += l.revenue;
+        p.profit += l.profit;
         if (balance > 0 && itemsTotal > 0)
-          p.dues += (balance * qty * sell) / itemsTotal;
+          p.dues += (balance * l.revenue) / itemsTotal;
       });
     });
     return out;
-  }, [transactions]);
+  }, [transactions, stock]);
 
   // Months from the first sale up to now (newest first, max 24)
   const months = useMemo(() => {

@@ -49,6 +49,7 @@ import {
   MdDeleteOutline,
   MdEdit,
   MdReceiptLong,
+  MdEvent,
 } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -72,12 +73,19 @@ import { FaWhatsapp } from 'react-icons/fa';
 import Card from 'components/card/Card';
 import Menu from 'components/menu/MainMenu';
 import moment from 'moment';
+import ReceipterField from 'components/fields/ReceipterField';
 import {
   updateInAvailableDueBalance,
-  deleteAvailableDueBalance,
-  fetchAvailableProductbyID,
-  updateInAvailableProductbyIDPutBack,
+  deleteTransaction,
+  restockCart,
+  saveTransaction,
 } from 'service/apiservice';
+import {
+  billMoment,
+  billTime,
+  fromDateTimeInput,
+  toDateTimeInput,
+} from 'service/bill';
 import { ToastContainer, toast } from 'react-toastify';
 
 const columnHelper = createColumnHelper();
@@ -124,6 +132,8 @@ export default function ComplexTable(props) {
   const segmentActiveBg = useColorModeValue('white', 'navy.700');
   const [isDelete, setisDelete] = React.useState(null);
   const [isUpdate, setiisUpdate] = React.useState(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
   const finalRef = React.useRef(null);
 
   const [pagination, setPagination] = React.useState({
@@ -145,7 +155,8 @@ export default function ComplexTable(props) {
       !isUpdate?.paymentMode ||
       !isUpdate?.receipterName ||
       !isUpdate?.paymentOption ||
-      isUpdate?.Cart?.length === 0
+      isUpdate?.Cart?.length === 0 ||
+      billDateError
     ) {
       return false;
     }
@@ -198,12 +209,12 @@ export default function ComplexTable(props) {
         );
       },
     },
-    columnHelper.accessor('id', {
+    columnHelper.accessor((row) => billTime(row), {
       id: 'id',
       header: () => 'Date',
-      sortingFn: (a, b) => Number(a.original.id) - Number(b.original.id),
+      sortingFn: (a, b) => billTime(a.original) - billTime(b.original),
       cell: (info) => {
-        const m = moment(Number(info.getValue()));
+        const m = moment(info.getValue());
         return (
           <Box whiteSpace="nowrap">
             <Text color={textColor} fontSize="sm" fontWeight="700">
@@ -418,24 +429,31 @@ export default function ComplexTable(props) {
     });
   };
   const deletedConfirmation = async (obj) => {
-    let object = JSON.parse(JSON.stringify(obj));
-    object.totalAmmount = 0;
-    object.paymentOption = '';
-    object.partialPayment = 0;
-    object.balance = 0;
-    setisDelete(null);
-    obj.Cart.map(async (val) => {
-      await fetchAvailableProductbyID(val.id).then(async (response) => {
-        let datafromResponse = response;
-        datafromResponse.quantity =
-          Number(response.quantity) + Number(val.buyingQty);
-        await updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
-      });
-    });
-
-    await deleteAvailableDueBalance(object, obj.id).then((response) => {
+    if (!obj || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const restocked = await deleteTransaction(obj);
+      const missing = restocked.filter((r) => !r.restored);
+      setisDelete(null);
+      toast.success(
+        `Bill of ${obj.customerName || 'customer'} deleted` +
+          (restocked.length - missing.length
+            ? ` · ${restocked.length - missing.length} item(s) put back in stock`
+            : ''),
+      );
+      if (missing.length)
+        toast.warn(
+          `Not restocked (product deleted): ${missing
+            .map((m) => `${m.name} ×${m.qty}`)
+            .join(', ')}`,
+        );
       props.refreshTable();
-    });
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      toast.error('Could not delete the bill. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
   const onChangeUpdateText = (val, state) => {
     let obj = {
@@ -444,7 +462,9 @@ export default function ComplexTable(props) {
     obj[state] = val;
     setiisUpdate(obj);
   };
-  const updateDetails = (obj) => {
+  const updateDetails = async (edited) => {
+    if (isSaving) return;
+    const obj = JSON.parse(JSON.stringify(edited));
     let totalAmount = obj.Cart.reduce((acc, item) => {
       return acc + Number(item.sellPrice) * Number(item.buyingQty);
     }, 0);
@@ -456,28 +476,59 @@ export default function ComplexTable(props) {
       obj.paymentMode === 'Partial Payment'
         ? totalAmount - Number(obj.partialPayment)
         : 0;
-    setiisUpdate(null);
-    let arrayOfRemoveItems = sessionStorage.getItem('arrayOfRemoveItems');
-    if (arrayOfRemoveItems) {
-      JSON.parse(arrayOfRemoveItems).map((val) => {
-        fetchAvailableProductbyID(val.id).then((response) => {
-          let datafromResponse = response;
-          datafromResponse.quantity =
-            Number(response.quantity) + Number(val.buyingQty);
-          updateInAvailableProductbyIDPutBack(datafromResponse, val.id);
-          sessionStorage.removeItem('arrayOfRemoveItems');
-        });
-      });
-    }
+    // Only store billDate when it differs from the creation time
+    if (!obj.billDate || Number(obj.billDate) === Number(obj.id))
+      delete obj.billDate;
 
-    deleteAvailableDueBalance(obj, obj.id).then(() => {
-      props.refreshTable();
+    // Items removed while editing go back to stock, compared against the
+    // saved bill rather than a sessionStorage list
+    const original = (transactionData || []).find((t) => t.id === obj.id);
+    const keptQty = {};
+    obj.Cart.forEach((c) => {
+      keptQty[c.id] = (keptQty[c.id] || 0) + (Number(c.buyingQty) || 0);
     });
+    const removed = (original?.Cart || [])
+      .map((c) => ({
+        ...c,
+        buyingQty: Math.max(
+          0,
+          (Number(c.buyingQty) || 0) - (keptQty[c.id] || 0),
+        ),
+      }))
+      .filter((c) => c.buyingQty > 0);
+
+    setIsSaving(true);
+    try {
+      await saveTransaction(obj);
+      const restocked = await restockCart(removed);
+      const missing = restocked.filter((r) => !r.restored);
+      setiisUpdate(null);
+      toast.success('Bill updated');
+      if (missing.length)
+        toast.warn(
+          `Not restocked (product deleted): ${missing
+            .map((m) => `${m.name} ×${m.qty}`)
+            .join(', ')}`,
+        );
+      props.refreshTable();
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      toast.error('Could not save the bill. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
   const closeUpdate = () => {
     setiisUpdate(null);
-    sessionStorage.removeItem('arrayOfRemoveItems');
   };
+  const billDateError = (() => {
+    if (!isUpdate) return '';
+    const ms = billTime(isUpdate);
+    if (!ms) return 'Pick a valid date and time';
+    if (ms > moment().endOf('day').valueOf())
+      return 'Bill date cannot be in the future';
+    return '';
+  })();
   // Live total, same formula updateDetails saves with
   const editTotal = isUpdate
     ? isUpdate.Cart.reduce(
@@ -496,17 +547,9 @@ export default function ComplexTable(props) {
   };
 
   const removeOrder = (id) => {
-    let arrayOfRemoveItems = sessionStorage.getItem('arrayOfRemoveItems')
-      ? JSON.parse(sessionStorage.getItem('arrayOfRemoveItems'))
-      : [];
     let obj = {
       ...isUpdate,
     };
-    arrayOfRemoveItems.push(isUpdate.Cart.find((x) => x.id === id));
-    sessionStorage.setItem(
-      'arrayOfRemoveItems',
-      JSON.stringify(arrayOfRemoveItems),
-    );
     obj.Cart = obj.Cart.filter((x) => x.id !== id);
     setiisUpdate(obj);
   };
@@ -818,43 +861,97 @@ export default function ComplexTable(props) {
 
         <Modal
           finalFocusRef={finalRef}
-          isOpen={isDelete}
-          onClose={() => setisDelete(null)}
+          isOpen={Boolean(isDelete)}
+          onClose={() => !isDeleting && setisDelete(null)}
+          isCentered
         >
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Delete below Transaction</ModalHeader>
-            <ModalCloseButton />
+          <ModalContent borderRadius="20px" mx="16px">
+            <ModalHeader>Delete this bill?</ModalHeader>
+            <ModalCloseButton isDisabled={isDeleting} />
             {isDelete && (
               <ModalBody>
-                Name of Customer: <b>{isDelete.customerName}</b>
-                <br />
-                Phone Number of Customer: <b>{isDelete.phoneNumber}</b>
-                <br />
-                Total Amount: <b>{isDelete.totalAmmount}</b>
+                <Box
+                  bg={softBg}
+                  borderRadius="12px"
+                  p="12px"
+                  fontSize="sm"
+                  mb="12px"
+                >
+                  <Flex justify="space-between">
+                    <Text color="secondaryGray.600">Customer</Text>
+                    <Text color={textColor} fontWeight="600">
+                      {isDelete.customerName || '—'} · {isDelete.phoneNumber}
+                    </Text>
+                  </Flex>
+                  <Flex justify="space-between" mt="4px">
+                    <Text color="secondaryGray.600">Bill date</Text>
+                    <Text color={textColor}>
+                      {billMoment(isDelete).format('DD MMM YYYY, hh:mm A')}
+                    </Text>
+                  </Flex>
+                  <Flex justify="space-between" mt="4px">
+                    <Text color="secondaryGray.600">Total</Text>
+                    <Text color={textColor} fontWeight="700">
+                      {inr(isDelete.totalAmmount)}
+                    </Text>
+                  </Flex>
+                  {Number(isDelete.balance) > 0 && (
+                    <Flex justify="space-between" mt="4px">
+                      <Text color="red.500">Due (will be cleared)</Text>
+                      <Text color="red.500" fontWeight="700">
+                        {inr(isDelete.balance)}
+                      </Text>
+                    </Flex>
+                  )}
+                </Box>
+                <Text fontSize="sm" fontWeight="600" mb="6px">
+                  These items will be put back in stock:
+                </Text>
+                {(isDelete.Cart || []).map((c, i) => (
+                  <Flex
+                    key={(c.id || '') + i}
+                    justify="space-between"
+                    fontSize="sm"
+                    py="2px"
+                  >
+                    <Text color={textColor} noOfLines={1}>
+                      {c.name}
+                      {c.flavour ? ` (${c.flavour})` : ''}
+                    </Text>
+                    <Text color="secondaryGray.600">×{c.buyingQty}</Text>
+                  </Flex>
+                ))}
+                <Text fontSize="xs" color="secondaryGray.600" mt="10px">
+                  The bill stays in history as deleted and no longer counts in
+                  earnings, dues or profit.
+                </Text>
               </ModalBody>
             )}
 
-            <ModalFooter>
+            <ModalFooter gap="10px">
               <Button
-                colorScheme="red"
-                mr={3}
+                variant="ghost"
+                isDisabled={isDeleting}
                 onClick={() => setisDelete(null)}
               >
-                Close
+                Cancel
               </Button>
               <Button
-                colorScheme="green"
+                colorScheme="red"
+                leftIcon={<Icon as={MdDeleteOutline} />}
+                isLoading={isDeleting}
+                loadingText="Deleting"
                 onClick={() => deletedConfirmation(isDelete)}
               >
-                Confirm Delete & Put Back in Stock
+                Delete & restock
               </Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
 
         <Modal
-          isOpen={isUpdate}
+          isOpen={Boolean(isUpdate)}
           onClose={closeUpdate}
           isCentered
           size="xl"
@@ -885,9 +982,7 @@ export default function ComplexTable(props) {
                   {isUpdate && (
                     <Text fontSize="sm" fontWeight="500" color="whiteAlpha.800">
                       Bill #{isUpdate.id} ·{' '}
-                      {moment(Number(isUpdate.id)).format(
-                        'DD MMM YYYY, hh:mm A',
-                      )}
+                      {billMoment(isUpdate).format('DD MMM YYYY, hh:mm A')}
                     </Text>
                   )}
                 </Box>
@@ -896,6 +991,40 @@ export default function ComplexTable(props) {
             <ModalCloseButton color="white" top="22px" />
             {isUpdate && (
               <ModalBody py="20px">
+                <EditSection icon={MdEvent}>Bill date</EditSection>
+                <FormControl isRequired isInvalid={Boolean(billDateError)}>
+                  <FormLabel fontSize="sm">Date &amp; time</FormLabel>
+                  <Input
+                    type="datetime-local"
+                    borderRadius="12px"
+                    max={moment().endOf('day').format('YYYY-MM-DDTHH:mm')}
+                    value={toDateTimeInput(billTime(isUpdate))}
+                    onChange={(e) =>
+                      onChangeUpdateText(
+                        fromDateTimeInput(e.target.value),
+                        'billDate',
+                      )
+                    }
+                  />
+                  {billDateError ? (
+                    <FormErrorMessage>{billDateError}</FormErrorMessage>
+                  ) : (
+                    Boolean(Number(isUpdate.billDate)) &&
+                    Number(isUpdate.billDate) !== Number(isUpdate.id) && (
+                      <FormHelperText fontSize="xs">
+                        Originally created{' '}
+                        {moment(Number(isUpdate.id)).format(
+                          'DD MMM YYYY, hh:mm A',
+                        )}
+                        . Reports use the new date; the receipt link stays the
+                        same.
+                      </FormHelperText>
+                    )
+                  )}
+                </FormControl>
+
+                <Divider my="18px" />
+
                 <EditSection icon={MdPersonOutline}>Customer</EditSection>
                 <SimpleGrid columns={{ base: 1, md: 2 }} gap="14px">
                   <FormControl isRequired>
@@ -1113,17 +1242,10 @@ export default function ComplexTable(props) {
                   </FormControl>
                 )}
 
-                <FormControl isRequired mb="14px">
-                  <FormLabel fontSize="sm">Receipter Name / Notes</FormLabel>
-                  <Input
-                    borderRadius="12px"
-                    placeholder="Who received the payment, or a note"
-                    value={isUpdate.receipterName}
-                    onChange={(e) =>
-                      onChangeUpdateText(e.target.value, 'receipterName')
-                    }
-                  />
-                </FormControl>
+                <ReceipterField
+                  value={isUpdate.receipterName}
+                  onChange={(v) => onChangeUpdateText(v, 'receipterName')}
+                />
 
                 <Flex
                   align="center"
@@ -1249,6 +1371,8 @@ export default function ComplexTable(props) {
                   variant="brand"
                   leftIcon={<Icon as={MdSave} w="18px" h="18px" />}
                   isDisabled={!isFormValid()}
+                  isLoading={isSaving}
+                  loadingText="Saving"
                   onClick={() => updateDetails(isUpdate)}
                 >
                   Save Changes

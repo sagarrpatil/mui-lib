@@ -45,11 +45,9 @@ import {
   MdOutlineShoppingCart,
   MdShoppingCart,
   MdSort,
-  MdCreditCard,
   MdPayments,
   MdPersonOutline,
   MdPrint,
-  MdQrCode2,
   MdReceiptLong,
 } from 'react-icons/md';
 import PageHeader from 'components/page/PageHeader';
@@ -62,6 +60,7 @@ import moment from 'moment';
 import ReceipterField, {
   DEFAULT_RECEIPTER,
 } from 'components/fields/ReceipterField';
+import PaymentMethodField from 'components/fields/PaymentMethodField';
 import { billTime } from 'service/bill';
 import { fetchAvailableProduct } from 'service/apiservice';
 import {
@@ -862,34 +861,10 @@ export default function Marketplace() {
 
             {/* Payment */}
             <SectionLabel icon={MdPayments}>Payment</SectionLabel>
-            <FormControl isRequired mb="14px">
-              <FormLabel fontSize="sm">Payment Method</FormLabel>
-              <SimpleGrid columns={3} gap="8px">
-                {[
-                  {
-                    value: 'UPI / Netbanking',
-                    label: 'UPI / Bank',
-                    icon: MdQrCode2,
-                  },
-                  { value: 'Cash', label: 'Cash', icon: MdPayments },
-                  { value: 'Card', label: 'Card', icon: MdCreditCard },
-                ].map((opt) => (
-                  <Button
-                    key={opt.value}
-                    h="56px"
-                    flexDirection="column"
-                    gap="2px"
-                    fontSize="sm"
-                    borderRadius="14px"
-                    variant={paymentOption === opt.value ? 'brand' : 'light'}
-                    onClick={() => setPaymentOption(opt.value)}
-                  >
-                    <Icon as={opt.icon} w="20px" h="20px" />
-                    {opt.label}
-                  </Button>
-                ))}
-              </SimpleGrid>
-            </FormControl>
+            <PaymentMethodField
+              value={paymentOption}
+              onChange={setPaymentOption}
+            />
 
             <FormControl mb="14px">
               <FormLabel fontSize="sm">Payment Type</FormLabel>

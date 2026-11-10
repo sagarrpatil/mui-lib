@@ -9,6 +9,7 @@ import {
   MdOutlineShoppingCart,
   MdExpandCircleDown,
   MdReceiptLong,
+  MdSettings,
 } from 'react-icons/md';
 
 // Admin Imports
@@ -18,6 +19,7 @@ import Profile from 'views/admin/profile';
 import Expense from 'views/admin/Expense';
 import DataTables from 'views/admin/dataTables';
 import RTL from 'views/admin/rtl';
+import Settings from 'views/admin/settings';
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
@@ -68,6 +70,13 @@ const routes = [
       <Icon as={MdReceiptLong} width="20px" height="20px" color="inherit" />
     ),
     component: <Profile />,
+  },
+  {
+    name: 'Settings',
+    layout: '/admin',
+    path: '/settings',
+    icon: <Icon as={MdSettings} width="20px" height="20px" color="inherit" />,
+    component: <Settings />,
   },
   {
     name: 'Log out',

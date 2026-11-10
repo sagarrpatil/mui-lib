@@ -7,20 +7,11 @@ import {
   Text,
   useColorModeValue,
 } from '@chakra-ui/react';
-import {
-  MdCreditCard,
-  MdPayments,
-  MdQrCode2,
-  MdHelpOutline,
-} from 'react-icons/md';
+import { MdHelpOutline } from 'react-icons/md';
+import { paymentIcon } from 'service/paymentMethods';
 import Card from 'components/card/Card';
 
 const inr = (n) => '₹ ' + Math.round(n).toLocaleString('en-IN');
-const ICONS = {
-  'UPI / Netbanking': MdQrCode2,
-  Cash: MdPayments,
-  Card: MdCreditCard,
-};
 
 export default function PaymentSplit({ transactions }) {
   const textColor = useColorModeValue('secondaryGray.900', 'white');
@@ -79,7 +70,7 @@ export default function PaymentSplit({ transactions }) {
                 justify="center"
               >
                 <Icon
-                  as={ICONS[r.key] || MdHelpOutline}
+                  as={r.key === 'Other' ? MdHelpOutline : paymentIcon(r.key)}
                   color="brand.500"
                   w="20px"
                   h="20px"

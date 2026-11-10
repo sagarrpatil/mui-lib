@@ -37,11 +37,9 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import {
-  MdCreditCard,
   MdEditNote,
   MdPayments,
   MdPersonOutline,
-  MdQrCode2,
   MdSave,
   MdShoppingCart,
   MdUndo,
@@ -51,6 +49,8 @@ import {
   MdReceiptLong,
   MdEvent,
 } from 'react-icons/md';
+import PaymentMethodField from 'components/fields/PaymentMethodField';
+import { paymentIcon } from 'service/paymentMethods';
 import { useNavigate } from 'react-router-dom';
 import {
   createColumnHelper,
@@ -91,11 +91,6 @@ import { ToastContainer, toast } from 'react-toastify';
 const columnHelper = createColumnHelper();
 
 const inr = (n) => '₹ ' + Math.round(Number(n) || 0).toLocaleString('en-IN');
-const MODE_ICONS = {
-  'UPI / Netbanking': MdQrCode2,
-  Cash: MdPayments,
-  Card: MdCreditCard,
-};
 
 function EditSection({ icon, children }) {
   return (
@@ -289,7 +284,7 @@ export default function ComplexTable(props) {
             gap="4px"
             whiteSpace="nowrap"
           >
-            <Icon as={MODE_ICONS[v] || MdPayments} />
+            <Icon as={paymentIcon(v)} />
             {v === 'UPI / Netbanking' ? 'UPI / Bank' : v}
           </Badge>
         ) : (
@@ -1143,40 +1138,10 @@ export default function ComplexTable(props) {
                 <Divider my="18px" />
 
                 <EditSection icon={MdPayments}>Payment</EditSection>
-                <FormControl isRequired mb="14px">
-                  <FormLabel fontSize="sm">Payment Method</FormLabel>
-                  <SimpleGrid columns={3} gap="8px">
-                    {[
-                      {
-                        value: 'UPI / Netbanking',
-                        label: 'UPI / Bank',
-                        icon: MdQrCode2,
-                      },
-                      { value: 'Cash', label: 'Cash', icon: MdPayments },
-                      { value: 'Card', label: 'Card', icon: MdCreditCard },
-                    ].map((opt) => (
-                      <Button
-                        key={opt.value}
-                        h="56px"
-                        flexDirection="column"
-                        gap="2px"
-                        fontSize="sm"
-                        borderRadius="14px"
-                        variant={
-                          isUpdate.paymentOption === opt.value
-                            ? 'brand'
-                            : 'light'
-                        }
-                        onClick={() =>
-                          onChangeUpdateText(opt.value, 'paymentOption')
-                        }
-                      >
-                        <Icon as={opt.icon} w="20px" h="20px" />
-                        {opt.label}
-                      </Button>
-                    ))}
-                  </SimpleGrid>
-                </FormControl>
+                <PaymentMethodField
+                  value={isUpdate.paymentOption}
+                  onChange={(v) => onChangeUpdateText(v, 'paymentOption')}
+                />
 
                 <FormControl mb="14px">
                   <FormLabel fontSize="sm">Payment Type</FormLabel>

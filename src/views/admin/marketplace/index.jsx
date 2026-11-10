@@ -61,6 +61,13 @@ import ReceipterField, {
   DEFAULT_RECEIPTER,
 } from 'components/fields/ReceipterField';
 import PaymentMethodField from 'components/fields/PaymentMethodField';
+import {
+  billPayments,
+  finalizePayments,
+  paymentLabel,
+  splitProblem,
+  sumPayments,
+} from 'service/paymentMethods';
 import { billTime } from 'service/bill';
 import { fetchAvailableProduct } from 'service/apiservice';
 import {
@@ -93,7 +100,7 @@ export default function Marketplace() {
   const [searchParams] = useSearchParams();
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
-  const password = localStorage.getItem('word') || '7057';
+  const password = '2222';
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const dividerColor = useColorModeValue('secondaryGray.100', 'whiteAlpha.100');
   const segmentBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
@@ -107,7 +114,9 @@ export default function Marketplace() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [receipterName, setReceipterName] = useState(DEFAULT_RECEIPTER);
-  const [paymentOption, setPaymentOption] = useState('');
+  const [payments, setPayments] = useState([]);
+  const paymentOption = paymentLabel(payments);
+  const isSplit = payments.length > 1;
   const [transaction, setTransaction] = useState([]);
   const [updateProduct, setUpdateProduct] = useState(null);
   const [showupdateBtn, setShowupdateBtn] = useState(false);
@@ -138,7 +147,7 @@ export default function Marketplace() {
       setPhoneNumber(updateData.phoneNumber);
       setCustomerName(updateData.customerName);
       setReceipterName(updateData.receipterName);
-      setPaymentOption(updateData.paymentOption);
+      setPayments(billPayments(updateData));
       setUpdateID(updateData.id);
     }
   }, [searchParams]);
@@ -154,6 +163,12 @@ export default function Marketplace() {
   useEffect(() => {
     setPartialPayment(0);
   }, [paymentMode]);
+  // Partial + split: amount received now is the sum of the split amounts
+  const splitSum = sumPayments(payments);
+  useEffect(() => {
+    if (isSplit && paymentMode === 'Partial Payment')
+      setPartialPayment(splitSum);
+  }, [isSplit, paymentMode, splitSum]);
   useEffect(() => {
     if (updateProduct === null) {
       setTableData(null);
@@ -236,6 +251,10 @@ export default function Marketplace() {
   if (checkedAddittional) {
     totalAmmount += Number(checkedAddittional.amount);
   }
+  const paymentError = splitProblem(payments, {
+    total: totalAmmount,
+    partial: paymentMode === 'Partial Payment',
+  });
   const isFormValid = () => {
     if (
       !phoneNumber ||
@@ -246,6 +265,7 @@ export default function Marketplace() {
     ) {
       return false;
     }
+    if (paymentError) return false;
     if (
       checkedAddittional &&
       (!checkedAddittional.type || !checkedAddittional.amount)
@@ -321,7 +341,7 @@ export default function Marketplace() {
     setPhoneNumber('');
     setCustomerName('');
     setReceipterName(DEFAULT_RECEIPTER);
-    setPaymentOption('');
+    setPayments([]);
     setPaymentMode('Full Payment');
     setPartialPayment(0);
     onClose();
@@ -335,6 +355,10 @@ export default function Marketplace() {
       checkedAddittional: checkedAddittional,
       receipterName: receipterName,
       paymentOption: paymentOption,
+      payments: finalizePayments(
+        payments,
+        paymentMode === 'Partial Payment' ? partialPayment : totalAmmount,
+      ),
       totalAmmount: Number(totalAmmount),
       partialPayment: Number(partialPayment),
       Cart: Cart,
@@ -862,8 +886,11 @@ export default function Marketplace() {
             {/* Payment */}
             <SectionLabel icon={MdPayments}>Payment</SectionLabel>
             <PaymentMethodField
-              value={paymentOption}
-              onChange={setPaymentOption}
+              payments={payments}
+              onChange={setPayments}
+              target={
+                paymentMode === 'Partial Payment' ? undefined : totalAmmount
+              }
             />
 
             <FormControl mb="14px">
@@ -909,9 +936,13 @@ export default function Marketplace() {
                     placeholder="0"
                     type="number"
                     value={partialPayment}
+                    isReadOnly={isSplit}
                     onChange={(e) => setPartialPayment(e.target.value)}
                   />
                 </InputGroup>
+                {isSplit && Number(partialPayment) <= totalAmmount && (
+                  <FormHelperText>Sum of split amounts</FormHelperText>
+                )}
                 {Number(partialPayment) > totalAmmount ? (
                   <FormErrorMessage>
                     Can't be more than the bill total (₹{' '}
@@ -1076,7 +1107,7 @@ export default function Marketplace() {
           >
             {!isFormValid() && (
               <Text fontSize="xs" color="secondaryGray.600" textAlign="center">
-                Fill in all required fields (*) to continue
+                {paymentError || 'Fill in all required fields (*) to continue'}
               </Text>
             )}
             {updateID ? (

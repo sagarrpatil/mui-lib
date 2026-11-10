@@ -28,6 +28,9 @@ import {
   InputLeftAddon,
   Text,
   useColorModeValue,
+  IconButton,
+  FormErrorMessage,
+  useToast,
 } from '@chakra-ui/react';
 import Card from 'components/card/Card';
 import MiniStatistics from 'components/card/MiniStatistics';
@@ -36,6 +39,9 @@ import DateRangeFilter from 'components/page/DateRangeFilter';
 import {
   MdAdd,
   MdCalendarToday,
+  MdDeleteOutline,
+  MdEdit,
+  MdLock,
   MdListAlt,
   MdReceiptLong,
 } from 'react-icons/md';
@@ -44,6 +50,7 @@ import {
   addExpenseIn,
   longformatDate,
   fetchExpenseIn,
+  deleteExpense,
 } from 'service/apiservice';
 
 const ExpenseTracker = () => {
@@ -61,6 +68,63 @@ const ExpenseTracker = () => {
     endDate: moment().endOf('month').format(),
   };
   const [valueDate, setDateValue] = useState(dateDefault);
+  const toast = useToast();
+  const password = '2222';
+  // Expense being edited (null = adding a new one)
+  const [editId, setEditId] = useState(null);
+  // Edit/delete waiting for the password: { type: 'edit' | 'delete', expense }
+  const [pending, setPending] = useState(null);
+  const [passInput, setPassInput] = useState('');
+  const [passError, setPassError] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const askPassword = (type, expense) => {
+    setPending({ type, expense });
+    setPassInput('');
+    setPassError(false);
+  };
+  const closePassword = () => {
+    setPending(null);
+    setPassInput('');
+    setPassError(false);
+  };
+  const confirmPassword = async () => {
+    if (passInput !== password) {
+      setPassError(true);
+      return;
+    }
+    const { type, expense } = pending;
+    closePassword();
+    if (type === 'edit') {
+      setEditId(expense.id);
+      setExpenseType(expense.expenseType || '');
+      setDate(moment(Number(expense.date)).format('YYYY-MM-DD'));
+      setAmount(String(expense.amount ?? ''));
+      onOpen();
+      return;
+    }
+    setBusy(true);
+    try {
+      await deleteExpense(expense.id);
+      toast({ status: 'success', title: 'Expense deleted' });
+      fetchExpense();
+    } catch (e) {
+      toast({
+        status: 'error',
+        title: 'Could not delete',
+        description: e.message,
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const closeExpenseModal = () => {
+    setEditId(null);
+    setExpenseType('');
+    setDate(moment().format('YYYY-MM-DD'));
+    setAmount('');
+    onClose();
+  };
   const handleExpenseTypeChange = (e) => {
     const value = e.target.value;
     setExpenseType(value.charAt(0).toUpperCase() + value.slice(1));
@@ -89,18 +153,16 @@ const ExpenseTracker = () => {
   };
 
   const handleAddExpense = () => {
-    let id = longformatDate(moment().format());
+    const id = editId || longformatDate(moment().format());
     const newExpense = {
       expenseType,
       date: longformatDate(date),
       amount: Number(amount),
     };
-    addExpenseIn(newExpense, id).then((response) => {
+    addExpenseIn(newExpense, id).then(() => {
+      if (editId) toast({ status: 'success', title: 'Expense updated' });
       fetchExpense();
-      setExpenseType('');
-      setDate(moment().startOf('day').format('YYYY-MM-DD'));
-      setAmount('');
-      onClose();
+      closeExpenseModal();
     });
   };
   const totalAmountExpense = expensesfilter
@@ -170,10 +232,12 @@ const ExpenseTracker = () => {
       </SimpleGrid>
 
       {/* Modal for adding expense */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <Modal isOpen={isOpen} onClose={closeExpenseModal} isCentered>
         <ModalOverlay bg="blackAlpha.400" backdropFilter="blur(4px)" />
         <ModalContent borderRadius="20px" mx="16px">
-          <ModalHeader>Add New Expense</ModalHeader>
+          <ModalHeader>
+            {editId ? 'Edit Expense' : 'Add New Expense'}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl isRequired mb={4}>
@@ -214,7 +278,7 @@ const ExpenseTracker = () => {
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button variant="ghost" mr={3} onClick={closeExpenseModal}>
               Cancel
             </Button>
             <Button
@@ -222,7 +286,72 @@ const ExpenseTracker = () => {
               onClick={handleAddExpense}
               isDisabled={!isFormValid} // Disable the button if the form is not valid
             >
-              Add Expense
+              {editId ? 'Save Changes' : 'Add Expense'}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Password check before editing or deleting an expense */}
+      <Modal
+        isOpen={Boolean(pending)}
+        onClose={closePassword}
+        isCentered
+        size="sm"
+      >
+        <ModalOverlay bg="blackAlpha.400" backdropFilter="blur(4px)" />
+        <ModalContent
+          as="form"
+          borderRadius="20px"
+          mx="16px"
+          onSubmit={(e) => {
+            e.preventDefault();
+            confirmPassword();
+          }}
+        >
+          <ModalHeader>
+            {pending?.type === 'delete' ? 'Delete expense?' : 'Edit expense'}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {pending && (
+              <Text fontSize="sm" color="secondaryGray.600" mb="12px">
+                {pending.expense.expenseType} · ₹{' '}
+                {Number(pending.expense.amount).toLocaleString()} ·{' '}
+                {moment(Number(pending.expense.date)).format('MMM DD, YYYY')}
+              </Text>
+            )}
+            <FormControl isInvalid={passError}>
+              <FormLabel fontSize="sm">Password</FormLabel>
+              <InputGroup>
+                <InputLeftAddon borderLeftRadius="12px">
+                  <Icon as={MdLock} />
+                </InputLeftAddon>
+                <Input
+                  autoFocus
+                  type="password"
+                  borderRightRadius="12px"
+                  value={passInput}
+                  onChange={(e) => {
+                    setPassInput(e.target.value);
+                    setPassError(false);
+                  }}
+                />
+              </InputGroup>
+              <FormErrorMessage>Wrong password</FormErrorMessage>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={closePassword}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant={pending?.type === 'delete' ? 'solid' : 'brand'}
+              colorScheme={pending?.type === 'delete' ? 'red' : undefined}
+              isDisabled={!passInput}
+            >
+              {pending?.type === 'delete' ? 'Delete' : 'Continue'}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -260,6 +389,9 @@ const ExpenseTracker = () => {
                   <Th color="secondaryGray.600" isNumeric>
                     Amount
                   </Th>
+                  <Th color="secondaryGray.600" isNumeric w="1%">
+                    Actions
+                  </Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -283,6 +415,24 @@ const ExpenseTracker = () => {
                     </Td>
                     <Td isNumeric fontWeight="700" color={textColor}>
                       ₹ {Number(expense.amount).toLocaleString()}
+                    </Td>
+                    <Td isNumeric whiteSpace="nowrap">
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        aria-label={`Edit ${expense.expenseType}`}
+                        icon={<MdEdit />}
+                        onClick={() => askPassword('edit', expense)}
+                      />
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        colorScheme="red"
+                        aria-label={`Delete ${expense.expenseType}`}
+                        icon={<MdDeleteOutline />}
+                        isDisabled={busy}
+                        onClick={() => askPassword('delete', expense)}
+                      />
                     </Td>
                   </Tr>
                 ))}

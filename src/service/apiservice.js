@@ -166,16 +166,17 @@ export const longformatDate = (parameter) => {
   if (parameter) return unixTime;
   else return '';
 };
+// Adds or overwrites (edit) the expense with this id
 export const addExpenseIn = async (object, id) => {
   try {
-    const dataRefs = ref(realtimeDb, `${key}/expenses/${id}`);
-    set(dataRefs, object).then((snapshot) => {
-      return snapshot;
-    });
+    await set(ref(realtimeDb, `${key}/expenses/${id}`), object);
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error('Error saving expense:', error);
     return error;
   }
+};
+export const deleteExpense = async (id) => {
+  await set(ref(realtimeDb, `${key}/expenses/${id}`), null);
 };
 export const fetchExpenseIn = async () => {
   try {
@@ -256,6 +257,7 @@ export const deleteTransaction = async (tx) => {
     deletedTotal: Number(bill.totalAmmount) || 0,
     totalAmmount: 0,
     paymentOption: '',
+    payments: null,
     partialPayment: 0,
     balance: 0,
   });

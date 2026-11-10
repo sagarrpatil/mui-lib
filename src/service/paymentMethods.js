@@ -97,3 +97,53 @@ export function usePaymentMethods() {
   }, []);
   return methods;
 }
+
+// ---- Split payments: one bill paid by several methods ----
+
+const num = (v) => Number(v) || 0;
+export const sumPayments = (payments) =>
+  (payments || []).reduce((s, p) => s + num(p.amount), 0);
+
+// [{ method, amount }] for a bill. Older bills only have paymentOption, so
+// the whole received amount is put on that one method.
+export const billPayments = (tx) => {
+  const list = (tx?.payments || []).filter((p) => p && p.method);
+  if (list.length)
+    return list.map((p) => ({ method: p.method, amount: num(p.amount) }));
+  if (!tx?.paymentOption) return [];
+  const received =
+    tx.paymentMode === 'Partial Payment'
+      ? num(tx.partialPayment)
+      : num(tx.totalAmmount);
+  return [{ method: tx.paymentOption, amount: received }];
+};
+
+// Text stored in paymentOption, e.g. "Card + Cash"
+export const paymentLabel = (payments) =>
+  (payments || []).map((p) => p.method).join(' + ');
+
+// What gets saved on the bill: a single method takes the whole received
+// amount, split amounts are stored as numbers
+export const finalizePayments = (payments, received) => {
+  const list = (payments || []).filter((p) => p && p.method);
+  if (list.length === 1)
+    return [{ method: list[0].method, amount: num(received) }];
+  return list.map((p) => ({ method: p.method, amount: num(p.amount) }));
+};
+
+// Error message for a split, or '' when it's fine (or not a split)
+export const splitProblem = (payments, { total, partial }) => {
+  const list = payments || [];
+  if (list.length < 2) return '';
+  if (list.some((p) => num(p.amount) <= 0))
+    return 'Enter an amount for each payment method';
+  const sum = sumPayments(list);
+  if (partial) {
+    if (sum > num(total) + 0.01)
+      return "Split total can't be more than the bill total";
+    return '';
+  }
+  if (Math.abs(sum - num(total)) > 0.01)
+    return 'Split amounts must add up to the bill total';
+  return '';
+};

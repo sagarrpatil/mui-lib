@@ -2,6 +2,7 @@ import { utils, writeFile } from 'xlsx';
 import moment from 'moment';
 import { billTime } from 'service/bill';
 import { cartLine, toNum } from 'service/profit';
+import { billPayments } from 'service/paymentMethods';
 
 const formatDate = (t) => moment(billTime(t)).format('DD-MM-YYYY hh:mm A');
 
@@ -29,6 +30,9 @@ export const exportTransactionsToExcel = (transactions, fileLabel) => {
     Phone: item.phoneNumber || '',
     'Receipter / Notes': item.receipterName || '',
     'Payment Option': item.paymentOption || '',
+    'Payment Split': billPayments(item)
+      .map((p) => `${p.method} ₹${p.amount}`)
+      .join(', '),
     'Payment Mode': item.paymentMode || '',
     Items: (item.Cart || []).reduce((sum, c) => sum + (c.buyingQty || 0), 0),
     'Additional Charges': item.checkedAddittional

@@ -50,7 +50,14 @@ import {
   MdEvent,
 } from 'react-icons/md';
 import PaymentMethodField from 'components/fields/PaymentMethodField';
-import { paymentIcon } from 'service/paymentMethods';
+import {
+  billPayments,
+  finalizePayments,
+  paymentIcon,
+  paymentLabel,
+  splitProblem,
+  sumPayments,
+} from 'service/paymentMethods';
 import { useNavigate } from 'react-router-dom';
 import {
   createColumnHelper,
@@ -168,6 +175,7 @@ export default function ComplexTable(props) {
     ) {
       return false;
     }
+    if (editPaymentError) return false;
     return true;
   };
   const onClose = () => {
@@ -270,6 +278,28 @@ export default function ComplexTable(props) {
       header: () => 'Mode',
       cell: (info) => {
         const v = info.getValue();
+        const split = billPayments(info.row.original);
+        if (split.length > 1)
+          return (
+            <Flex direction="column" gap="2px">
+              {split.map((p) => (
+                <Flex
+                  key={p.method}
+                  align="center"
+                  gap="4px"
+                  fontSize="xs"
+                  fontWeight="600"
+                  whiteSpace="nowrap"
+                >
+                  <Icon as={paymentIcon(p.method)} />
+                  {p.method === 'UPI / Netbanking' ? 'UPI / Bank' : p.method}
+                  <Text as="span" color="secondaryGray.600" fontWeight="500">
+                    {inr(p.amount)}
+                  </Text>
+                </Flex>
+              ))}
+            </Flex>
+          );
         return v ? (
           <Badge
             variant="subtle"
@@ -455,6 +485,20 @@ export default function ComplexTable(props) {
       ...isUpdate,
     };
     obj[state] = val;
+    // Partial + split: amount paid is the sum of the split amounts
+    const list = obj.payments ?? billPayments(obj);
+    if (list.length > 1 && obj.paymentMode === 'Partial Payment')
+      obj.partialPayment = sumPayments(list);
+    setiisUpdate(obj);
+  };
+  const setEditPayments = (list) => {
+    const obj = {
+      ...isUpdate,
+      payments: list,
+      paymentOption: paymentLabel(list),
+    };
+    if (list.length > 1 && obj.paymentMode === 'Partial Payment')
+      obj.partialPayment = sumPayments(list);
     setiisUpdate(obj);
   };
   const updateDetails = async (edited) => {
@@ -467,6 +511,11 @@ export default function ComplexTable(props) {
       totalAmount += Number(obj.checkedAddittional.amount);
     }
     obj.totalAmmount = totalAmount;
+    obj.payments = finalizePayments(
+      obj.payments ?? billPayments(obj),
+      obj.paymentMode === 'Partial Payment' ? obj.partialPayment : totalAmount,
+    );
+    obj.paymentOption = paymentLabel(obj.payments);
     obj.balance =
       obj.paymentMode === 'Partial Payment'
         ? totalAmount - Number(obj.partialPayment)
@@ -534,6 +583,16 @@ export default function ComplexTable(props) {
         ? Number(isUpdate.checkedAddittional.amount) || 0
         : 0)
     : 0;
+  const editPayments = isUpdate
+    ? (isUpdate.payments ?? billPayments(isUpdate))
+    : [];
+  const editIsSplit = editPayments.length > 1;
+  const editPaymentError = isUpdate
+    ? splitProblem(editPayments, {
+        total: editTotal,
+        partial: isUpdate.paymentMode === 'Partial Payment',
+      })
+    : '';
   const datePickup = (id) => {
     return moment(Number(id)).isBetween(
       moment().subtract(180, 'days'),
@@ -771,6 +830,29 @@ export default function ComplexTable(props) {
                                     )}
                                   </Text>
                                 </Flex>
+                                {billPayments(tx).length > 1 &&
+                                  billPayments(tx).map((p) => (
+                                    <Flex
+                                      key={p.method}
+                                      justify="space-between"
+                                      align="center"
+                                      fontSize="xs"
+                                      mt="2px"
+                                      pl="10px"
+                                    >
+                                      <Flex
+                                        align="center"
+                                        gap="4px"
+                                        color="secondaryGray.600"
+                                      >
+                                        <Icon as={paymentIcon(p.method)} />
+                                        {p.method}
+                                      </Flex>
+                                      <Text color="secondaryGray.600">
+                                        {inr(p.amount)}
+                                      </Text>
+                                    </Flex>
+                                  ))}
                                 {tx.balance > 0 && (
                                   <Flex justify="space-between" mt="4px">
                                     <Text color="red.500">Balance due</Text>
@@ -1139,8 +1221,13 @@ export default function ComplexTable(props) {
 
                 <EditSection icon={MdPayments}>Payment</EditSection>
                 <PaymentMethodField
-                  value={isUpdate.paymentOption}
-                  onChange={(v) => onChangeUpdateText(v, 'paymentOption')}
+                  payments={editPayments}
+                  onChange={setEditPayments}
+                  target={
+                    isUpdate.paymentMode === 'Partial Payment'
+                      ? undefined
+                      : editTotal
+                  }
                 />
 
                 <FormControl mb="14px">
@@ -1186,11 +1273,16 @@ export default function ComplexTable(props) {
                         placeholder="0"
                         type="number"
                         value={isUpdate.partialPayment}
+                        isReadOnly={editIsSplit}
                         onChange={(e) =>
                           onChangeUpdateText(e.target.value, 'partialPayment')
                         }
                       />
                     </InputGroup>
+                    {editIsSplit &&
+                      Number(isUpdate.partialPayment) <= editTotal && (
+                        <FormHelperText>Sum of split amounts</FormHelperText>
+                      )}
                     {Number(isUpdate.partialPayment) > editTotal ? (
                       <FormErrorMessage>
                         Can't be more than the bill total (₹{' '}

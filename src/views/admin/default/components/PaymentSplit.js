@@ -8,7 +8,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { MdHelpOutline } from 'react-icons/md';
-import { paymentIcon } from 'service/paymentMethods';
+import { billPayments, paymentIcon } from 'service/paymentMethods';
 import Card from 'components/card/Card';
 
 const inr = (n) => '₹ ' + Math.round(n).toLocaleString('en-IN');
@@ -24,10 +24,19 @@ export default function PaymentSplit({ transactions }) {
     let due = 0;
     (transactions || []).forEach((t) => {
       if (!t.totalAmmount) return;
-      const key = t.paymentOption || 'Other';
-      map[key] = map[key] || { key, amount: 0, count: 0 };
-      map[key].amount += Number(t.totalAmmount) || 0;
-      map[key].count += 1;
+      // Split bills count under each method; any rest of the bill (unpaid
+      // balance, dues paid later) goes to the first method so method
+      // totals still add up to sales
+      const total = Number(t.totalAmmount) || 0;
+      const list = billPayments(t);
+      const parts = list.length ? list : [{ method: 'Other', amount: total }];
+      const rest = total - parts.reduce((s, p) => s + p.amount, 0);
+      parts.forEach((p, i) => {
+        const key = p.method;
+        map[key] = map[key] || { key, amount: 0, count: 0 };
+        map[key].amount += p.amount + (i === 0 ? rest : 0);
+        map[key].count += 1;
+      });
       sum += Number(t.totalAmmount) || 0;
       if (Number(t.balance) > 0) due += 1;
     });
